@@ -6,7 +6,7 @@ import org.hime.parse.*
 import java.io.File
 import java.nio.file.Files
 
-var defaultSymbolTable = SymbolTable(HashMap(), core)
+val defaultSymbolTable = SymbolTable(HashMap(), core)
 
 fun call(code: String, symbolTable: SymbolTable = defaultSymbolTable): Token {
     val asts = parser(lexer(format(code)))
