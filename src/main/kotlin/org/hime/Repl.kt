@@ -10,6 +10,7 @@ import java.util.Scanner
 fun main() {
     val scanner = Scanner(System.`in`)
     var codeBuilder = StringBuilder()
+    var symbolTable = SymbolTable(HashMap(), core)
     var size = 0
     while (true) {
         print("[Hime] >>> ")
@@ -70,7 +71,7 @@ fun main() {
         }
         if (flag == 0) {
             codeBuilder = StringBuilder()
-            val result = call(builder.toString())
+            val result = call(builder.toString(), symbolTable)
             if (result.type != Type.NIL)
                 println(result.toString())
         }
