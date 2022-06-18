@@ -9,7 +9,7 @@ import java.nio.file.Files
 val defaultSymbolTable = SymbolTable(HashMap(), core)
 
 fun call(code: String, symbolTable: SymbolTable = defaultSymbolTable): Token {
-    val asts = parser(lexer(format(code)))
+    val asts = parser(lexer(preprocessor(code)))
     var result = NIL
     for (ast in asts)
         result = org.hime.core.call(ast, symbolTable)

@@ -1,6 +1,6 @@
 package org.hime.parse
 
-fun format(s: String): String {
+fun preprocessor(s: String): String {
     val builder = StringBuilder()
     var index = 0
     val chars = s.replace("(?m)^\\s*$\\n".toRegex(), "").toCharArray()

@@ -156,7 +156,7 @@ val core = SymbolTable(
             }
             val file = File(System.getProperty("user.dir") + "/" + path.replace(".", "/") + ".hime")
             if (file.exists())
-                for (node in parser(lexer(format(Files.readString(file.toPath())))))
+                for (node in parser(lexer(preprocessor(Files.readString(file.toPath())))))
                     call(node, symbolTable)
             else
                 throw HimeModuleException("Module $path does not exist!!!")
@@ -988,7 +988,7 @@ val core = SymbolTable(
         }),
         "eval" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            val asts = parser(lexer(format(parameters[0].toString())))
+            val asts = parser(lexer(preprocessor(parameters[0].toString())))
             var result = NIL
             for (ast in asts)
                 result = call(ast, symbolTable)
