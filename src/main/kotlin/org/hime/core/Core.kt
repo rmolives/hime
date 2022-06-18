@@ -406,7 +406,7 @@ val core = SymbolTable(
         "list-set" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 2)
             assert(parameters[0].type == LIST)
-            assert(parameters[1].isSmallNum())
+            assert(parameters[1].type == NUM)
             val index = cast<Int>(parameters[1].value)
             val tokens = ArrayList(cast<List<Token>>(parameters[0].value))
             assert(index < tokens.size)
@@ -416,7 +416,7 @@ val core = SymbolTable(
         "list-add" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 2)
             assert(parameters[0].type == LIST)
-            assert(parameters[1].isSmallNum())
+            assert(parameters[1].type == NUM)
             val index = cast<Int>(parameters[1].value)
             val tokens = ArrayList(cast<List<Token>>(parameters[0].value))
             assert(index < tokens.size)
@@ -426,7 +426,7 @@ val core = SymbolTable(
         "list-get" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
             assert(parameters[0].type == LIST)
-            assert(parameters[1].isSmallNum())
+            assert(parameters[1].type == NUM)
             val index = cast<Int>(parameters[1].value)
             val tokens = cast<List<Token>>(parameters[0].value)
             assert(index < tokens.size)
