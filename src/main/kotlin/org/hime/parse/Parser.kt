@@ -56,16 +56,15 @@ fun parser(lexer: List<Pair<List<Token>, Int>>): List<ASTNode> {
                     assert(stack.peek() != null)
                     stack.peek().type = AstType.FUNCTION
                 }
-                if (!stack.isEmpty()) {
+                if (!stack.isEmpty())
                     stack.pop()
-                } else
+                else
                     throw HimeParserException("[expression: ${line.second}] separator mismatch error.")
-            } else {
+            } else
                 if (!stack.isEmpty())
                     stack.peek().add(ASTNode(tokens[index]))
                 else
                     throw HimeParserException("[expression: ${line.second}] separator mismatch error.")
-            }
             ++index
         }
     }
