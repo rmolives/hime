@@ -31,7 +31,7 @@ fun Any.toToken(): Token {
         is List<*> -> {
             val list = ArrayList<Token>()
             for (e in this)
-                list.add(this.toToken())
+                list.add(e!!.toToken())
             return Token(Type.LIST, list)
         }
         is Boolean -> Token(Type.BOOL, this)
