@@ -6,28 +6,25 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlin.math.floor
 
-fun BigDecimal.simplification(): BigDecimal {
-    if (this == BigDecimal.ZERO)
-        return this
-    var s = this.toPlainString()
-    if (s.contains(".")) {
-        for (i in s.length - 1 downTo 0) {
-            if (!s.contains("."))
-                break
-            if (s[i] != '0' || s[i] != '.')
-                break
-            s = s.substring(0, i)
-        }
-    }
-    return BigDecimal(s)
-}
+val INT_MAX: BigInteger = BigInteger.valueOf(Int.MAX_VALUE.toLong())
+val FLOAT_MAX: BigDecimal = BigDecimal.valueOf(Float.MAX_VALUE.toDouble())
 
+fun Token.isNum(): Boolean = this.isSmallNum() || this.isBigNum()
+fun Token.isSmallNum(): Boolean = this.type == Type.NUM || this.type == Type.REAL
+fun Token.isBigNum(): Boolean = this.type == Type.NUM || this.type == Type.REAL
 fun Any.toToken(): Token {
     return when (this) {
         is Token -> this
-        is BigInteger -> Token(Type.NUM, this)
-        is BigDecimal -> Token(Type.REAL, this)
+        is Int -> Token(Type.NUM, this)
+        is Float -> if (floor(this.toDouble()).compareTo(this) == 0)
+            this.toInt().toToken()
+        else Token(Type.REAL, this)
+        is BigInteger -> if (this <= INT_MAX) this.toInt().toToken() else Token(Type.BIG_NUM, this)
+        is BigDecimal -> if (this.signum() == 0 || this.scale() <= 0 || this.stripTrailingZeros().scale() <= 0)
+            this.toBigIntegerExact().toToken()
+        else if (this <= FLOAT_MAX) this.toFloat().toToken() else Token(Type.BIG_REAL, this)
         is String -> Token(Type.STR, this)
         is Long -> Token(Type.NUM, BigInteger.valueOf(this))
         is Double -> Token(Type.REAL, BigDecimal.valueOf(this))
@@ -45,4 +42,5 @@ fun Any.toToken(): Token {
     }
 }
 
-inline fun <reified R> cast(any: Any?) = any as? R ?: throw java.lang.RuntimeException("null is not ${R::class.java.name}.")
+inline fun <reified R> cast(any: Any?) =
+    any as? R ?: throw java.lang.RuntimeException("null is not ${R::class.java.name}.")

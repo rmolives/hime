@@ -4,7 +4,6 @@ import org.hime.cast
 import org.hime.core.SymbolTable
 import org.hime.core.call
 import org.hime.parse.Type.*
-import org.hime.simplification
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.ArrayList
@@ -25,8 +24,10 @@ class Token(val type: Type, val value: Any) {
         return when(this.type) {
             STR, Type.LB, Type.RB, EMPTY, Type.NIL, ID -> cast<String>(this.value)
             BOOL -> cast<Boolean>(this.value).toString()
-            NUM -> cast<BigInteger>(this.value).toString()
-            REAL -> cast<BigDecimal>(this.value).simplification().toString()
+            NUM -> cast<Int>(this.value).toString()
+            REAL -> cast<Float>(this.value).toString()
+            BIG_NUM -> cast<BigInteger>(this.value).toString()
+            BIG_REAL -> cast<BigDecimal>(this.value).toPlainString()
             LIST ->  {
                 val builder = StringBuilder("[")
                 val list = cast<List<Token>>(this.value)
@@ -61,7 +62,8 @@ fun structureHimeFunction(functionParameters: ArrayList<String>, ast: List<ASTNo
 enum class Type {
     UNKNOWN,
     LB, RB, EMPTY, NIL,
-    ID, BOOL, STR, NUM, REAL, LIST, BYTE,
+    ID, BOOL, STR,  LIST, BYTE,
+    NUM, REAL, BIG_NUM, BIG_REAL,
     IO_INPUT, IO_OUT,
     FUNCTION, STATIC_FUNCTION, HIME_FUNCTION
 }

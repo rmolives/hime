@@ -1,12 +1,10 @@
 package org.hime.core
 
 import ch.obermuhlner.math.big.BigDecimalMath
-import org.hime.cast
+import org.hime.*
 import org.hime.exceptions.HimeModuleException
 import org.hime.parse.*
 import org.hime.parse.Type.*
-import org.hime.simplification
-import org.hime.toToken
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -258,60 +256,40 @@ val core = SymbolTable(
             return NIL
         }),
         "+" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            return if (parameters.isNotEmpty()) {
-                var num = BigDecimal.ZERO
-                for (parameter in parameters) {
-                    assert(parameter.type == NUM || parameter.type == REAL)
-                    num = num.add(BigDecimal(parameter.toString()))
-                }
-                if (!num.simplification().toPlainString().contains("."))
-                    BigInteger(num.simplification().toPlainString()).toToken()
-                else
-                    num.toToken()
-            } else
-                Token(NUM, BigInteger.ZERO)
+            assert(parameters.isNotEmpty())
+            var num = BigDecimal.ZERO
+            for (parameter in parameters) {
+                assert(parameter.isNum())
+                num = num.add(BigDecimal(parameter.toString()))
+            }
+            return num.toToken()
         }),
         "-" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            return if (parameters.isNotEmpty()) {
-                var num = BigDecimal(parameters[0].toString())
-                for (i in 1 until parameters.size) {
-                    assert(parameters[i].type == NUM || parameters[i].type == REAL)
-                    num = num.subtract(BigDecimal(parameters[i].toString()))
-                }
-                if (!num.simplification().toPlainString().contains("."))
-                    BigInteger(num.simplification().toPlainString()).toToken()
-                else
-                    num.toToken()
-            } else
-                Token(NUM, BigInteger.ZERO)
+            assert(parameters.isNotEmpty())
+            var num = BigDecimal(parameters[0].toString())
+            for (i in 1 until parameters.size) {
+                assert(parameters[i].isNum())
+                num = num.subtract(BigDecimal(parameters[i].toString()))
+            }
+            return num.toToken()
         }),
         "*" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            return if (parameters.isNotEmpty()) {
-                var num = BigDecimal.ONE
-                for (parameter in parameters) {
-                    assert(parameter.type == NUM || parameter.type == REAL)
-                    num = num.multiply(BigDecimal(parameter.toString()))
-                }
-                if (!num.simplification().toPlainString().contains("."))
-                    BigInteger(num.simplification().toPlainString()).toToken()
-                else
-                    num.toToken()
-            } else
-                Token(NUM, BigInteger.ZERO)
+            assert(parameters.isNotEmpty())
+            var num = BigDecimal.ONE
+            for (parameter in parameters) {
+                assert(parameter.isNum())
+                num = num.multiply(BigDecimal(parameter.toString()))
+            }
+            return num.toToken()
         }),
         "/" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            return if (parameters.isNotEmpty()) {
-                var num = BigDecimal(parameters[0].toString())
-                for (i in 1 until parameters.size) {
-                    assert(parameters[i].type == NUM || parameters[i].type == REAL)
-                    num = num.divide(BigDecimal(parameters[i].toString()))
-                }
-                if (!num.simplification().toPlainString().contains("."))
-                    BigInteger(num.simplification().toPlainString()).toToken()
-                else
-                    num.toToken()
-            } else
-                Token(NUM, BigInteger.ZERO)
+            assert(parameters.isNotEmpty())
+            var num = BigDecimal(parameters[0].toString())
+            for (i in 1 until parameters.size) {
+                assert(parameters[i].isNum())
+                num = num.divide(BigDecimal(parameters[i].toString()), MathContext.DECIMAL64)
+            }
+            return num.toToken()
         }),
         "and" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
@@ -365,9 +343,9 @@ val core = SymbolTable(
             assert(parameters[0].type == NUM)
             if (parameters.size >= 2)
                 assert(parameters[1].type == NUM)
-            val start = if (parameters.size == 1) BigInteger.ZERO else cast<BigInteger>(parameters[0].value)
+            val start = if (parameters.size == 1) BigInteger.ZERO else BigInteger(parameters.toString())
             val end =
-                if (parameters.size == 1) cast<BigInteger>(parameters[0].value) else cast<BigInteger>(parameters[1].value)
+                if (parameters.size == 1) BigInteger(parameters[0].toString()) else BigInteger(parameters[1].toString())
             val rand = Random()
             val scale = end.toString().length
             var generated = ""
@@ -428,34 +406,31 @@ val core = SymbolTable(
         "list-set" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 2)
             assert(parameters[0].type == LIST)
-            assert(parameters[1].type == NUM)
-            val index = cast<BigInteger>(parameters[1].value)
-            assert(index < BigInteger.valueOf(Int.MAX_VALUE.toLong()))
+            assert(parameters[1].isSmallNum())
+            val index = cast<Int>(parameters[1].value)
             val tokens = ArrayList(cast<List<Token>>(parameters[0].value))
-            assert(index.intValueExact() < tokens.size)
-            tokens[index.intValueExact()] = parameters[2]
+            assert(index < tokens.size)
+            tokens[index] = parameters[2]
             return tokens.toToken()
         }),
         "list-add" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 2)
             assert(parameters[0].type == LIST)
-            assert(parameters[1].type == NUM)
-            val index = cast<BigInteger>(parameters[1].value)
-            assert(index < BigInteger.valueOf(Int.MAX_VALUE.toLong()))
+            assert(parameters[1].isSmallNum())
+            val index = cast<Int>(parameters[1].value)
             val tokens = ArrayList(cast<List<Token>>(parameters[0].value))
-            assert(index.intValueExact() < tokens.size)
-            tokens.add(index.intValueExact(), parameters[2])
+            assert(index < tokens.size)
+            tokens.add(index, parameters[2])
             return tokens.toToken()
         }),
         "list-get" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
             assert(parameters[0].type == LIST)
-            assert(parameters[1].type == NUM)
-            val index = cast<BigInteger>(parameters[1].value)
-            assert(index < BigInteger.valueOf(Int.MAX_VALUE.toLong()))
+            assert(parameters[1].isSmallNum())
+            val index = cast<Int>(parameters[1].value)
             val tokens = cast<List<Token>>(parameters[0].value)
-            assert(index.intValueExact() < tokens.size)
-            return tokens[index.intValueExact()]
+            assert(index < tokens.size)
+            return tokens[index]
         }),
         "++" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
@@ -477,10 +452,10 @@ val core = SymbolTable(
         }),
         "range" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            val start = if (parameters.size >= 2) cast<BigInteger>(parameters[0].value) else BigInteger.ZERO
+            val start = if (parameters.size >= 2) BigInteger(parameters[0].toString()) else BigInteger.ZERO
             val end =
-                if (parameters.size >= 2) cast<BigInteger>(parameters[1].value) else cast<BigInteger>(parameters[0].value)
-            val step = if (parameters.size >= 3) cast<BigInteger>(parameters[2].value) else BigInteger.ONE
+                if (parameters.size >= 2) BigInteger(parameters[1].toString()) else BigInteger(parameters[0].toString())
+            val step = if (parameters.size >= 3) BigInteger(parameters[2].toString()) else BigInteger.ONE
             val size = end.subtract(start).divide(step)
             val list = ArrayList<Token>()
             var i = BigInteger.ZERO
@@ -493,9 +468,9 @@ val core = SymbolTable(
         "length" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
             return when (parameters[0].type) {
-                STR -> cast<String>(parameters[0].value).length.toLong().toToken()
-                LIST -> cast<List<Token>>(parameters[0].value).size.toLong().toToken()
-                else -> parameters[0].toString().length.toLong().toToken()
+                STR -> cast<String>(parameters[0].value).length.toToken()
+                LIST -> cast<List<Token>>(parameters[0].value).size.toToken()
+                else -> parameters[0].toString().length.toToken()
             }
         }),
         "reverse" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
@@ -541,13 +516,8 @@ val core = SymbolTable(
                 list[i] = BigDecimal(tokens[i].toString())
             }
             mergeSort(list, 0, list.size - 1)
-            for (i in list.indices) {
-                val s = list[i]?.simplification().toString()
-                if (s.contains("."))
-                    result[i] = list[i]!!.toToken()
-                else
-                    result[i] = BigInteger(list[i]!!.simplification().toPlainString()).toToken()
-            }
+            for (i in list.indices)
+                result[i] = list[i]!!.toToken()
             return result.toToken()
         }),
         "map" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
@@ -588,203 +558,124 @@ val core = SymbolTable(
         }),
         "sqrt" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.sqrt(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.sqrt(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "sin" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.sin(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.sin(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "sinh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.sinh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.sinh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "asin" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.asin(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.asin(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "asinh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.asinh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.asinh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "cos" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.cos(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.cos(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "cosh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.cosh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.cosh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "acos" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.acos(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.acos(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "acosh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.acosh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.acosh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "tan" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.tan(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.tan(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "tanh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.tanh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.tanh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "atan" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.atan(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.atan(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "atanh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.atanh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.atanh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "atan2" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
+            assert(parameters[0].isNum())
             assert(parameters[1].type == NUM || parameters[1].type == REAL)
-            val num = BigDecimalMath.atan2(
+            return BigDecimalMath.atan2(
                 BigDecimal(parameters[0].toString()),
                 BigDecimal(parameters[1].toString()),
                 MathContext.DECIMAL64
-            )
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            ).toToken()
         }),
         "log" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.log(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.log(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "log10" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.log10(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.log10(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "log2" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.log2(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.log2(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "exp" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
-            val num = BigDecimalMath.exp(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64)
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            assert(parameters[0].isNum())
+            return BigDecimalMath.exp(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
         }),
         "pow" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
+            assert(parameters[0].isNum())
             assert(parameters[1].type == NUM || parameters[1].type == REAL)
-            val num = BigDecimalMath.pow(
+            return BigDecimalMath.pow(
                 BigDecimal(parameters[0].toString()),
                 BigDecimal(parameters[1].toString()),
                 MathContext.DECIMAL64
-            )
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            ).toToken()
         }),
         "root" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
-            assert(parameters[0].type == NUM || parameters[0].type == REAL)
+            assert(parameters[0].isNum())
             assert(parameters[1].type == NUM || parameters[1].type == REAL)
-            val num = BigDecimalMath.root(
+            return BigDecimalMath.root(
                 BigDecimal(parameters[0].toString()),
                 BigDecimal(parameters[1].toString()),
                 MathContext.DECIMAL64
-            )
-            return if (!num.simplification().toPlainString().contains("."))
-                BigInteger(num.simplification().toPlainString()).toToken()
-            else
-                num.toToken()
+            ).toToken()
         }),
         "mod" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
-            assert(parameters[0].type == NUM && parameters[1].type == NUM)
-            return cast<BigInteger>(parameters[0].value).mod(cast<BigInteger>(parameters[1].value)).toToken()
+            assert((parameters[0].type == NUM && parameters[1].type == NUM)
+                    || parameters[0].type == BIG_NUM && parameters[1].type == BIG_NUM)
+            return BigInteger(parameters[0].toString()).mod(BigInteger(parameters[1].toString())).toToken()
         }),
         "max" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
@@ -822,20 +713,20 @@ val core = SymbolTable(
         "gcd" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
             for (parameter in parameters)
-                assert(parameter.type == NUM)
-            var temp = cast<BigInteger>(parameters[0].value).gcd(cast<BigInteger>(parameters[1].value))
+                assert(parameter.type == NUM || parameter.type == BIG_NUM)
+            var temp = BigInteger(parameters[0].toString()).gcd(BigInteger(parameters[1].toString()))
             for (i in 2 until parameters.size)
-                temp = temp.gcd(cast<BigInteger>(parameters[i].value))
+                temp = temp.gcd(BigInteger(parameters[i].toString()))
             return temp.toToken()
         }),
         "lcm" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             fun BigInteger.lcm(n: BigInteger): BigInteger = (this.multiply(n).abs()).divide(this.gcd(n))
             assert(parameters.size > 1)
             for (parameter in parameters)
-                assert(parameter.type == NUM)
-            var temp = cast<BigInteger>(parameters[0].value).lcm(cast<BigInteger>(parameters[1].value))
+                assert(parameter.type == NUM || parameter.type == BIG_NUM)
+            var temp = BigInteger(parameters[0].toString()).lcm(BigInteger(parameters[1].toString()))
             for (i in 2 until parameters.size)
-                temp = temp.lcm(cast<BigInteger>(parameters[i].value))
+                temp = temp.lcm(BigInteger(parameters[i].toString()))
             return temp.toToken()
         }),
         "->string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
@@ -869,7 +760,7 @@ val core = SymbolTable(
             assert(parameters[1].type == NUM)
             assert(parameters[2].type == NUM)
             return parameters[0].toString()
-                .substring(cast<BigInteger>(parameters[1].value).toInt(), cast<BigInteger>(parameters[2].value).toInt())
+                .substring(cast<Int>(parameters[1]), cast<Int>(parameters[2]))
                 .toToken()
         }),
         "string-split" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
@@ -1046,7 +937,7 @@ val core = SymbolTable(
         "exit" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
             assert(parameters[0].type == NUM)
-            exitProcess(cast<BigInteger>(parameters[0].value).toInt())
+            exitProcess(cast<Int>(parameters[0].value))
         }),
         "time" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
             return Date().time.toToken()
@@ -1054,8 +945,8 @@ val core = SymbolTable(
         "time-format" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
             assert(parameters[0].type == STR)
-            assert(parameters[1].type == NUM)
-            return SimpleDateFormat(cast<String>(parameters[0].value)).format(cast<BigInteger>(parameters[1].value).toLong())
+            assert(parameters[1].type == NUM || parameters[1].type == BIG_NUM)
+            return SimpleDateFormat(cast<String>(parameters[0].value)).format(BigInteger(parameters[1].toString()).toLong())
                 .toToken()
         }),
         "time-parse" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
