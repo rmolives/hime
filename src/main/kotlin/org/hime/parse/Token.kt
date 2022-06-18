@@ -62,7 +62,7 @@ fun structureHimeFunction(functionParameters: ArrayList<String>, ast: List<ASTNo
 enum class Type {
     UNKNOWN,
     LB, RB, EMPTY, NIL,
-    ID, BOOL, STR,  LIST, BYTE,
+    ID, BOOL, STR, LIST, BYTE,
     NUM, REAL, BIG_NUM, BIG_REAL,
     IO_INPUT, IO_OUT,
     FUNCTION, STATIC_FUNCTION, HIME_FUNCTION
