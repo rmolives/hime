@@ -911,7 +911,7 @@ val core = SymbolTable(
             Files.writeString(file.toPath(), parameters[1].toString())
             return NIL
         }),
-        "file-read-byte" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+        "file-read-bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
             val list = ArrayList<Token>()
             val bytes = Files.readAllBytes(Paths.get(parameters[0].toString()))
@@ -919,7 +919,7 @@ val core = SymbolTable(
                 list.add(byte.toToken())
             return list.toToken()
         }),
-        "file-write-byte" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+        "file-write-bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
             assert(parameters[1].type == LIST)
             val file = File(parameters[0].toString())
