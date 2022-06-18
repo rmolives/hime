@@ -499,7 +499,6 @@ val core = SymbolTable(
                 for (k2 in temp.indices)
                     a[k2 + low] = temp[k2]!!
             }
-
             fun mergeSort(a: Array<BigDecimal?>, low: Int, high: Int) {
                 val mid = (low + high) / 2
                 if (low < high) {
@@ -508,7 +507,6 @@ val core = SymbolTable(
                     merge(a, low, mid, high)
                 }
             }
-
             val result = ArrayList<Token>()
             val tokens = cast<List<Token>>(parameters[0].value)
             val list = arrayOfNulls<BigDecimal>(tokens.size)
