@@ -510,9 +510,8 @@ val core = SymbolTable(
             val result = ArrayList<Token>()
             val tokens = cast<List<Token>>(parameters[0].value)
             val list = arrayOfNulls<BigDecimal>(tokens.size)
-            for (i in tokens.indices) {
+            for (i in tokens.indices)
                 list[i] = BigDecimal(tokens[i].toString())
-            }
             mergeSort(list, 0, list.size - 1)
             for (i in list.indices)
                 result[i] = list[i]!!.toToken()
