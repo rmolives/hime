@@ -535,6 +535,23 @@ val core = SymbolTable(
             }
             return result.toToken()
         }),
+        "for-each" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
+            assert(parameters.size > 1)
+            assert(parameters[0].type == FUNCTION || parameters[0].type == HIME_FUNCTION)
+            assert(parameters[1].type == LIST)
+            val tokens = cast<List<Token>>(parameters[1].value)
+            for (i in tokens.indices) {
+                val functionParameters = ArrayList<Token>()
+                functionParameters.add(tokens[i])
+                for (j in 1 until parameters.size - 1)
+                    functionParameters.add(cast<List<Token>>(parameters[j + 1].value)[i])
+                if (parameters[0].type == FUNCTION)
+                    cast<Hime_Function>(parameters[0].value)(functionParameters, symbolTable.createChild())
+                else if (parameters[0].type == HIME_FUNCTION)
+                    cast<Hime_HimeFunction>(parameters[0].value)(functionParameters)
+            }
+            return NIL
+        }),
         "filter" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
             assert(parameters.size > 1)
             assert(parameters[0].type == FUNCTION || parameters[0].type == HIME_FUNCTION)
