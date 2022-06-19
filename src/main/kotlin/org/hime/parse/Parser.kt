@@ -3,13 +3,13 @@ package org.hime.parse
 import org.hime.exceptions.HimeParserException
 import java.util.*
 
-fun parser(lexer: List<Pair<List<Token>, Int>>): List<ASTNode> {
+fun parser(lexer: List<List<Token>>): List<ASTNode> {
     val asts: MutableList<ASTNode> = ArrayList()
     val stack = ArrayDeque<ASTNode>()
     var state = -1
     var temp: ASTNode
     for (line in lexer) {
-        val tokens = line.first.toMutableList()
+        val tokens = line.toMutableList()
         var index = 0
         while (index < tokens.size) {
             if (state == 1) {
@@ -29,7 +29,7 @@ fun parser(lexer: List<Pair<List<Token>, Int>>): List<ASTNode> {
                     asts.add(temp)
                     state = -1
                 } else
-                    throw HimeParserException("[expression: ${line.second}] nonstandard word error.")
+                    throw HimeParserException("nonstandard word error.")
             } else if (state == 2) {
                 if (tokens[index].type == Type.RB) {
                     temp = ASTNode.EMPTY
@@ -48,7 +48,7 @@ fun parser(lexer: List<Pair<List<Token>, Int>>): List<ASTNode> {
                     stack.push(temp)
                     state = -1
                 } else
-                    throw HimeParserException("[expression: ${line.second}] nonstandard word error.")
+                    throw HimeParserException("nonstandard word error.")
             } else if (tokens[index].type == Type.LB)
                 state = if (stack.isEmpty()) 1 else 2
             else if (tokens[index].type == Type.RB) {
@@ -59,12 +59,12 @@ fun parser(lexer: List<Pair<List<Token>, Int>>): List<ASTNode> {
                 if (!stack.isEmpty())
                     stack.pop()
                 else
-                    throw HimeParserException("[expression: ${line.second}] separator mismatch error.")
+                    throw HimeParserException("separator mismatch error.")
             } else
                 if (!stack.isEmpty())
                     stack.peek().add(ASTNode(tokens[index]))
                 else
-                    throw HimeParserException("[expression: ${line.second}] separator mismatch error.")
+                    throw HimeParserException("separator mismatch error.")
             ++index
         }
     }

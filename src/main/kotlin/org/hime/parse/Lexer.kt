@@ -13,8 +13,8 @@ val ENV: Map<String, Token> = mapOf(
     "nil" to NIL
 )
 
-fun lexer(code: String): List<Pair<List<Token>, Int>> {
-    val result = ArrayList<Pair<List<Token>, Int>>()
+fun lexer(code: String): List<List<Token>> {
+    val result = ArrayList<List<Token>>()
     val expressions = ArrayList<String>()
     var index = 0
     while (index < code.length) {
@@ -63,7 +63,7 @@ fun lexer(code: String): List<Pair<List<Token>, Int>> {
     }
     for (expressionIndex in expressions.indices) {
         val tokens = ArrayList<Token>()
-        result.add(Pair(tokens, expressionIndex + 1))
+        result.add(tokens)
         val expression = expressions[expressionIndex]
         index = -1
         while (++index < expression.length) {
