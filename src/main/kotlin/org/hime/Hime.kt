@@ -2,6 +2,7 @@ package org.hime
 
 import org.hime.core.SymbolTable
 import org.hime.core.core
+import org.hime.core.eval
 import org.hime.parse.*
 import java.io.File
 import java.nio.file.Files
@@ -12,7 +13,7 @@ fun call(code: String, symbolTable: SymbolTable = defaultSymbolTable): Token {
     val asts = parser(lexer(preprocessor(code)))
     var result = NIL
     for (ast in asts)
-        result = org.hime.core.call(ast, symbolTable)
+        result = eval(ast, symbolTable)
     return result
 }
 

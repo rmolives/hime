@@ -2,7 +2,7 @@ package org.hime.parse
 
 import org.hime.cast
 import org.hime.core.SymbolTable
-import org.hime.core.call
+import org.hime.core.eval
 import org.hime.parse.Type.*
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -54,7 +54,7 @@ fun structureHimeFunction(functionParameters: ArrayList<String>, ast: List<ASTNo
                 newSymbolTable.put(functionParameters[i], parameters[i])
             var result = NIL
             for (astNode in ast)
-                result = call(astNode.copy(), newSymbolTable)
+                result = eval(astNode.copy(), newSymbolTable)
             return result
         })
 }

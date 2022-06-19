@@ -4,7 +4,7 @@ import org.hime.cast
 import org.hime.parse.*
 import java.util.*
 
-fun call(ast: ASTNode, symbolTable: SymbolTable): Token {
+fun eval(ast: ASTNode, symbolTable: SymbolTable): Token {
     var temp = ast.tok
     while (true)
         temp = if (temp.type == Type.ID && symbolTable.contains(cast<String>(temp.value)))
@@ -20,7 +20,7 @@ fun call(ast: ASTNode, symbolTable: SymbolTable): Token {
         return ast.tok
     }
     for (i in 0 until ast.size())
-        ast[i].tok = call(ast[i].copy(), symbolTable)
+        ast[i].tok = eval(ast[i].copy(), symbolTable)
     val parameters = ArrayList<Token>()
     for (i in 0 until ast.size())
         parameters.add(ast[i].tok)

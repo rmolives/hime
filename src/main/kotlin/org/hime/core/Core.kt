@@ -27,7 +27,7 @@ val core = SymbolTable(
             assert(ast[0].tok.type == ID)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
                 if (ast[1].isNotEmpty())
-                    ast[1].tok = call(ast[1], symbolTable.createChild())
+                    ast[1].tok = eval(ast[1], symbolTable.createChild())
                 symbolTable.put(cast<String>(ast[0].tok.value), ast[1].tok)
             } else {
                 val parameters = ArrayList<String>()
@@ -56,7 +56,7 @@ val core = SymbolTable(
             assert(symbolTable.contains(cast<String>(ast[0].tok.value)))
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
                 if (ast[1].isNotEmpty())
-                    ast[1].tok = call(ast[1], symbolTable.createChild())
+                    ast[1].tok = eval(ast[1], symbolTable.createChild())
                 symbolTable.set(cast<String>(ast[0].tok.value), ast[1].tok)
             } else {
                 val parameters = ArrayList<String>()
@@ -91,24 +91,24 @@ val core = SymbolTable(
         "if" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
             assert(ast.size() > 1)
             val newSymbolTable = symbolTable.createChild()
-            val condition = call(ast[0], newSymbolTable)
+            val condition = eval(ast[0], newSymbolTable)
             assert(condition.type == BOOL)
             if (cast<Boolean>(condition.value))
-                return call(ast[1].copy(), newSymbolTable)
+                return eval(ast[1].copy(), newSymbolTable)
             else if (ast.size() > 2)
-                return call(ast[2].copy(), newSymbolTable)
+                return eval(ast[2].copy(), newSymbolTable)
             return NIL
         }),
         "cond" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
             val functionSymbolTable = symbolTable.createChild()
             for (astNode in ast.child) {
                 if (astNode.tok.type == ID && cast<String>(astNode.tok.value) == "else")
-                    return call(astNode[0].copy(), functionSymbolTable)
+                    return eval(astNode[0].copy(), functionSymbolTable)
                 else {
-                    val result = call(astNode[0].copy(), functionSymbolTable)
+                    val result = eval(astNode[0].copy(), functionSymbolTable)
                     assert(result.type == BOOL)
                     if (cast<Boolean>(result.value))
-                        return call(astNode[1].copy(), functionSymbolTable)
+                        return eval(astNode[1].copy(), functionSymbolTable)
                 }
             }
             return NIL
@@ -117,18 +117,18 @@ val core = SymbolTable(
             val newSymbolTable = symbolTable.createChild()
             var result = NIL
             for (i in 0 until ast.size())
-                result = call(ast[i].copy(), newSymbolTable)
+                result = eval(ast[i].copy(), newSymbolTable)
             return result
         }),
         "while" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
             val newSymbolTable = symbolTable.createChild()
             var result = NIL
-            var bool = call(ast[0].copy(), symbolTable)
+            var bool = eval(ast[0].copy(), symbolTable)
             assert(bool.type == BOOL)
             while (cast<Boolean>(bool.value)) {
                 for (i in 1 until ast.size())
-                    result = call(ast[i].copy(), newSymbolTable)
-                bool = call(ast[0].copy(), symbolTable)
+                    result = eval(ast[i].copy(), newSymbolTable)
+                bool = eval(ast[0].copy(), symbolTable)
                 assert(bool.type == BOOL)
             }
             return result
@@ -136,7 +136,7 @@ val core = SymbolTable(
         "apply" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
             assert(ast.size() > 0)
             val newAst = ast.copy()
-            val op = call(newAst[0], symbolTable)
+            val op = eval(newAst[0], symbolTable)
             val backups = ArrayList<ASTNode>()
             for (i in 1 until newAst.size())
                 backups.add(newAst[i])
@@ -144,7 +144,7 @@ val core = SymbolTable(
             newAst.clear()
             for (i in backups.indices)
                 newAst.add(backups[i])
-            return call(newAst, symbolTable)
+            return eval(newAst, symbolTable)
         }),
         "require" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
             assert(parameters.isNotEmpty())
@@ -157,7 +157,7 @@ val core = SymbolTable(
             val file = File(System.getProperty("user.dir") + "/" + path.replace(".", "/") + ".hime")
             if (file.exists())
                 for (node in parser(lexer(preprocessor(Files.readString(file.toPath())))))
-                    call(node, symbolTable)
+                    eval(node, symbolTable)
             else
                 throw HimeModuleException("Module $path does not exist!!!")
             return NIL
@@ -991,7 +991,7 @@ val core = SymbolTable(
             val asts = parser(lexer(preprocessor(parameters[0].toString())))
             var result = NIL
             for (ast in asts)
-                result = call(ast, symbolTable)
+                result = eval(ast, symbolTable)
             return result
         })
     ), null
