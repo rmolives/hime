@@ -1,2 +1,0 @@
-(extern "java.util.Objects" "equals")
-(println (equals 10000 100))
