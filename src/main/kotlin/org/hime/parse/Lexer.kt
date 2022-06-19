@@ -7,7 +7,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 
-val WORD: Map<String, Token> = mapOf(
+val ENV: Map<String, Token> = mapOf(
     "true" to TRUE,
     "false" to FALSE,
     "nil" to NIL
@@ -170,7 +170,7 @@ fun lexer(code: String): List<Pair<List<Token>, Int>> {
                     ++index
                 }
                 val s = builder.toString()
-                tokens.add(if (WORD.containsKey(s)) WORD[s]!! else Token(Type.ID, builder.toString()))
+                tokens.add(if (ENV.containsKey(s)) ENV[s]!! else Token(Type.ID, builder.toString()))
                 continue
             }
         }
