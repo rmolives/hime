@@ -56,7 +56,7 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     assert(stack.peek() != null)
                     stack.peek().type = AstType.FUNCTION
                 }
-                if (!stack.isEmpty())
+                if (stack.isNotEmpty())
                     stack.pop()
                 else
                     throw HimeParserException("separator mismatch error.")
