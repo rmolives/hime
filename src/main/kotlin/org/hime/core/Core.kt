@@ -826,6 +826,13 @@ val core = SymbolTable(
                 bytes[index] = cast<Byte>(list[index].value)
             return String(bytes).toToken()
         }),
+        "bool?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            for (parameter in parameters)
+                if (parameter.type != BOOL)
+                    return FALSE
+            return TRUE
+        }),
         "string?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
             for (parameter in parameters)
