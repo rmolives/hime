@@ -20,7 +20,7 @@ fun eval(ast: ASTNode, symbolTable: SymbolTable): Token {
         return ast.tok
     }
     for (i in 0 until ast.size())
-        ast[i].tok = eval(ast[i].copy(), symbolTable)
+        ast[i].tok = eval(ast[i].copy(), symbolTable.createChild())
     val parameters = ArrayList<Token>()
     for (i in 0 until ast.size())
         parameters.add(ast[i].tok)
