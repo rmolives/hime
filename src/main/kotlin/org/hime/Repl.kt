@@ -3,12 +3,13 @@ package org.hime
 import org.hime.core.SymbolTable
 import org.hime.core.core
 import org.hime.parse.Type
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.Scanner
 
 fun main() {
-    val scanner = Scanner(System.`in`)
+    val buffered = BufferedReader(InputStreamReader(System.`in`))
     var codeBuilder = StringBuilder()
     var symbolTable = SymbolTable(HashMap(), core)
     var size = 0
@@ -21,7 +22,7 @@ fun main() {
         var index = 0
         var flag = 0
         val builder = StringBuilder()
-        val read = scanner.nextLine()
+        val read = buffered.readLine()
         if (read.startsWith(":clear"))
             symbolTable = SymbolTable(HashMap(), core)
         else if (read.startsWith(":load"))
