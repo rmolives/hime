@@ -9,7 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 fun main() {
-    val buffered = BufferedReader(InputStreamReader(System.`in`))
+    val reader = BufferedReader(InputStreamReader(System.`in`))
     var codeBuilder = StringBuilder()
     var symbolTable = SymbolTable(HashMap(), core)
     var size = 0
@@ -22,7 +22,7 @@ fun main() {
         var index = 0
         var flag = 0
         val builder = StringBuilder()
-        val read = buffered.readLine()
+        val read = reader.readLine()
         if (read.startsWith(":clear"))
             symbolTable = SymbolTable(HashMap(), core)
         else if (read.startsWith(":load"))
