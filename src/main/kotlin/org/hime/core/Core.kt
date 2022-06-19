@@ -836,14 +836,14 @@ val core = SymbolTable(
         "num?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
             for (parameter in parameters)
-                if (parameter.type != NUM)
+                if (parameter.type != NUM && parameter.type != BIG_NUM)
                     return FALSE
             return TRUE
         }),
         "real?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
             for (parameter in parameters)
-                if (parameter.type != REAL)
+                if (parameter.type != REAL && parameter.type != BIG_REAL)
                     return FALSE
             return TRUE
         }),
