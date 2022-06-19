@@ -61,7 +61,7 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                 else
                     throw HimeParserException("separator mismatch error.")
             } else
-                if (!stack.isEmpty())
+                if (stack.isNotEmpty())
                     stack.peek().add(ASTNode(tokens[index]))
                 else
                     throw HimeParserException("separator mismatch error.")
