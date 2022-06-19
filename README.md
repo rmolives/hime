@@ -14,7 +14,7 @@ It is still under development and has not released any version!!!
 
 ## Examples
 
-## Sqrt
+### Sqrt
 
 ```lisp
 (def (sqrt x)
