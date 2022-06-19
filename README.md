@@ -1,4 +1,4 @@
-## Hime Language
+# Hime Language
 [![Gitter](https://badges.gitter.im/wumoe/hime.svg)](https://gitter.im/wumoe/hime?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)<br/>
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
@@ -12,7 +12,9 @@ Once a feature is finished and tested, and not considered harmful, I'll copy the
 
 It is still under development and has not released any version!!!
 
-# Examples
+## Examples
+
+## Sqrt
 
 ```lisp
 (def (sqrt x)
@@ -28,7 +30,7 @@ It is still under development and has not released any version!!!
 (println (sqrt 81))
 ```
 
-## prime
+### Prime?
 ```lisp
 (def (prime? n)
     (def (divides? a b)
@@ -47,7 +49,7 @@ It is still under development and has not released any version!!!
         (println "not is prime.")))
 ```
 
-## fib
+### Fibonacci
 ```lisp
 (def (fib n)
     (cond ((= n 0) 0)
