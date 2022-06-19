@@ -49,9 +49,9 @@ fun parser(lexer: List<Pair<List<Token>, Int>>): List<ASTNode> {
                     state = -1
                 } else
                     throw HimeParserException("[expression: ${line.second}] nonstandard word error.")
-            } else if (tokens[index].type == Type.LB) {
+            } else if (tokens[index].type == Type.LB)
                 state = if (stack.isEmpty()) 1 else 2
-            } else if (tokens[index].type == Type.RB) {
+            else if (tokens[index].type == Type.RB) {
                 if (index >= 2 && tokens[index - 2].type == Type.LB) {
                     assert(stack.peek() != null)
                     stack.peek().type = AstType.FUNCTION
