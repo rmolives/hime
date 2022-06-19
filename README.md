@@ -16,8 +16,6 @@ It is still under development and has not released any version!!!
 # Examples
 
 ```lisp
-(require "hime.core")
-(require "hime.math")
 (def (sqrt x)
     (def (good-enough guess)
         (< (abs (- (pow guess 2) x)) 0.001))
@@ -33,8 +31,6 @@ It is still under development and has not released any version!!!
 
 ## prime
 ```lisp
-(require "hime.core")
-(require "hime.math")
 (def (prime? n)
     (def (divides? a b)
         (= (mod b a) 0))
@@ -54,7 +50,6 @@ It is still under development and has not released any version!!!
 
 ## fib
 ```lisp
-(require "hime.core")
 (def (fib n)
         (cond ((= n 0) 0)
             ((= n 1) 1)
