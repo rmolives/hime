@@ -2,8 +2,6 @@ package org.hime
 
 import org.hime.parse.Token
 import org.hime.parse.Type
-import java.io.InputStream
-import java.io.OutputStream
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.math.floor
@@ -36,8 +34,6 @@ fun Any.toToken(): Token {
         }
         is Boolean -> Token(Type.BOOL, this)
         is Byte -> Token(Type.BYTE, this)
-        is InputStream -> Token(Type.IO_INPUT, this)
-        is OutputStream -> Token(Type.IO_OUT, this)
         else -> Token(Type.UNKNOWN, this)
     }
 }

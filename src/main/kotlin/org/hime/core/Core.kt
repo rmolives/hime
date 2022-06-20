@@ -6,8 +6,6 @@ import org.hime.exceptions.HimeModuleException
 import org.hime.parse.*
 import org.hime.parse.Type.*
 import java.io.File
-import java.io.InputStream
-import java.io.OutputStream
 import java.lang.reflect.Modifier
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -162,80 +160,20 @@ val core = SymbolTable(
                 throw HimeModuleException("Module $path does not exist!!!")
             return NIL
         }),
-        "read-line" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val input = if (parameters.isNotEmpty()) {
-                assert(parameters[0].type == IO_INPUT)
-                cast<InputStream>(parameters[0].value)
-            } else
-                System.`in`
-            return Scanner(input).nextLine().toToken()
+        "read-line" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+            return Scanner(System.`in`).nextLine().toToken()
         }),
-        "read" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val input = if (parameters.isNotEmpty()) {
-                assert(parameters[0].type == IO_INPUT)
-                cast<InputStream>(parameters[0].value)
-            } else
-                System.`in`
-            return Scanner(input).next().toToken()
+        "read" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+            return Scanner(System.`in`).next().toToken()
         }),
-        "read-num" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val input = if (parameters.isNotEmpty()) {
-                assert(parameters[0].type == IO_INPUT)
-                cast<InputStream>(parameters[0].value)
-            } else
-                System.`in`
-            return Scanner(input).nextBigInteger().toToken()
+        "read-num" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+            return Scanner(System.`in`).nextBigInteger().toToken()
         }),
-        "read-real" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val input = if (parameters.isNotEmpty()) {
-                assert(parameters[0].type == IO_INPUT)
-                cast<InputStream>(parameters[0].value)
-            } else
-                System.`in`
-            return Scanner(input).nextBigDecimal().toToken()
+        "read-real" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+            return Scanner(System.`in`).nextBigDecimal().toToken()
         }),
-        "read-bool" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val input = if (parameters.isNotEmpty()) {
-                assert(parameters[0].type == IO_INPUT)
-                cast<InputStream>(parameters[0].value)
-            } else
-                System.`in`
-            return Scanner(input).nextBoolean().toToken()
-        }),
-        "write" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == IO_OUT)
-            assert(parameters[1].type == LIST)
-            val list = cast<List<Token>>(parameters[1].value)
-            val data = ArrayList<Byte>()
-            for (token in list) {
-                assert(token.type == BYTE)
-                data.add(cast<Byte>(token.value))
-            }
-            val output = cast<OutputStream>(parameters[0].value)
-            output.write(data.toByteArray())
-            return NIL
-        }),
-        "close" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == IO_OUT || parameters[0].type == IO_INPUT)
-            if (parameters[0].type == IO_OUT)
-                cast<OutputStream>(parameters[0].value).close()
-            else
-                cast<InputStream>(parameters[0].value).close()
-            return NIL
-        }),
-        "flush" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == IO_OUT)
-            cast<OutputStream>(parameters[0].value).flush()
-            return NIL
-        }),
-        "system-out" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
-            return System.out.toToken()
-        }),
-        "system-input" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
-            return System.`in`.toToken()
+        "read-bool" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+            return Scanner(System.`in`).nextBoolean().toToken()
         }),
         "println" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()

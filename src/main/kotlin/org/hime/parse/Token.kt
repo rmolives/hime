@@ -37,8 +37,6 @@ class Token(val type: Type, val value: Any) {
                 return builder.toString()
             }
             FUNCTION, STATIC_FUNCTION, HIME_FUNCTION -> "<Function: ${this.value.hashCode()}>"
-            IO_INPUT -> "<Input: ${this.value.hashCode()}>"
-            IO_OUT -> "<Out: ${this.value.hashCode()}>"
             BYTE -> cast<Byte>(this.value).toString()
             UNKNOWN -> this.toString()
         }
@@ -64,6 +62,5 @@ enum class Type {
     LB, RB, EMPTY, NIL,
     ID, BOOL, STR, LIST, BYTE,
     NUM, REAL, BIG_NUM, BIG_REAL,
-    IO_INPUT, IO_OUT,
     FUNCTION, STATIC_FUNCTION, HIME_FUNCTION
 }
