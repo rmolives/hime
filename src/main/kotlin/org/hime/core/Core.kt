@@ -791,11 +791,11 @@ val core = SymbolTable(
         }),
         "string-index" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
-            return parameters[0].toString().indexOf(parameters[1].toString()).toLong().toToken()
+            return parameters[0].toString().indexOf(parameters[1].toString()).toToken()
         }),
         "string-last-index" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
-            return parameters[0].toString().lastIndexOf(parameters[1].toString()).toLong().toToken()
+            return parameters[0].toString().lastIndexOf(parameters[1].toString()).toToken()
         }),
         "string-format" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
