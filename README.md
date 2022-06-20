@@ -10,7 +10,7 @@ Once a feature is finished and tested, and not considered harmful, I'll copy the
 
 ##  Version
 
-It is still under development and has not released any version!!!
+Current latest version is 0.1
 
 ## Examples
 
