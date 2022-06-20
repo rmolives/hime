@@ -513,8 +513,8 @@ val core = SymbolTable(
             for (i in tokens.indices)
                 list[i] = BigDecimal(tokens[i].toString())
             mergeSort(list, 0, list.size - 1)
-            for (i in list.indices)
-                result[i] = list[i]!!.toToken()
+            for (e in list)
+                result.add(e!!.toToken())
             return result.toToken()
         }),
         "map" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
