@@ -774,7 +774,7 @@ val core = SymbolTable(
             assert(parameters[1].type == NUM)
             assert(parameters[2].type == NUM)
             return parameters[0].toString()
-                .substring(cast<Int>(parameters[1]), cast<Int>(parameters[2]))
+                    .substring(cast<Int>(parameters[1].value), cast<Int>(parameters[2].value))
                 .toToken()
         }),
         "string-split" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
