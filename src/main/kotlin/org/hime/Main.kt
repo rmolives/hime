@@ -5,7 +5,7 @@ import java.nio.file.Path
 
 fun main(args: Array<String>) {
     if (args.isEmpty())
-        real()
+        repl()
     else
         call(Files.readString(Path.of(args[0])))
 }
