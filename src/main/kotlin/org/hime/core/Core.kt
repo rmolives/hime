@@ -759,16 +759,6 @@ val core = SymbolTable(
             assert(parameters.size > 1)
             return BigDecimal(parameters[0].toString()).toToken()
         }),
-        "->bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val builder = StringBuilder()
-            for (token in parameters)
-                builder.append(token.toString())
-            val list = ArrayList<Token>()
-            val bytes = builder.toString().toByteArray()
-            for (byte in bytes)
-                list.add(byte.toToken())
-            return list.toToken()
-        }),
         "string-replace" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 2)
             return parameters[0].toString().replace(parameters[1].toString(), parameters[2].toString()).toToken()
@@ -803,6 +793,16 @@ val core = SymbolTable(
             for (i in 1 until parameters.size)
                 args[i - 1] = parameters[i].value
             return String.format(parameters[0].toString(), *args).toToken()
+        }),
+        "string->bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            val builder = StringBuilder()
+            for (token in parameters)
+                builder.append(token.toString())
+            val list = ArrayList<Token>()
+            val bytes = builder.toString().toByteArray()
+            for (byte in bytes)
+                list.add(byte.toToken())
+            return list.toToken()
         }),
         "string->list" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
