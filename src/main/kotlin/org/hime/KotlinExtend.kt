@@ -26,8 +26,8 @@ fun Any.toToken(): Token {
             this.toBigIntegerExact().toToken()
         else if (this <= FLOAT_MAX) this.toFloat().toToken() else Token(Type.BIG_REAL, this)
         is String -> Token(Type.STR, this)
-        is Long -> Token(Type.NUM, BigInteger.valueOf(this))
-        is Double -> Token(Type.REAL, BigDecimal.valueOf(this))
+        is Long -> Token(Type.BIG_NUM, BigInteger.valueOf(this))
+        is Double -> Token(Type.BIG_REAL, BigDecimal.valueOf(this))
         is List<*> -> {
             val list = ArrayList<Token>()
             for (e in this)
