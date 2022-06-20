@@ -646,6 +646,10 @@ val core = SymbolTable(
                 min = min.min(BigDecimal(parameters[i].toString()))
             return min.toToken()
         }),
+        "abs" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            return BigDecimal(parameters[0].toString()).abs().toToken()
+        }),
         "average" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
             var num = BigDecimal.ZERO
