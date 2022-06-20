@@ -280,7 +280,7 @@ val core = SymbolTable(
             assert(parameters[0].type == NUM)
             if (parameters.size >= 2)
                 assert(parameters[1].type == NUM)
-            val start = if (parameters.size == 1) BigInteger.ZERO else BigInteger(parameters.toString())
+            val start = if (parameters.size == 1) BigInteger.ZERO else BigInteger(parameters[0].toString())
             val end =
                 if (parameters.size == 1) BigInteger(parameters[0].toString()) else BigInteger(parameters[1].toString())
             val rand = Random()
