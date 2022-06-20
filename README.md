@@ -8,10 +8,6 @@ This is the interpreter of Hime language, a dialect of Lisp, run on JVM platform
 
 Once a feature is finished and tested, and not considered harmful, I'll copy the codes here and publish releases.
 
-##  Version
-
-Current latest version is 0.1
-
 ## Examples
 
 ### Sqrt

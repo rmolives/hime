@@ -6,12 +6,15 @@ import org.hime.exceptions.HimeModuleException
 import org.hime.parse.*
 import org.hime.parse.Type.*
 import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
 import java.lang.reflect.Modifier
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
 import java.nio.file.Files
+import java.nio.file.Paths
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.*
@@ -173,6 +176,75 @@ val core = SymbolTable(
         }),
         "read-bool" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
             return Scanner(System.`in`).nextBoolean().toToken()
+        }),
+        "read-line" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            val input = if (parameters.isNotEmpty()) {
+                assert(parameters[0].type == IO_INPUT)
+                cast<InputStream>(parameters[0].value)
+            } else
+                System.`in`
+            return Scanner(input).nextLine().toToken()
+        }),
+        "read" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            val input = if (parameters.isNotEmpty()) {
+                assert(parameters[0].type == IO_INPUT)
+                cast<InputStream>(parameters[0].value)
+            } else
+                System.`in`
+            return Scanner(input).next().toToken()
+        }),
+        "read-num" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            val input = if (parameters.isNotEmpty()) {
+                assert(parameters[0].type == IO_INPUT)
+                cast<InputStream>(parameters[0].value)
+            } else
+                System.`in`
+            return Scanner(input).nextBigInteger().toToken()
+        }),
+        "read-real" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            val input = if (parameters.isNotEmpty()) {
+                assert(parameters[0].type == IO_INPUT)
+                cast<InputStream>(parameters[0].value)
+            } else
+                System.`in`
+            return Scanner(input).nextBigDecimal().toToken()
+        }),
+        "read-bool" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            val input = if (parameters.isNotEmpty()) {
+                assert(parameters[0].type == IO_INPUT)
+                cast<InputStream>(parameters[0].value)
+            } else
+                System.`in`
+            return Scanner(input).nextBoolean().toToken()
+        }),
+        "write" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 1)
+            assert(parameters[0].type == IO_OUT)
+            assert(parameters[1].type == LIST)
+            val list = cast<List<Token>>(parameters[1].value)
+            val data = ArrayList<Byte>()
+            for (token in list) {
+                assert(token.type == BYTE)
+                data.add(cast<Byte>(token.value))
+            }
+            val output = cast<OutputStream>(parameters[0].value)
+            output.write(data.toByteArray())
+            return NIL
+        }),
+        "close" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            assert(parameters[0].type == IO_OUT || parameters[0].type == IO_INPUT)
+            if (parameters[0].type == IO_OUT)
+                cast<OutputStream>(parameters[0].value).close()
+            else
+                cast<InputStream>(parameters[0].value).close()
+            return NIL
+        }),
+        "flush" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            assert(parameters[0].type == IO_OUT)
+            cast<OutputStream>(parameters[0].value).flush()
+            return NIL
         }),
         "println" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()
@@ -749,8 +821,27 @@ val core = SymbolTable(
             val builder = StringBuilder()
             val list = cast<List<Token>>(parameters[0].value)
             for (token in list)
-                builder.append(token.value)
+                builder.append(token.toString())
             return builder.toString().toToken()
+        }),
+        "string->bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            val builder = StringBuilder()
+            for (token in parameters)
+                builder.append(token.toString())
+            val list = ArrayList<Token>()
+            val bytes = builder.toString().toByteArray()
+            for (byte in bytes)
+                list.add(byte.toToken())
+            return list.toToken()
+        }),
+        "bytes->string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            assert(parameters[0].type == LIST)
+            val list = cast<List<Token>>(parameters[0].value)
+            val bytes = ByteArray(list.size)
+            for (index in list.indices)
+                bytes[index] = cast<Byte>(list[index].value)
+            return String(bytes).toToken()
         }),
         "bool?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
@@ -784,6 +875,13 @@ val core = SymbolTable(
             assert(parameters.isNotEmpty())
             for (parameter in parameters)
                 if (parameter.type != LIST)
+                    return FALSE
+            return TRUE
+        }),
+        "byte?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            for (parameter in parameters)
+                if (parameter.type != BYTE)
                     return FALSE
             return TRUE
         }),
@@ -883,4 +981,91 @@ val hash = SymbolTable(
     ), null
 )
 
-val module = mutableMapOf("hime.hash" to hash)
+val file = SymbolTable(
+    mutableMapOf(
+        "file-input" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            return Files.newInputStream(Paths.get(parameters[0].toString())).toToken()
+        }),
+        "file-out" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            return Files.newOutputStream(Paths.get(parameters[0].toString())).toToken()
+        }),
+        "file-exists" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            return File(parameters[0].toString()).exists().toToken()
+        }),
+        "file-list" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            fun listAllFile(f: File): Token {
+                val list = ArrayList<Token>()
+                val files = f.listFiles()
+                for (file in files!!) {
+                    if (file.isDirectory)
+                        list.add(listAllFile(file))
+                    else
+                        list.add(file.path.toToken())
+                }
+                return list.toToken()
+            }
+            assert(parameters.isNotEmpty())
+            return listAllFile(File(parameters[0].toString()))
+        }),
+        "file-mkdirs" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            val file = File(parameters[0].toString())
+            if (!file.parentFile.exists())
+                !file.parentFile.mkdirs()
+            if (!file.exists())
+                file.createNewFile()
+            return NIL
+        }),
+        "file-new-file" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            val file = File(parameters[0].toString())
+            if (!file.exists())
+                file.createNewFile()
+            return NIL
+        }),
+        "file-read-string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            return Files.readString(Paths.get(parameters[0].toString())).toToken()
+        }),
+        "file-write-string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 1)
+            val file = File(parameters[0].toString())
+            if (!file.parentFile.exists())
+                !file.parentFile.mkdirs()
+            if (!file.exists())
+                file.createNewFile()
+            Files.writeString(file.toPath(), parameters[1].toString())
+            return NIL
+        }),
+        "file-read-bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            val list = ArrayList<Token>()
+            val bytes = Files.readAllBytes(Paths.get(parameters[0].toString()))
+            for (byte in bytes)
+                list.add(byte.toToken())
+            return list.toToken()
+        }),
+        "file-write-bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 1)
+            assert(parameters[1].type == LIST)
+            val file = File(parameters[0].toString())
+            if (!file.parentFile.exists())
+                !file.parentFile.mkdirs()
+            if (!file.exists())
+                file.createNewFile()
+            val list = cast<List<Token>>(parameters[1].value)
+            val bytes = ByteArray(list.size)
+            for (index in list.indices) {
+                assert(list[index].type == BYTE)
+                bytes[index] = cast<Byte>(list[index].value)
+            }
+            Files.write(file.toPath(), bytes)
+            return NIL
+        })
+    ), null
+)
+
+val module = mutableMapOf("hime.hash" to hash, "hime.file" to file)
