@@ -767,7 +767,7 @@ val core = SymbolTable(
         }),
         "string-replace" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 2)
-            return parameters[0].toString().replace(Regex(parameters[1].toString()), parameters[2].toString()).toToken()
+            return parameters[0].toString().replace(parameters[1].toString(), parameters[2].toString()).toToken()
         }),
         "string-substring" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 2)
