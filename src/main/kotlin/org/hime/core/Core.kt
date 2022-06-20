@@ -491,7 +491,7 @@ val core = SymbolTable(
                 var j = mid + 1
                 var k = 0
                 while (i <= mid && j <= high)
-                    temp[k++] = if (a[i]!! > a[j]) a[i++] else a[j++]
+                    temp[k++] = if (a[i]!! < a[j]) a[i++] else a[j++]
                 while (i <= mid)
                     temp[k++] = a[i++]
                 while (j <= high)
