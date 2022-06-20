@@ -499,6 +499,7 @@ val core = SymbolTable(
                 for (k2 in temp.indices)
                     a[k2 + low] = temp[k2]!!
             }
+
             fun mergeSort(a: Array<BigDecimal?>, low: Int, high: Int) {
                 val mid = (low + high) / 2
                 if (low < high) {
@@ -507,6 +508,7 @@ val core = SymbolTable(
                     merge(a, low, mid, high)
                 }
             }
+
             val result = ArrayList<Token>()
             val tokens = cast<List<Token>>(parameters[0].value)
             val list = arrayOfNulls<BigDecimal>(tokens.size)
@@ -687,8 +689,10 @@ val core = SymbolTable(
         }),
         "mod" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
-            assert((parameters[0].type == NUM && parameters[1].type == NUM)
-                    || parameters[0].type == BIG_NUM && parameters[1].type == BIG_NUM)
+            assert(
+                (parameters[0].type == NUM && parameters[1].type == NUM)
+                        || parameters[0].type == BIG_NUM && parameters[1].type == BIG_NUM
+            )
             return BigInteger(parameters[0].toString()).mod(BigInteger(parameters[1].toString())).toToken()
         }),
         "max" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
@@ -774,7 +778,7 @@ val core = SymbolTable(
             assert(parameters[1].type == NUM)
             assert(parameters[2].type == NUM)
             return parameters[0].toString()
-                    .substring(cast<Int>(parameters[1].value), cast<Int>(parameters[2].value))
+                .substring(cast<Int>(parameters[1].value), cast<Int>(parameters[2].value))
                 .toToken()
         }),
         "string-split" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
