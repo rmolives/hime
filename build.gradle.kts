@@ -23,3 +23,9 @@ tasks.test {
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
 }
+
+tasks.jar.configure {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    manifest.attributes["Main-Class"] = "org.hime.MainKt"
+    from(configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) })
+}

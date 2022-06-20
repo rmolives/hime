@@ -8,7 +8,7 @@ import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
 
-fun main() {
+fun real() {
     val reader = BufferedReader(InputStreamReader(System.`in`))
     var codeBuilder = StringBuilder()
     var symbolTable = SymbolTable(HashMap(), core)
