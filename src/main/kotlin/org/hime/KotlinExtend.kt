@@ -33,7 +33,6 @@ fun Any.toToken(): Token {
             return Token(Type.LIST, list)
         }
         is Boolean -> Token(Type.BOOL, this)
-        is Byte -> Token(Type.BYTE, this)
         else -> Token(Type.UNKNOWN, this)
     }
 }

@@ -37,7 +37,6 @@ class Token(val type: Type, val value: Any) {
                 return builder.toString()
             }
             FUNCTION, STATIC_FUNCTION, HIME_FUNCTION -> "<Function: ${this.value.hashCode()}>"
-            BYTE -> cast<Byte>(this.value).toString()
             UNKNOWN -> this.toString()
         }
     }
@@ -60,7 +59,7 @@ fun structureHimeFunction(functionParameters: ArrayList<String>, ast: List<ASTNo
 enum class Type {
     UNKNOWN,
     LB, RB, EMPTY, NIL,
-    ID, BOOL, STR, LIST, BYTE,
+    ID, BOOL, STR, LIST,
     NUM, REAL, BIG_NUM, BIG_REAL,
     FUNCTION, STATIC_FUNCTION, HIME_FUNCTION
 }

@@ -12,7 +12,6 @@ import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
 import java.nio.file.Files
-import java.nio.file.Paths
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.*
@@ -732,16 +731,6 @@ val core = SymbolTable(
                 args[i - 1] = parameters[i].value
             return String.format(parameters[0].toString(), *args).toToken()
         }),
-        "string->bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val builder = StringBuilder()
-            for (token in parameters)
-                builder.append(token.toString())
-            val list = ArrayList<Token>()
-            val bytes = builder.toString().toByteArray()
-            for (byte in bytes)
-                list.add(byte.toToken())
-            return list.toToken()
-        }),
         "string->list" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
             val chars = parameters[0].toString().toCharArray()
@@ -758,15 +747,6 @@ val core = SymbolTable(
             for (token in list)
                 builder.append(token.value)
             return builder.toString().toToken()
-        }),
-        "bytes->string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == LIST)
-            val list = cast<List<Token>>(parameters[0].value)
-            val bytes = ByteArray(list.size)
-            for (index in list.indices)
-                bytes[index] = cast<Byte>(list[index].value)
-            return String(bytes).toToken()
         }),
         "bool?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
@@ -803,99 +783,12 @@ val core = SymbolTable(
                     return FALSE
             return TRUE
         }),
-        "byte?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            for (parameter in parameters)
-                if (parameter.type != BYTE)
-                    return FALSE
-            return TRUE
-        }),
         "function?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
             for (parameter in parameters)
                 if (parameter.type != FUNCTION && parameter.type != STATIC_FUNCTION && parameter.type != HIME_FUNCTION)
                     return FALSE
             return TRUE
-        }),
-        "file-input" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return Files.newInputStream(Paths.get(parameters[0].toString())).toToken()
-        }),
-        "file-out" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return Files.newOutputStream(Paths.get(parameters[0].toString())).toToken()
-        }),
-        "file-exists" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return File(parameters[0].toString()).exists().toToken()
-        }),
-        "file-list" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            fun listAllFile(f: File): Token {
-                val list = ArrayList<Token>()
-                val files = f.listFiles()
-                for (file in files!!) {
-                    if (file.isDirectory)
-                        list.add(listAllFile(file))
-                    else
-                        list.add(file.path.toToken())
-                }
-                return list.toToken()
-            }
-            assert(parameters.isNotEmpty())
-            return listAllFile(File(parameters[0].toString()))
-        }),
-        "file-mkdirs" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            val file = File(parameters[0].toString())
-            if (!file.parentFile.exists())
-                !file.parentFile.mkdirs()
-            if (!file.exists())
-                file.createNewFile()
-            return NIL
-        }),
-        "file-new-file" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            val file = File(parameters[0].toString())
-            if (!file.exists())
-                file.createNewFile()
-            return NIL
-        }),
-        "file-read-string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return Files.readString(Paths.get(parameters[0].toString())).toToken()
-        }),
-        "file-write-string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            val file = File(parameters[0].toString())
-            if (!file.parentFile.exists())
-                !file.parentFile.mkdirs()
-            if (!file.exists())
-                file.createNewFile()
-            Files.writeString(file.toPath(), parameters[1].toString())
-            return NIL
-        }),
-        "file-read-bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            val list = ArrayList<Token>()
-            val bytes = Files.readAllBytes(Paths.get(parameters[0].toString()))
-            for (byte in bytes)
-                list.add(byte.toToken())
-            return list.toToken()
-        }),
-        "file-write-bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[1].type == LIST)
-            val file = File(parameters[0].toString())
-            if (!file.parentFile.exists())
-                !file.parentFile.mkdirs()
-            if (!file.exists())
-                file.createNewFile()
-            val list = cast<List<Token>>(parameters[1].value)
-            val bytes = ByteArray(list.size)
-            for (index in list.indices)
-                bytes[index] = cast<Byte>(list[index].value)
-            Files.write(file.toPath(), bytes)
-            return NIL
         }),
         "exit" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
