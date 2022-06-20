@@ -686,16 +686,6 @@ val core = SymbolTable(
                 MathContext.DECIMAL64
             ).toToken()
         }),
-        "root" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].isNum())
-            assert(parameters[1].type == NUM || parameters[1].type == REAL)
-            return BigDecimalMath.root(
-                BigDecimal(parameters[0].toString()),
-                BigDecimal(parameters[1].toString()),
-                MathContext.DECIMAL64
-            ).toToken()
-        }),
         "mod" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
             assert(
@@ -929,14 +919,6 @@ val core = SymbolTable(
                 return method.invoke(null, *args).toToken()
             }))
             return NIL
-        }),
-        "eval" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            val asts = parser(lexer(preprocessor(parameters[0].toString())))
-            var result = NIL
-            for (ast in asts)
-                result = eval(ast, symbolTable)
-            return result
         })
     ), null
 )
