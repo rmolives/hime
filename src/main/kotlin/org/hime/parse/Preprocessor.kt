@@ -3,7 +3,7 @@ package org.hime.parse
 fun preprocessor(s: String): String {
     val builder = StringBuilder()
     var index = 0
-    val chars = s.toCharArray()
+    val chars = s.replace("(?m)^\\s*$(\\n|\\r\\n)".toRegex(), "").toCharArray()
     var i = 0
     while (i < chars.size) {
         val c = chars[i]
