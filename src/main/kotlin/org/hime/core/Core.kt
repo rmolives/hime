@@ -158,17 +158,19 @@ val core = SymbolTable(
                     symbolTable.put(key, value)
                 return NIL
             }
-
             val file = File(System.getProperty("user.dir") + "/" + path.replace(".", "/") + ".hime")
             if (file.exists()) {
                 for (node in parser(lexer(preprocessor(Files.readString(file.toPath())))))
                     eval(node, symbolTable)
                 return NIL
             }
-            val built = File(symbolTable.javaClass.classLoader.getResource("module/"+ path.replace(".", "/") + ".hime")?.toString() ?: "")
+            val builtURI = symbolTable.javaClass.classLoader.getResource("module/"+ path.replace(".", "/") + ".hime")
+            if (builtURI != null) {
+            val built = File(builtURI.toURI())
             if (built.exists())
                 for (node in parser(lexer(preprocessor(Files.readString(built.toPath())))))
                     eval(node, symbolTable)
+            }
             return NIL
         }),
         "read-line" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
@@ -284,6 +286,7 @@ val core = SymbolTable(
         }),
         "-" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
+            assert(parameters[0].isNum())
             var num = BigDecimal(parameters[0].toString())
             for (i in 1 until parameters.size) {
                 assert(parameters[i].isNum())
@@ -302,6 +305,7 @@ val core = SymbolTable(
         }),
         "/" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
+            assert(parameters[0].isNum())
             var num = BigDecimal(parameters[0].toString())
             for (i in 1 until parameters.size) {
                 assert(parameters[i].isNum())
@@ -410,15 +414,21 @@ val core = SymbolTable(
             val list = ArrayList<Token>()
             for (i in 1 until tokens.size)
                 list.add(tokens[i])
+            if (list.size == 1)
+                return list[0]
             return list.toToken()
         }),
         "init" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.isNotEmpty())
             assert(parameters[0].type == LIST)
             val tokens = cast<List<Token>>(parameters[0].value)
+            if (tokens.size == 1)
+                return tokens[0]
             val list = ArrayList<Token>()
             for (i in 0 until tokens.size - 1)
                 list.add(tokens[i])
+            if (list.size == 1)
+                return list[0]
             return list.toToken()
         }),
         "list-set" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
@@ -432,13 +442,16 @@ val core = SymbolTable(
             return tokens.toToken()
         }),
         "list-add" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 2)
+            assert(parameters.size > 1)
             assert(parameters[0].type == LIST)
-            assert(parameters[1].type == NUM)
-            val index = cast<Int>(parameters[1].value)
             val tokens = ArrayList(cast<List<Token>>(parameters[0].value))
-            assert(index < tokens.size)
-            tokens.add(index, parameters[2])
+            if (parameters.size > 2) {
+                assert(parameters[1].type == NUM)
+                val index = cast<Int>(parameters[1].value)
+                assert(index < tokens.size)
+                tokens.add(index, parameters[2])
+            } else
+                tokens.add(parameters[1])
             return tokens.toToken()
         }),
         "list-get" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
