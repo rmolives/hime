@@ -8,4 +8,7 @@
             guess
             (sqrt-iter (improve guess))))
         (sqrt-iter 1.0))
-(println (sqrt 81))
+(while true
+    (print "Input Number: ")
+    (def n (read-num))
+    (println "sqrt(" n ")=" (sqrt n)))
