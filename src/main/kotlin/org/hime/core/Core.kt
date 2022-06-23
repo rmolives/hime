@@ -34,7 +34,7 @@ val core = SymbolTable(
             assert(ast[0].tok.type == ID)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)
                 symbolTable.put(cast<String>(ast[0].tok.value), eval(ast[1], symbolTable.createChild()))
-                else {
+            else {
                 val parameters = ArrayList<String>()
                 for (i in 0 until ast[0].size()) {
                     assert(ast[0][i].tok.type == ID)
