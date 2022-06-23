@@ -1,6 +1,5 @@
 package org.hime.parse
 
-import org.hime.exceptions.HimeParserException
 import java.util.*
 
 fun parser(lexer: List<List<Token>>): List<ASTNode> {
@@ -28,8 +27,7 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     stack.push(temp)
                     asts.add(temp)
                     state = -1
-                } else
-                    throw HimeParserException("nonstandard word error.")
+                }
             } else if (state == 2) {
                 if (tokens[index].type == Type.RB) {
                     temp = ASTNode.EMPTY
@@ -47,8 +45,7 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     stack.peek().add(temp)
                     stack.push(temp)
                     state = -1
-                } else
-                    throw HimeParserException("nonstandard word error.")
+                }
             } else if (tokens[index].type == Type.LB)
                 state = if (stack.isEmpty()) 1 else 2
             else if (tokens[index].type == Type.RB) {
@@ -56,15 +53,12 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     assert(stack.peek() != null)
                     stack.peek().type = AstType.FUNCTION
                 }
-                if (stack.isNotEmpty())
-                    stack.pop()
-                else
-                    throw HimeParserException("separator mismatch error.")
-            } else
-                if (stack.isNotEmpty())
-                    stack.peek().add(ASTNode(tokens[index]))
-                else
-                    throw HimeParserException("separator mismatch error.")
+                assert(stack.isNotEmpty())
+                stack.pop()
+            } else {
+                assert(stack.isNotEmpty())
+                stack.peek().add(ASTNode(tokens[index]))
+            }
             ++index
         }
     }

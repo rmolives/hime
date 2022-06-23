@@ -1,4 +1,4 @@
-(require "hime.draw")
+(require "graphics.draw")
 (def g (draw "Sierpinski Triangle" 800 800))
 (def (draw-tri n x0 y0 d1)
     (if (/= n 0)

@@ -4,7 +4,6 @@ import ch.obermuhlner.math.big.BigDecimalMath
 import org.hime.*
 import org.hime.draw.Coordinate
 import org.hime.draw.Draw
-import org.hime.exceptions.HimeModuleException
 import org.hime.parse.*
 import org.hime.parse.Type.*
 import java.awt.Color
@@ -159,12 +158,17 @@ val core = SymbolTable(
                     symbolTable.put(key, value)
                 return NIL
             }
+
             val file = File(System.getProperty("user.dir") + "/" + path.replace(".", "/") + ".hime")
-            if (file.exists())
+            if (file.exists()) {
                 for (node in parser(lexer(preprocessor(Files.readString(file.toPath())))))
                     eval(node, symbolTable)
-            else
-                throw HimeModuleException("Module $path does not exist!!!")
+                return NIL
+            }
+            val built = File(symbolTable.javaClass.classLoader.getResource("module/"+ path.replace(".", "/") + ".hime")?.toString() ?: "")
+            if (built.exists())
+                for (node in parser(lexer(preprocessor(Files.readString(built.toPath())))))
+                    eval(node, symbolTable)
             return NIL
         }),
         "read-line" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
@@ -1304,7 +1308,7 @@ val draw = SymbolTable(
 )
 
 val module = mutableMapOf(
-    "hime.hash" to hash,
-    "hime.file" to file,
-    "hime.draw" to draw
+    "util.hash" to hash,
+    "util.file" to file,
+    "graphics.draw" to draw
 )
