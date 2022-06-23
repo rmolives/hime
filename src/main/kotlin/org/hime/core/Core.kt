@@ -2,9 +2,16 @@ package org.hime.core
 
 import ch.obermuhlner.math.big.BigDecimalMath
 import org.hime.*
+import org.hime.draw.Coordinate
+import org.hime.draw.Draw
 import org.hime.exceptions.HimeModuleException
 import org.hime.parse.*
 import org.hime.parse.Type.*
+import java.awt.Color
+import java.awt.Graphics2D
+import java.awt.RenderingHints
+import java.awt.Transparency
+import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -1050,4 +1057,256 @@ val file = SymbolTable(
     ), null
 )
 
-val module = mutableMapOf("hime.hash" to hash, "hime.file" to file)
+val draw = SymbolTable(
+    mutableMapOf(
+        "draw" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 2)
+            assert(parameters[0].type == STR)
+            assert(parameters[1].type == NUM)
+            assert(parameters[2].type == NUM)
+            return Token(DRAW, Draw(
+                cast<String>(parameters[0].value),
+                cast<Int>(parameters[1].value),
+                cast<Int>(parameters[2].value))
+            )
+        }),
+        // (draw-color draw r g b)
+        "draw-color" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 3)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == NUM)
+            assert(parameters[2].type == NUM)
+            assert(parameters[3].type == NUM)
+            (cast<Draw>(parameters[0].value)).graphics.color =
+                Color(
+                    cast<Int>(parameters[1].value),
+                    cast<Int>(parameters[2].value),
+                    cast<Int>(parameters[3].value)
+                )
+            return parameters[0]
+        }),
+        // (coordinate x y)
+        "coordinate" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 1)
+            assert(parameters[0].type == NUM)
+            assert(parameters[1].type == NUM)
+            return Token(COORDINATE, Coordinate(cast<Int>(parameters[0].value), cast<Int>(parameters[1].value)))
+        }),
+        // (draw-clear draw)
+        // (draw-clear draw (x y) width height)
+        "draw-clear" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.isNotEmpty())
+            assert(parameters[0].type == DRAW)
+            val draw = cast<Draw>(parameters[0].value)
+            if (parameters.size > 3) {
+                val coordinate = cast<Coordinate>(parameters[1].value)
+                val width = cast<Int>(parameters[2].value)
+                val height = cast<Int>(parameters[3].value)
+                draw.graphics.clearRect(coordinate.x, coordinate.y, width, height)
+                draw.update()
+                return parameters[0]
+            }
+            draw.image = BufferedImage(draw.frame.width, draw.frame.height, BufferedImage.TYPE_INT_RGB)
+            (draw.image.graphics as Graphics2D).setRenderingHint(RenderingHints.KEY_ANTIALIASING , RenderingHints.VALUE_ANTIALIAS_ON)
+            draw.graphics = draw.image.createGraphics()
+            draw.image = draw.graphics.deviceConfiguration.createCompatibleImage(draw.frame.width, draw.frame.height, Transparency.TRANSLUCENT)
+            draw.graphics.dispose()
+            draw.graphics = draw.image.createGraphics()
+            draw.graphics.color = Color.BLACK
+            return parameters[0]
+        }),
+        // (draw-polygon draw [(x y)])
+        "draw-polygon" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 1)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == LIST)
+            val draw = cast<Draw>(parameters[0].value)
+            val p = cast<List<Token>>(parameters[1].value)
+            val xa = arrayListOf<Int>()
+            val ya = arrayListOf<Int>()
+            for (c in p) {
+                assert(c.type == COORDINATE)
+                val coordinate = cast<Coordinate>(c.value)
+                xa.add(coordinate.x)
+                ya.add(coordinate.y)
+            }
+            draw.graphics.drawPolygon(xa.toIntArray(), ya.toIntArray(), xa.size.coerceAtMost(ya.size))
+            draw.update()
+            return parameters[0]
+        }),
+        // (fill-polygon draw [(x y)])
+        "fill-polygon" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 1)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == LIST)
+            val draw = cast<Draw>(parameters[0].value)
+            val p = cast<List<Token>>(parameters[1].value)
+            val xa = arrayListOf<Int>()
+            val ya = arrayListOf<Int>()
+            for (c in p) {
+                assert(c.type == COORDINATE)
+                val coordinate = cast<Coordinate>(c.value)
+                xa.add(coordinate.x)
+                ya.add(coordinate.y)
+            }
+            draw.graphics.fillPolygon(xa.toIntArray(), ya.toIntArray(), xa.size.coerceAtMost(ya.size))
+            draw.update()
+            return parameters[0]
+        }),
+        // (draw-line draw (x1 y1) (x2 y2))
+        "draw-line" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 2)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == COORDINATE)
+            assert(parameters[2].type == COORDINATE)
+            val draw = cast<Draw>(parameters[0].value)
+            val c1 = cast<Coordinate>(parameters[1].value)
+            val c2 = cast<Coordinate>(parameters[2].value)
+            draw.graphics.drawLine(c1.x, c1.y, c2.x, c2.y)
+            draw.update()
+            return parameters[0]
+        }),
+        // (draw-rect draw (x y) width height)
+        "draw-rect" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 3)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == COORDINATE)
+            assert(parameters[2].type == NUM)
+            assert(parameters[3].type == NUM)
+            val draw = cast<Draw>(parameters[0].value)
+            val coordinate = cast<Coordinate>(parameters[1].value)
+            val width = cast<Int>(parameters[2].value)
+            val height = cast<Int>(parameters[3].value)
+            draw.graphics.drawRect(coordinate.x, coordinate.y, width, height)
+            draw.update()
+            return parameters[0]
+        }),
+        // (fill-rect draw (x y) width height)
+        "fill-rect" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 3)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == COORDINATE)
+            assert(parameters[2].type == NUM)
+            assert(parameters[3].type == NUM)
+            val draw = cast<Draw>(parameters[0].value)
+            val coordinate = cast<Coordinate>(parameters[1].value)
+            val width = cast<Int>(parameters[2].value)
+            val height = cast<Int>(parameters[3].value)
+            draw.graphics.fillRect(coordinate.x, coordinate.y, width, height)
+            draw.update()
+            return parameters[0]
+        }),
+        // (draw-oval draw (x y) width height)
+        "draw-oval" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 3)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == COORDINATE)
+            assert(parameters[2].type == NUM)
+            assert(parameters[3].type == NUM)
+            val draw = cast<Draw>(parameters[0].value)
+            val coordinate = cast<Coordinate>(parameters[1].value)
+            val width = cast<Int>(parameters[2].value)
+            val height = cast<Int>(parameters[3].value)
+            draw.graphics.drawOval(coordinate.x, coordinate.y, width, height)
+            draw.update()
+            return parameters[0]
+        }),
+        // (fill-oval draw (x y) width height)
+        "fill-oval" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 3)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == COORDINATE)
+            assert(parameters[2].type == NUM)
+            assert(parameters[3].type == NUM)
+            val draw = cast<Draw>(parameters[0].value)
+            val coordinate = cast<Coordinate>(parameters[1].value)
+            val width = cast<Int>(parameters[2].value)
+            val height = cast<Int>(parameters[3].value)
+            draw.graphics.fillOval(coordinate.x, coordinate.y, width, height)
+            draw.update()
+            return parameters[0]
+        }),
+        // (draw-round-rect draw (x y) width height arcWidth arcHeight)
+        "draw-round-rect" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 5)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == COORDINATE)
+            assert(parameters[2].type == NUM)
+            assert(parameters[3].type == NUM)
+            assert(parameters[4].type == NUM)
+            assert(parameters[5].type == NUM)
+            val draw = cast<Draw>(parameters[0].value)
+            val coordinate = cast<Coordinate>(parameters[1].value)
+            val width = cast<Int>(parameters[2].value)
+            val height = cast<Int>(parameters[3].value)
+            val arcWidth = cast<Int>(parameters[4].value)
+            val arcHeight = cast<Int>(parameters[5].value)
+            draw.graphics.drawRoundRect(coordinate.x, coordinate.y, width, height, arcWidth, arcHeight)
+            draw.update()
+            return parameters[0]
+        }),
+        // (fill-round-rect draw (x y) width height arcWidth arcHeight)
+        "fill-round-rect" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 5)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == COORDINATE)
+            assert(parameters[2].type == NUM)
+            assert(parameters[3].type == NUM)
+            assert(parameters[4].type == NUM)
+            assert(parameters[5].type == NUM)
+            val draw = cast<Draw>(parameters[0].value)
+            val coordinate = cast<Coordinate>(parameters[1].value)
+            val width = cast<Int>(parameters[2].value)
+            val height = cast<Int>(parameters[3].value)
+            val arcWidth = cast<Int>(parameters[4].value)
+            val arcHeight = cast<Int>(parameters[5].value)
+            draw.graphics.fillRoundRect(coordinate.x, coordinate.y, width, height, arcWidth, arcHeight)
+            draw.update()
+            return parameters[0]
+        }),
+        // (draw-arc draw (x y) width height arcWidth arcHeight)
+        "draw-arc" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 5)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == COORDINATE)
+            assert(parameters[2].type == NUM)
+            assert(parameters[3].type == NUM)
+            assert(parameters[4].type == NUM)
+            assert(parameters[5].type == NUM)
+            val draw = cast<Draw>(parameters[0].value)
+            val coordinate = cast<Coordinate>(parameters[1].value)
+            val width = cast<Int>(parameters[2].value)
+            val height = cast<Int>(parameters[3].value)
+            val arcWidth = cast<Int>(parameters[4].value)
+            val arcHeight = cast<Int>(parameters[5].value)
+            draw.graphics.drawArc(coordinate.x, coordinate.y, width, height, arcWidth, arcHeight)
+            draw.update()
+            return parameters[0]
+        }),
+        // (fill-arc draw (x y) width height arcWidth arcHeight)
+        "fill-arc" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+            assert(parameters.size > 5)
+            assert(parameters[0].type == DRAW)
+            assert(parameters[1].type == COORDINATE)
+            assert(parameters[2].type == NUM)
+            assert(parameters[3].type == NUM)
+            assert(parameters[4].type == NUM)
+            assert(parameters[5].type == NUM)
+            val draw = cast<Draw>(parameters[0].value)
+            val coordinate = cast<Coordinate>(parameters[1].value)
+            val width = cast<Int>(parameters[2].value)
+            val height = cast<Int>(parameters[3].value)
+            val arcWidth = cast<Int>(parameters[4].value)
+            val arcHeight = cast<Int>(parameters[5].value)
+            draw.graphics.fillArc(coordinate.x, coordinate.y, width, height, arcWidth, arcHeight)
+            draw.update()
+            return parameters[0]
+        })
+    ), null
+)
+
+val module = mutableMapOf(
+    "hime.hash" to hash,
+    "hime.file" to file,
+    "hime.draw" to draw
+)

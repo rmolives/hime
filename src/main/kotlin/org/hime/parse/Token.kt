@@ -3,6 +3,7 @@ package org.hime.parse
 import org.hime.cast
 import org.hime.core.SymbolTable
 import org.hime.core.eval
+import org.hime.draw.Coordinate
 import org.hime.parse.Type.*
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -37,7 +38,9 @@ class Token(val type: Type, val value: Any) {
                 return builder.toString()
             }
             FUNCTION, STATIC_FUNCTION, HIME_FUNCTION -> "<Function: ${this.value.hashCode()}>"
-            else -> this.toString()
+            DRAW -> "<Draw: ${this.value.hashCode()}>"
+            COORDINATE -> "(${cast<Coordinate>(this.value).x}, ${cast<Coordinate>(this.value).y})"
+            else -> this.value.toString()
         }
     }
 }
@@ -62,5 +65,6 @@ enum class Type {
     ID, BOOL, STR, LIST,
     IO_INPUT, IO_OUT, BYTE,
     NUM, REAL, BIG_NUM, BIG_REAL,
-    FUNCTION, STATIC_FUNCTION, HIME_FUNCTION
+    FUNCTION, STATIC_FUNCTION, HIME_FUNCTION,
+    DRAW, COORDINATE
 }
