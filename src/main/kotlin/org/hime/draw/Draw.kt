@@ -2,7 +2,9 @@ package org.hime.draw
 
 import java.awt.*
 import java.awt.image.BufferedImage
+import javax.swing.ImageIcon
 import javax.swing.JFrame
+
 
 class Draw(title: String, width: Int, height: Int) {
     val frame: JFrame = JFrame(title)
@@ -11,6 +13,7 @@ class Draw(title: String, width: Int, height: Int) {
 
     init {
         frame.setSize(width, height)
+        frame.iconImage = ImageIcon(this.javaClass.classLoader.getResource("logo.jpg")).image
         frame.isResizable = false
         frame.isVisible = true
         frame.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
