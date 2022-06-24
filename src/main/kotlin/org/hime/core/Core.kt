@@ -701,7 +701,7 @@ val core = SymbolTable(
         "pow" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
             assert(parameters[0].isNum())
-            assert(parameters[1].type == NUM || parameters[1].type == REAL)
+            assert(parameters[1].isNum())
             return BigDecimalMath.pow(
                 BigDecimal(parameters[0].toString()),
                 BigDecimal(parameters[1].toString()),
