@@ -710,10 +710,8 @@ val core = SymbolTable(
         }),
         "mod" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
             assert(parameters.size > 1)
-            assert(
-                (parameters[0].type == NUM && parameters[1].type == NUM)
-                        || parameters[0].type == BIG_NUM && parameters[1].type == BIG_NUM
-            )
+            assert(parameters[0].isNum())
+            assert(parameters[1].isNum())
             return BigInteger(parameters[0].toString()).mod(BigInteger(parameters[1].toString())).toToken()
         }),
         "max" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
