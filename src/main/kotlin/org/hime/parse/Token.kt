@@ -45,13 +45,13 @@ class Token(val type: Type, val value: Any) {
     }
 }
 
-fun structureHimeFunction(functionParameters: ArrayList<String>, ast: List<ASTNode>, symbolTable: SymbolTable): Token {
+fun structureHimeFunction(functionargs: ArrayList<String>, ast: List<ASTNode>, symbolTable: SymbolTable): Token {
     return Token(HIME_FUNCTION,
-        fun(parameters: List<Token>): Token {
-            assert(parameters.size >= functionParameters.size)
+        fun(args: List<Token>): Token {
+            assert(args.size >= functionargs.size)
             val newSymbolTable = symbolTable.createChild()
-            for (i in functionParameters.indices)
-                newSymbolTable.put(functionParameters[i], parameters[i])
+            for (i in functionargs.indices)
+                newSymbolTable.put(functionargs[i], args[i])
             var result = NIL
             for (astNode in ast)
                 result = eval(astNode.copy(), newSymbolTable)

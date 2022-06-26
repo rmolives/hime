@@ -21,16 +21,16 @@ fun eval(ast: ASTNode, symbolTable: SymbolTable): Token {
     }
     for (i in 0 until ast.size())
         ast[i].tok = eval(ast[i].copy(), symbolTable.createChild())
-    val parameters = ArrayList<Token>()
+    val args = ArrayList<Token>()
     for (i in 0 until ast.size())
-        parameters.add(ast[i].tok)
+        args.add(ast[i].tok)
     if (ast.tok.type == Type.FUNCTION) {
-        ast.tok = cast<Hime_Function>(ast.tok.value)(parameters, symbolTable)
+        ast.tok = cast<Hime_Function>(ast.tok.value)(args, symbolTable)
         ast.clear()
         return ast.tok
     }
     if (ast.tok.type == Type.HIME_FUNCTION) {
-        ast.tok = cast<Hime_HimeFunction>(ast.tok.value)(parameters)
+        ast.tok = cast<Hime_HimeFunction>(ast.tok.value)(args)
         ast.clear()
         return ast.tok
     }

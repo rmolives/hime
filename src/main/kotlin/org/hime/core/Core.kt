@@ -34,16 +34,16 @@ val core = SymbolTable(
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)
                 symbolTable.put(cast<String>(ast[0].tok.value), eval(ast[1], symbolTable.createChild()))
             else {
-                val parameters = ArrayList<String>()
+                val args = ArrayList<String>()
                 for (i in 0 until ast[0].size()) {
                     assert(ast[0][i].tok.type == ID)
-                    parameters.add(cast<String>(ast[0][i].tok.value))
+                    args.add(cast<String>(ast[0][i].tok.value))
                 }
                 val asts = ArrayList<ASTNode>()
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
                 assert(ast[0].tok.type == ID)
-                symbolTable.put(cast<String>(ast[0].tok.value), structureHimeFunction(parameters, asts, symbolTable))
+                symbolTable.put(cast<String>(ast[0].tok.value), structureHimeFunction(args, asts, symbolTable))
             }
             return NIL
         }),
@@ -63,34 +63,34 @@ val core = SymbolTable(
                     ast[1].tok = eval(ast[1], symbolTable.createChild())
                 symbolTable.set(cast<String>(ast[0].tok.value), ast[1].tok)
             } else {
-                val parameters = ArrayList<String>()
+                val args = ArrayList<String>()
                 for (i in 0 until ast[0].size()) {
                     assert(ast[0][i].tok.type == ID)
-                    parameters.add(cast<String>(ast[0][i].tok.value))
+                    args.add(cast<String>(ast[0][i].tok.value))
                 }
                 val asts = ArrayList<ASTNode>()
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
                 assert(ast[0].tok.type == ID)
-                symbolTable.set(cast<String>(ast[0].tok.value), structureHimeFunction(parameters, asts, symbolTable))
+                symbolTable.set(cast<String>(ast[0].tok.value), structureHimeFunction(args, asts, symbolTable))
             }
             return NIL
         }),
         "lambda" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
             assert(ast.size() > 1)
-            val parameters = ArrayList<String>()
+            val args = ArrayList<String>()
             if (ast[0].tok.type != EMPTY) {
                 assert(ast[0].tok.type == ID)
-                parameters.add(cast<String>(ast[0].tok.value))
+                args.add(cast<String>(ast[0].tok.value))
                 for (i in 0 until ast[0].size()) {
                     assert(ast[0][i].tok.type == ID)
-                    parameters.add(cast<String>(ast[0][i].tok.value))
+                    args.add(cast<String>(ast[0][i].tok.value))
                 }
             }
             val asts = ArrayList<ASTNode>()
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
-            return structureHimeFunction(parameters, asts, symbolTable)
+            return structureHimeFunction(args, asts, symbolTable)
         }),
         "if" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
             assert(ast.size() > 1)
@@ -150,9 +150,9 @@ val core = SymbolTable(
                 newAst.add(backups[i])
             return eval(newAst, symbolTable)
         }),
-        "require" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            val path = parameters[0].toString()
+        "require" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            val path = args[0].toString()
             if (module.containsKey(path)) {
                 for ((key, value) in module[path]!!.table)
                     symbolTable.put(key, value)
@@ -188,85 +188,85 @@ val core = SymbolTable(
         "read-bool" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
             return Scanner(System.`in`).nextBoolean().toToken()
         }),
-        "read-line" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val input = if (parameters.isNotEmpty()) {
-                assert(parameters[0].type == IO_INPUT)
-                cast<InputStream>(parameters[0].value)
+        "read-line" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            val input = if (args.isNotEmpty()) {
+                assert(args[0].type == IO_INPUT)
+                cast<InputStream>(args[0].value)
             } else
                 System.`in`
             return Scanner(input).nextLine().toToken()
         }),
-        "read" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val input = if (parameters.isNotEmpty()) {
-                assert(parameters[0].type == IO_INPUT)
-                cast<InputStream>(parameters[0].value)
+        "read" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            val input = if (args.isNotEmpty()) {
+                assert(args[0].type == IO_INPUT)
+                cast<InputStream>(args[0].value)
             } else
                 System.`in`
             return Scanner(input).next().toToken()
         }),
-        "read-num" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val input = if (parameters.isNotEmpty()) {
-                assert(parameters[0].type == IO_INPUT)
-                cast<InputStream>(parameters[0].value)
+        "read-num" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            val input = if (args.isNotEmpty()) {
+                assert(args[0].type == IO_INPUT)
+                cast<InputStream>(args[0].value)
             } else
                 System.`in`
             return Scanner(input).nextBigInteger().toToken()
         }),
-        "read-real" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val input = if (parameters.isNotEmpty()) {
-                assert(parameters[0].type == IO_INPUT)
-                cast<InputStream>(parameters[0].value)
+        "read-real" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            val input = if (args.isNotEmpty()) {
+                assert(args[0].type == IO_INPUT)
+                cast<InputStream>(args[0].value)
             } else
                 System.`in`
             return Scanner(input).nextBigDecimal().toToken()
         }),
-        "read-bool" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            val input = if (parameters.isNotEmpty()) {
-                assert(parameters[0].type == IO_INPUT)
-                cast<InputStream>(parameters[0].value)
+        "read-bool" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            val input = if (args.isNotEmpty()) {
+                assert(args[0].type == IO_INPUT)
+                cast<InputStream>(args[0].value)
             } else
                 System.`in`
             return Scanner(input).nextBoolean().toToken()
         }),
-        "write" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == IO_OUT)
-            assert(parameters[1].type == LIST)
-            val list = cast<List<Token>>(parameters[1].value)
+        "write" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == IO_OUT)
+            assert(args[1].type == LIST)
+            val list = cast<List<Token>>(args[1].value)
             val data = ArrayList<Byte>()
             for (token in list) {
                 assert(token.type == BYTE)
                 data.add(cast<Byte>(token.value))
             }
-            val output = cast<OutputStream>(parameters[0].value)
+            val output = cast<OutputStream>(args[0].value)
             output.write(data.toByteArray())
             return NIL
         }),
-        "close" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == IO_OUT || parameters[0].type == IO_INPUT)
-            if (parameters[0].type == IO_OUT)
-                cast<OutputStream>(parameters[0].value).close()
+        "close" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == IO_OUT || args[0].type == IO_INPUT)
+            if (args[0].type == IO_OUT)
+                cast<OutputStream>(args[0].value).close()
             else
-                cast<InputStream>(parameters[0].value).close()
+                cast<InputStream>(args[0].value).close()
             return NIL
         }),
-        "flush" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == IO_OUT)
-            cast<OutputStream>(parameters[0].value).flush()
+        "flush" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == IO_OUT)
+            cast<OutputStream>(args[0].value).flush()
             return NIL
         }),
-        "println" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+        "println" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()
-            for (token in parameters)
+            for (token in args)
                 builder.append(token.toString())
             println(builder.toString())
             return NIL
         }),
-        "print" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+        "print" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()
-            for (token in parameters)
+            for (token in args)
                 builder.append(token.toString())
             print(builder.toString())
             return NIL
@@ -275,99 +275,99 @@ val core = SymbolTable(
             println()
             return NIL
         }),
-        "+" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
+        "+" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
             var num = BigDecimal.ZERO
-            for (parameter in parameters) {
+            for (parameter in args) {
                 assert(parameter.isNum())
                 num = num.add(BigDecimal(parameter.toString()))
             }
             return num.toToken()
         }),
-        "-" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            var num = BigDecimal(parameters[0].toString())
-            for (i in 1 until parameters.size) {
-                assert(parameters[i].isNum())
-                num = num.subtract(BigDecimal(parameters[i].toString()))
+        "-" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            var num = BigDecimal(args[0].toString())
+            for (i in 1 until args.size) {
+                assert(args[i].isNum())
+                num = num.subtract(BigDecimal(args[i].toString()))
             }
             return num.toToken()
         }),
-        "*" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
+        "*" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
             var num = BigDecimal.ONE
-            for (parameter in parameters) {
+            for (parameter in args) {
                 assert(parameter.isNum())
                 num = num.multiply(BigDecimal(parameter.toString()))
             }
             return num.toToken()
         }),
-        "/" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            var num = BigDecimal(parameters[0].toString())
-            for (i in 1 until parameters.size) {
-                assert(parameters[i].isNum())
-                num = num.divide(BigDecimal(parameters[i].toString()), MathContext.DECIMAL64)
+        "/" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            var num = BigDecimal(args[0].toString())
+            for (i in 1 until args.size) {
+                assert(args[i].isNum())
+                num = num.divide(BigDecimal(args[i].toString()), MathContext.DECIMAL64)
             }
             return num.toToken()
         }),
-        "and" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            for (parameter in parameters) {
+        "and" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            for (parameter in args) {
                 assert(parameter.type == BOOL)
                 if (!cast<Boolean>(parameter.value))
                     return FALSE
             }
             return TRUE
         }),
-        "or" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            for (parameter in parameters) {
+        "or" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            for (parameter in args) {
                 assert(parameter.type == BOOL)
                 if (cast<Boolean>(parameter.value))
                     return TRUE
             }
             return FALSE
         }),
-        "not" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == BOOL)
-            return if (cast<Boolean>(parameters[0].value)) FALSE else TRUE
+        "not" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == BOOL)
+            return if (cast<Boolean>(args[0].value)) FALSE else TRUE
         }),
-        "=" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return if (parameters[0].toString() == parameters[1].toString()) TRUE else FALSE
+        "=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return if (args[0].toString() == args[1].toString()) TRUE else FALSE
         }),
-        "/=" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return if (parameters[0].toString() != parameters[1].toString()) TRUE else FALSE
+        "/=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return if (args[0].toString() != args[1].toString()) TRUE else FALSE
         }),
-        ">" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return if (BigDecimal(parameters[0].toString()) > BigDecimal(parameters[1].toString())) TRUE else FALSE
+        ">" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return if (BigDecimal(args[0].toString()) > BigDecimal(args[1].toString())) TRUE else FALSE
         }),
-        "<" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return if (BigDecimal(parameters[0].toString()) < BigDecimal(parameters[1].toString())) TRUE else FALSE
+        "<" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return if (BigDecimal(args[0].toString()) < BigDecimal(args[1].toString())) TRUE else FALSE
         }),
-        ">=" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return if (BigDecimal(parameters[0].toString()) >= BigDecimal(parameters[1].toString())) TRUE else FALSE
+        ">=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return if (BigDecimal(args[0].toString()) >= BigDecimal(args[1].toString())) TRUE else FALSE
         }),
-        "<=" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return if (BigDecimal(parameters[0].toString()) <= BigDecimal(parameters[1].toString())) TRUE else FALSE
+        "<=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return if (BigDecimal(args[0].toString()) <= BigDecimal(args[1].toString())) TRUE else FALSE
         }),
-        "random" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM)
-            if (parameters.size >= 2)
-                assert(parameters[1].type == NUM)
-            val start = if (parameters.size == 1) BigInteger.ZERO else BigInteger(parameters[0].toString())
+        "random" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == NUM)
+            if (args.size >= 2)
+                assert(args[1].type == NUM)
+            val start = if (args.size == 1) BigInteger.ZERO else BigInteger(args[0].toString())
             val end =
-                if (parameters.size == 1) BigInteger(parameters[0].toString()) else BigInteger(parameters[1].toString())
+                if (args.size == 1) BigInteger(args[0].toString()) else BigInteger(args[1].toString())
             val rand = Random()
             val scale = end.toString().length
             var generated = ""
@@ -393,24 +393,24 @@ val core = SymbolTable(
                 if (returnInteger > end) end else returnInteger
             return returnInteger.toToken()
         }),
-        "list" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            return ArrayList(parameters).toToken()
+        "list" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            return ArrayList(args).toToken()
         }),
-        "head" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == LIST)
-            return cast<List<Token>>(parameters[0].value)[0]
+        "head" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            return cast<List<Token>>(args[0].value)[0]
         }),
-        "last" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == LIST)
-            val tokens = cast<List<Token>>(parameters[0].value)
+        "last" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            val tokens = cast<List<Token>>(args[0].value)
             return tokens[tokens.size - 1]
         }),
-        "tail" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == LIST)
-            val tokens = cast<List<Token>>(parameters[0].value)
+        "tail" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            val tokens = cast<List<Token>>(args[0].value)
             val list = ArrayList<Token>()
             for (i in 1 until tokens.size)
                 list.add(tokens[i])
@@ -418,10 +418,10 @@ val core = SymbolTable(
                 return list[0]
             return list.toToken()
         }),
-        "init" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == LIST)
-            val tokens = cast<List<Token>>(parameters[0].value)
+        "init" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            val tokens = cast<List<Token>>(args[0].value)
             if (tokens.size == 1)
                 return tokens[0]
             val list = ArrayList<Token>()
@@ -431,43 +431,43 @@ val core = SymbolTable(
                 return list[0]
             return list.toToken()
         }),
-        "list-set" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 2)
-            assert(parameters[0].type == LIST)
-            assert(parameters[1].type == NUM)
-            val index = cast<Int>(parameters[1].value)
-            val tokens = ArrayList(cast<List<Token>>(parameters[0].value))
+        "list-set" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[0].type == LIST)
+            assert(args[1].type == NUM)
+            val index = cast<Int>(args[1].value)
+            val tokens = ArrayList(cast<List<Token>>(args[0].value))
             assert(index < tokens.size)
-            tokens[index] = parameters[2]
+            tokens[index] = args[2]
             return tokens.toToken()
         }),
-        "list-add" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == LIST)
-            val tokens = ArrayList(cast<List<Token>>(parameters[0].value))
-            if (parameters.size > 2) {
-                assert(parameters[1].type == NUM)
-                val index = cast<Int>(parameters[1].value)
+        "list-add" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == LIST)
+            val tokens = ArrayList(cast<List<Token>>(args[0].value))
+            if (args.size > 2) {
+                assert(args[1].type == NUM)
+                val index = cast<Int>(args[1].value)
                 assert(index < tokens.size)
-                tokens.add(index, parameters[2])
+                tokens.add(index, args[2])
             } else
-                tokens.add(parameters[1])
+                tokens.add(args[1])
             return tokens.toToken()
         }),
-        "list-get" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == LIST)
-            assert(parameters[1].type == NUM)
-            val index = cast<Int>(parameters[1].value)
-            val tokens = cast<List<Token>>(parameters[0].value)
+        "list-get" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == LIST)
+            assert(args[1].type == NUM)
+            val index = cast<Int>(args[1].value)
+            val tokens = cast<List<Token>>(args[0].value)
             assert(index < tokens.size)
             return tokens[index]
         }),
-        "++" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return if (parameters[0].type == LIST) {
+        "++" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            return if (args[0].type == LIST) {
                 val list = ArrayList<Token>()
-                for (parameter in parameters) {
+                for (parameter in args) {
                     if (parameter.type == LIST)
                         list.addAll(cast<List<Token>>(parameter.value))
                     else
@@ -476,17 +476,17 @@ val core = SymbolTable(
                 list.toToken()
             } else {
                 val builder = StringBuilder()
-                for (parameter in parameters)
+                for (parameter in args)
                     builder.append(parameter.toString())
                 builder.toString().toToken()
             }
         }),
-        "range" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            val start = if (parameters.size >= 2) BigInteger(parameters[0].toString()) else BigInteger.ZERO
+        "range" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            val start = if (args.size >= 2) BigInteger(args[0].toString()) else BigInteger.ZERO
             val end =
-                if (parameters.size >= 2) BigInteger(parameters[1].toString()) else BigInteger(parameters[0].toString())
-            val step = if (parameters.size >= 3) BigInteger(parameters[2].toString()) else BigInteger.ONE
+                if (args.size >= 2) BigInteger(args[1].toString()) else BigInteger(args[0].toString())
+            val step = if (args.size >= 3) BigInteger(args[2].toString()) else BigInteger.ONE
             val size = end.subtract(start).divide(step)
             val list = ArrayList<Token>()
             var i = BigInteger.ZERO
@@ -496,26 +496,26 @@ val core = SymbolTable(
             }
             return Token(LIST, list)
         }),
-        "length" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return when (parameters[0].type) {
-                STR -> cast<String>(parameters[0].value).length.toToken()
-                LIST -> cast<List<Token>>(parameters[0].value).size.toToken()
-                else -> parameters[0].toString().length.toToken()
+        "length" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            return when (args[0].type) {
+                STR -> cast<String>(args[0].value).length.toToken()
+                LIST -> cast<List<Token>>(args[0].value).size.toToken()
+                else -> args[0].toString().length.toToken()
             }
         }),
-        "reverse" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == LIST)
+        "reverse" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
             val result = ArrayList<Token>()
-            val tokens = cast<List<Token>>(parameters[0].value)
+            val tokens = cast<List<Token>>(args[0].value)
             for (i in tokens.size - 1 downTo 0)
                 result.add(tokens[i])
             return result.toToken()
         }),
-        "sort" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == LIST)
+        "sort" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
             fun merge(a: Array<BigDecimal?>, low: Int, mid: Int, high: Int) {
                 val temp = arrayOfNulls<BigDecimal>(high - low + 1)
                 var i = low
@@ -541,7 +541,7 @@ val core = SymbolTable(
             }
 
             val result = ArrayList<Token>()
-            val tokens = cast<List<Token>>(parameters[0].value)
+            val tokens = cast<List<Token>>(args[0].value)
             val list = arrayOfNulls<BigDecimal>(tokens.size)
             for (i in tokens.indices)
                 list[i] = BigDecimal(tokens[i].toString())
@@ -550,51 +550,51 @@ val core = SymbolTable(
                 result.add(e!!.toToken())
             return result.toToken()
         }),
-        "map" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == FUNCTION || parameters[0].type == HIME_FUNCTION)
-            assert(parameters[1].type == LIST)
+        "map" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            assert(args[1].type == LIST)
             val result = ArrayList<Token>()
-            val tokens = cast<List<Token>>(parameters[1].value)
+            val tokens = cast<List<Token>>(args[1].value)
             for (i in tokens.indices) {
-                val functionParameters = ArrayList<Token>()
-                functionParameters.add(tokens[i])
-                for (j in 1 until parameters.size - 1)
-                    functionParameters.add(cast<List<Token>>(parameters[j + 1].value)[i])
-                if (parameters[0].type == FUNCTION)
-                    result.add(cast<Hime_Function>(parameters[0].value)(functionParameters, symbolTable.createChild()))
-                else if (parameters[0].type == HIME_FUNCTION)
-                    result.add(cast<Hime_HimeFunction>(parameters[0].value)(functionParameters))
+                val functionargs = ArrayList<Token>()
+                functionargs.add(tokens[i])
+                for (j in 1 until args.size - 1)
+                    functionargs.add(cast<List<Token>>(args[j + 1].value)[i])
+                if (args[0].type == FUNCTION)
+                    result.add(cast<Hime_Function>(args[0].value)(functionargs, symbolTable.createChild()))
+                else if (args[0].type == HIME_FUNCTION)
+                    result.add(cast<Hime_HimeFunction>(args[0].value)(functionargs))
             }
             return result.toToken()
         }),
-        "for-each" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == FUNCTION || parameters[0].type == HIME_FUNCTION)
-            assert(parameters[1].type == LIST)
-            val tokens = cast<List<Token>>(parameters[1].value)
+        "for-each" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            assert(args[1].type == LIST)
+            val tokens = cast<List<Token>>(args[1].value)
             for (i in tokens.indices) {
-                val functionParameters = ArrayList<Token>()
-                functionParameters.add(tokens[i])
-                for (j in 1 until parameters.size - 1)
-                    functionParameters.add(cast<List<Token>>(parameters[j + 1].value)[i])
-                if (parameters[0].type == FUNCTION)
-                    cast<Hime_Function>(parameters[0].value)(functionParameters, symbolTable.createChild())
-                else if (parameters[0].type == HIME_FUNCTION)
-                    cast<Hime_HimeFunction>(parameters[0].value)(functionParameters)
+                val functionargs = ArrayList<Token>()
+                functionargs.add(tokens[i])
+                for (j in 1 until args.size - 1)
+                    functionargs.add(cast<List<Token>>(args[j + 1].value)[i])
+                if (args[0].type == FUNCTION)
+                    cast<Hime_Function>(args[0].value)(functionargs, symbolTable.createChild())
+                else if (args[0].type == HIME_FUNCTION)
+                    cast<Hime_HimeFunction>(args[0].value)(functionargs)
             }
             return NIL
         }),
-        "filter" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == FUNCTION || parameters[0].type == HIME_FUNCTION)
-            assert(parameters[1].type == LIST)
+        "filter" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            assert(args[1].type == LIST)
             val result = ArrayList<Token>()
-            val tokens = cast<List<Token>>(parameters[1].value)
+            val tokens = cast<List<Token>>(args[1].value)
             for (token in tokens) {
-                val op = when (parameters[0].type) {
-                    FUNCTION -> cast<Hime_Function>(parameters[0].value)(arrayListOf(token), symbolTable.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunction>(parameters[0].value)(arrayListOf(token))
+                val op = when (args[0].type) {
+                    FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(token), symbolTable.createChild())
+                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(token))
                     else -> NIL
                 }
                 assert(op.type == BOOL)
@@ -603,240 +603,240 @@ val core = SymbolTable(
             }
             return result.toToken()
         }),
-        "sqrt" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.sqrt(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "sqrt" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.sqrt(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "sin" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.sin(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "sin" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.sin(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "sinh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.sinh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "sinh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.sinh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "asin" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.asin(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "asin" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.asin(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "asinh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.asinh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "asinh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.asinh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "cos" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.cos(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "cos" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.cos(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "cosh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.cosh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "cosh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.cosh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "acos" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.acos(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "acos" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.acos(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "acosh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.acosh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "acosh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.acosh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "tan" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.tan(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "tan" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.tan(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "tanh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.tanh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "tanh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.tanh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "atan" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.atan(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "atan" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.atan(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "atanh" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.atanh(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "atanh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.atanh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "atan2" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].isNum())
-            assert(parameters[1].isNum())
+        "atan2" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].isNum())
+            assert(args[1].isNum())
             return BigDecimalMath.atan2(
-                BigDecimal(parameters[0].toString()),
-                BigDecimal(parameters[1].toString()),
+                BigDecimal(args[0].toString()),
+                BigDecimal(args[1].toString()),
                 MathContext.DECIMAL64
             ).toToken()
         }),
-        "log" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.log(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "log" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.log(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "log10" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.log10(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "log10" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.log10(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "log2" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.log2(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "log2" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.log2(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "exp" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].isNum())
-            return BigDecimalMath.exp(BigDecimal(parameters[0].toString()), MathContext.DECIMAL64).toToken()
+        "exp" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            return BigDecimalMath.exp(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
         }),
-        "pow" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].isNum())
-            assert(parameters[1].isNum())
+        "pow" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].isNum())
+            assert(args[1].isNum())
             return BigDecimalMath.pow(
-                BigDecimal(parameters[0].toString()),
-                BigDecimal(parameters[1].toString()),
+                BigDecimal(args[0].toString()),
+                BigDecimal(args[1].toString()),
                 MathContext.DECIMAL64
             ).toToken()
         }),
-        "mod" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].isNum())
-            assert(parameters[1].isNum())
-            return BigInteger(parameters[0].toString()).mod(BigInteger(parameters[1].toString())).toToken()
+        "mod" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].isNum())
+            assert(args[1].isNum())
+            return BigInteger(args[0].toString()).mod(BigInteger(args[1].toString())).toToken()
         }),
-        "max" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            var max = BigDecimal(parameters[0].toString())
-            for (i in 1 until parameters.size)
-                max = max.max(BigDecimal(parameters[i].toString()))
+        "max" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            var max = BigDecimal(args[0].toString())
+            for (i in 1 until args.size)
+                max = max.max(BigDecimal(args[i].toString()))
             return max.toToken()
         }),
-        "min" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            var min = BigDecimal(parameters[0].toString())
-            for (i in 1 until parameters.size)
-                min = min.min(BigDecimal(parameters[i].toString()))
+        "min" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            var min = BigDecimal(args[0].toString())
+            for (i in 1 until args.size)
+                min = min.min(BigDecimal(args[i].toString()))
             return min.toToken()
         }),
-        "abs" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return BigDecimal(parameters[0].toString()).abs().toToken()
+        "abs" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            return BigDecimal(args[0].toString()).abs().toToken()
         }),
-        "average" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
+        "average" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
             var num = BigDecimal.ZERO
-            for (parameter in parameters)
+            for (parameter in args)
                 num = num.add(BigDecimal(parameter.value.toString()))
-            return num.divide(parameters.size.toBigDecimal()).toToken()
+            return num.divide(args.size.toBigDecimal()).toToken()
         }),
-        "floor" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
+        "floor" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
             return BigInteger(
-                BigDecimal(parameters[0].toString()).setScale(0, RoundingMode.FLOOR).toPlainString()
+                BigDecimal(args[0].toString()).setScale(0, RoundingMode.FLOOR).toPlainString()
             ).toToken()
         }),
-        "ceil" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
+        "ceil" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
             return BigInteger(
-                BigDecimal(parameters[0].toString()).setScale(0, RoundingMode.CEILING).toPlainString()
+                BigDecimal(args[0].toString()).setScale(0, RoundingMode.CEILING).toPlainString()
             ).toToken()
         }),
-        "gcd" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            for (parameter in parameters)
+        "gcd" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            for (parameter in args)
                 assert(parameter.type == NUM || parameter.type == BIG_NUM)
-            var temp = BigInteger(parameters[0].toString()).gcd(BigInteger(parameters[1].toString()))
-            for (i in 2 until parameters.size)
-                temp = temp.gcd(BigInteger(parameters[i].toString()))
+            var temp = BigInteger(args[0].toString()).gcd(BigInteger(args[1].toString()))
+            for (i in 2 until args.size)
+                temp = temp.gcd(BigInteger(args[i].toString()))
             return temp.toToken()
         }),
-        "lcm" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+        "lcm" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             fun BigInteger.lcm(n: BigInteger): BigInteger = (this.multiply(n).abs()).divide(this.gcd(n))
-            assert(parameters.size > 1)
-            for (parameter in parameters)
+            assert(args.size > 1)
+            for (parameter in args)
                 assert(parameter.type == NUM || parameter.type == BIG_NUM)
-            var temp = BigInteger(parameters[0].toString()).lcm(BigInteger(parameters[1].toString()))
-            for (i in 2 until parameters.size)
-                temp = temp.lcm(BigInteger(parameters[i].toString()))
+            var temp = BigInteger(args[0].toString()).lcm(BigInteger(args[1].toString()))
+            for (i in 2 until args.size)
+                temp = temp.lcm(BigInteger(args[i].toString()))
             return temp.toToken()
         }),
-        "->string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return parameters[0].toString().toToken()
+        "->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return args[0].toString().toToken()
         }),
-        "->num" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return BigInteger(parameters[0].toString()).toToken()
+        "->num" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return BigInteger(args[0].toString()).toToken()
         }),
-        "->real" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return BigDecimal(parameters[0].toString()).toToken()
+        "->real" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return BigDecimal(args[0].toString()).toToken()
         }),
-        "string-replace" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 2)
-            return parameters[0].toString().replace(parameters[1].toString(), parameters[2].toString()).toToken()
+        "string-replace" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 2)
+            return args[0].toString().replace(args[1].toString(), args[2].toString()).toToken()
         }),
-        "string-substring" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 2)
-            assert(parameters[1].type == NUM)
-            assert(parameters[2].type == NUM)
-            return parameters[0].toString()
-                .substring(cast<Int>(parameters[1].value), cast<Int>(parameters[2].value))
+        "string-substring" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[1].type == NUM)
+            assert(args[2].type == NUM)
+            return args[0].toString()
+                .substring(cast<Int>(args[1].value), cast<Int>(args[2].value))
                 .toToken()
         }),
-        "string-split" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
+        "string-split" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
             val result = ArrayList<Token>()
-            val list = parameters[0].toString().split(parameters[1].toString())
+            val list = args[0].toString().split(args[1].toString())
             for (s in list)
                 result.add(s.toToken())
             return result.toToken()
         }),
-        "string-index" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return parameters[0].toString().indexOf(parameters[1].toString()).toToken()
+        "string-index" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return args[0].toString().indexOf(args[1].toString()).toToken()
         }),
-        "string-last-index" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            return parameters[0].toString().lastIndexOf(parameters[1].toString()).toToken()
+        "string-last-index" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            return args[0].toString().lastIndexOf(args[1].toString()).toToken()
         }),
-        "string-format" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            val args = arrayOfNulls<Any>(parameters.size - 1)
-            for (i in 1 until parameters.size)
-                args[i - 1] = parameters[i].value
-            return String.format(parameters[0].toString(), *args).toToken()
+        "string-format" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            val newArgs = arrayOfNulls<Any>(args.size - 1)
+            for (i in 1 until args.size)
+                newArgs[i - 1] = args[i].value
+            return String.format(args[0].toString(), *newArgs).toToken()
         }),
-        "string->list" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            val chars = parameters[0].toString().toCharArray()
+        "string->list" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            val chars = args[0].toString().toCharArray()
             val list = ArrayList<Token>()
             for (c in chars)
                 list.add(c.toString().toToken())
             return list.toToken()
         }),
-        "list->string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == LIST)
+        "list->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
             val builder = StringBuilder()
-            val list = cast<List<Token>>(parameters[0].value)
+            val list = cast<List<Token>>(args[0].value)
             for (token in list)
                 builder.append(token.toString())
             return builder.toString().toToken()
         }),
-        "string->bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+        "string->bytes" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()
-            for (token in parameters)
+            for (token in args)
                 builder.append(token.toString())
             val list = ArrayList<Token>()
             val bytes = builder.toString().toByteArray()
@@ -844,99 +844,99 @@ val core = SymbolTable(
                 list.add(byte.toToken())
             return list.toToken()
         }),
-        "bytes->string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == LIST)
-            val list = cast<List<Token>>(parameters[0].value)
+        "bytes->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            val list = cast<List<Token>>(args[0].value)
             val bytes = ByteArray(list.size)
             for (index in list.indices)
                 bytes[index] = cast<Byte>(list[index].value)
             return String(bytes).toToken()
         }),
-        "bool?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            for (parameter in parameters)
+        "bool?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            for (parameter in args)
                 if (parameter.type != BOOL)
                     return FALSE
             return TRUE
         }),
-        "string?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            for (parameter in parameters)
+        "string?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            for (parameter in args)
                 if (parameter.type != STR)
                     return FALSE
             return TRUE
         }),
-        "num?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            for (parameter in parameters)
+        "num?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            for (parameter in args)
                 if (parameter.type != NUM && parameter.type != BIG_NUM)
                     return FALSE
             return TRUE
         }),
-        "real?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            for (parameter in parameters)
+        "real?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            for (parameter in args)
                 if (parameter.type != REAL && parameter.type != BIG_REAL)
                     return FALSE
             return TRUE
         }),
-        "list?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            for (parameter in parameters)
+        "list?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            for (parameter in args)
                 if (parameter.type != LIST)
                     return FALSE
             return TRUE
         }),
-        "byte?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            for (parameter in parameters)
+        "byte?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            for (parameter in args)
                 if (parameter.type != BYTE)
                     return FALSE
             return TRUE
         }),
-        "function?" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            for (parameter in parameters)
+        "function?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            for (parameter in args)
                 if (parameter.type != FUNCTION && parameter.type != STATIC_FUNCTION && parameter.type != HIME_FUNCTION)
                     return FALSE
             return TRUE
         }),
-        "exit" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == NUM)
-            exitProcess(cast<Int>(parameters[0].value))
+        "exit" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == NUM)
+            exitProcess(cast<Int>(args[0].value))
         }),
         "time" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
             return Date().time.toToken()
         }),
-        "time-format" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == STR)
-            assert(parameters[1].type == NUM || parameters[1].type == BIG_NUM)
-            return SimpleDateFormat(cast<String>(parameters[0].value)).format(BigInteger(parameters[1].toString()).toLong())
+        "time-format" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == STR)
+            assert(args[1].type == NUM || args[1].type == BIG_NUM)
+            return SimpleDateFormat(cast<String>(args[0].value)).format(BigInteger(args[1].toString()).toLong())
                 .toToken()
         }),
-        "time-parse" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == STR)
-            assert(parameters[1].type == STR)
-            return SimpleDateFormat(cast<String>(parameters[0].value)).parse(cast<String>(parameters[1].value)).time.toToken()
+        "time-parse" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == STR)
+            assert(args[1].type == STR)
+            return SimpleDateFormat(cast<String>(args[0].value)).parse(cast<String>(args[1].value)).time.toToken()
         }),
-        "extern" to Token(FUNCTION, fun(parameters: List<Token>, symbolTable: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == STR)
-            assert(parameters[1].type == STR)
-            val clazz = parameters[0].toString()
-            val name = parameters[1].toString()
+        "extern" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == STR)
+            assert(args[1].type == STR)
+            val clazz = args[0].toString()
+            val name = args[1].toString()
             val method = Class.forName(clazz).declaredMethods
                 .firstOrNull { Modifier.isStatic(it.modifiers) && it.name == name }
                 ?: throw UnsatisfiedLinkError("Method $name not found for class $clazz.")
-            symbolTable.put(name, Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-                val args = arrayOfNulls<Any>(parameters.size)
-                for (i in parameters.indices)
-                    args[i] = parameters[i].value
-                return method.invoke(null, *args).toToken()
+            symbolTable.put(name, Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+                val newArgs = arrayOfNulls<Any>(args.size)
+                for (i in args.indices)
+                    newArgs[i] = args[i].value
+                return method.invoke(null, *newArgs).toToken()
             }))
             return NIL
         })
@@ -945,10 +945,10 @@ val core = SymbolTable(
 
 val hash = SymbolTable(
     mutableMapOf(
-        "sha256" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
+        "sha256" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
             val messageDigest = MessageDigest.getInstance("SHA-256")
-            messageDigest.update(parameters[0].toString().toByteArray())
+            messageDigest.update(args[0].toString().toByteArray())
             val byteBuffer = messageDigest.digest()
             val strHexString = StringBuilder()
             for (b in byteBuffer) {
@@ -959,10 +959,10 @@ val hash = SymbolTable(
             }
             return strHexString.toString().toToken()
         }),
-        "sha512" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
+        "sha512" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
             val messageDigest = MessageDigest.getInstance("SHA-512")
-            messageDigest.update(parameters[0].toString().toByteArray())
+            messageDigest.update(args[0].toString().toByteArray())
             val byteBuffer = messageDigest.digest()
             val strHexString = StringBuilder()
             for (b in byteBuffer) {
@@ -973,10 +973,10 @@ val hash = SymbolTable(
             }
             return strHexString.toString().toToken()
         }),
-        "md5" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+        "md5" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             return BigInteger(
                 1, MessageDigest.getInstance("MD5")
-                    .digest(parameters[0].toString().toByteArray())
+                    .digest(args[0].toString().toByteArray())
             ).toString(16)
                 .padStart(32, '0').toToken()
         })
@@ -985,19 +985,19 @@ val hash = SymbolTable(
 
 val file = SymbolTable(
     mutableMapOf(
-        "file-input" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return Files.newInputStream(Paths.get(parameters[0].toString())).toToken()
+        "file-input" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            return Files.newInputStream(Paths.get(args[0].toString())).toToken()
         }),
-        "file-out" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return Files.newOutputStream(Paths.get(parameters[0].toString())).toToken()
+        "file-out" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            return Files.newOutputStream(Paths.get(args[0].toString())).toToken()
         }),
-        "file-exists" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return File(parameters[0].toString()).exists().toToken()
+        "file-exists" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            return File(args[0].toString()).exists().toToken()
         }),
-        "file-list" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
+        "file-list" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             fun listAllFile(f: File): Token {
                 val list = ArrayList<Token>()
                 val files = f.listFiles()
@@ -1009,56 +1009,56 @@ val file = SymbolTable(
                 }
                 return list.toToken()
             }
-            assert(parameters.isNotEmpty())
-            return listAllFile(File(parameters[0].toString()))
+            assert(args.isNotEmpty())
+            return listAllFile(File(args[0].toString()))
         }),
-        "file-mkdirs" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            val file = File(parameters[0].toString())
+        "file-mkdirs" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            val file = File(args[0].toString())
             if (!file.parentFile.exists())
                 !file.parentFile.mkdirs()
             if (!file.exists())
                 file.createNewFile()
             return NIL
         }),
-        "file-new-file" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            val file = File(parameters[0].toString())
+        "file-new-file" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            val file = File(args[0].toString())
             if (!file.exists())
                 file.createNewFile()
             return NIL
         }),
-        "file-read-string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            return Files.readString(Paths.get(parameters[0].toString())).toToken()
+        "file-read-string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            return Files.readString(Paths.get(args[0].toString())).toToken()
         }),
-        "file-write-string" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            val file = File(parameters[0].toString())
+        "file-write-string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            val file = File(args[0].toString())
             if (!file.parentFile.exists())
                 !file.parentFile.mkdirs()
             if (!file.exists())
                 file.createNewFile()
-            Files.writeString(file.toPath(), parameters[1].toString())
+            Files.writeString(file.toPath(), args[1].toString())
             return NIL
         }),
-        "file-read-bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
+        "file-read-bytes" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
             val list = ArrayList<Token>()
-            val bytes = Files.readAllBytes(Paths.get(parameters[0].toString()))
+            val bytes = Files.readAllBytes(Paths.get(args[0].toString()))
             for (byte in bytes)
                 list.add(byte.toToken())
             return list.toToken()
         }),
-        "file-write-bytes" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[1].type == LIST)
-            val file = File(parameters[0].toString())
+        "file-write-bytes" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[1].type == LIST)
+            val file = File(args[0].toString())
             if (!file.parentFile.exists())
                 !file.parentFile.mkdirs()
             if (!file.exists())
                 file.createNewFile()
-            val list = cast<List<Token>>(parameters[1].value)
+            val list = cast<List<Token>>(args[1].value)
             val bytes = ByteArray(list.size)
             for (index in list.indices) {
                 assert(list[index].type == BYTE)
@@ -1072,52 +1072,52 @@ val file = SymbolTable(
 
 val draw = SymbolTable(
     mutableMapOf(
-        "draw" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 2)
-            assert(parameters[0].type == STR)
-            assert(parameters[1].type == NUM)
-            assert(parameters[2].type == NUM)
+        "draw" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[0].type == STR)
+            assert(args[1].type == NUM)
+            assert(args[2].type == NUM)
             return Token(DRAW, Draw(
-                cast<String>(parameters[0].value),
-                cast<Int>(parameters[1].value),
-                cast<Int>(parameters[2].value))
+                cast<String>(args[0].value),
+                cast<Int>(args[1].value),
+                cast<Int>(args[2].value))
             )
         }),
         // (draw-color draw r g b)
-        "draw-color" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 3)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == NUM)
-            assert(parameters[2].type == NUM)
-            assert(parameters[3].type == NUM)
-            (cast<Draw>(parameters[0].value)).graphics.color =
+        "draw-color" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 3)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == NUM)
+            assert(args[2].type == NUM)
+            assert(args[3].type == NUM)
+            (cast<Draw>(args[0].value)).graphics.color =
                 Color(
-                    cast<Int>(parameters[1].value),
-                    cast<Int>(parameters[2].value),
-                    cast<Int>(parameters[3].value)
+                    cast<Int>(args[1].value),
+                    cast<Int>(args[2].value),
+                    cast<Int>(args[3].value)
                 )
-            return parameters[0]
+            return args[0]
         }),
         // (coordinate x y)
-        "coordinate" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == NUM)
-            assert(parameters[1].type == NUM)
-            return Token(COORDINATE, Coordinate(cast<Int>(parameters[0].value), cast<Int>(parameters[1].value)))
+        "coordinate" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM)
+            assert(args[1].type == NUM)
+            return Token(COORDINATE, Coordinate(cast<Int>(args[0].value), cast<Int>(args[1].value)))
         }),
         // (draw-clear draw)
         // (draw-clear draw (x y) width height)
-        "draw-clear" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.isNotEmpty())
-            assert(parameters[0].type == DRAW)
-            val draw = cast<Draw>(parameters[0].value)
-            if (parameters.size > 3) {
-                val coordinate = cast<Coordinate>(parameters[1].value)
-                val width = cast<Int>(parameters[2].value)
-                val height = cast<Int>(parameters[3].value)
+        "draw-clear" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == DRAW)
+            val draw = cast<Draw>(args[0].value)
+            if (args.size > 3) {
+                val coordinate = cast<Coordinate>(args[1].value)
+                val width = cast<Int>(args[2].value)
+                val height = cast<Int>(args[3].value)
                 draw.graphics.clearRect(coordinate.x, coordinate.y, width, height)
                 draw.update()
-                return parameters[0]
+                return args[0]
             }
             draw.image = BufferedImage(draw.frame.width, draw.frame.height, BufferedImage.TYPE_INT_RGB)
             (draw.image.graphics as Graphics2D).setRenderingHint(RenderingHints.KEY_ANTIALIASING , RenderingHints.VALUE_ANTIALIAS_ON)
@@ -1126,15 +1126,15 @@ val draw = SymbolTable(
             draw.graphics.dispose()
             draw.graphics = draw.image.createGraphics()
             draw.graphics.color = Color.BLACK
-            return parameters[0]
+            return args[0]
         }),
         // (draw-polygon draw [(x y)])
-        "draw-polygon" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == LIST)
-            val draw = cast<Draw>(parameters[0].value)
-            val p = cast<List<Token>>(parameters[1].value)
+        "draw-polygon" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == LIST)
+            val draw = cast<Draw>(args[0].value)
+            val p = cast<List<Token>>(args[1].value)
             val xa = arrayListOf<Int>()
             val ya = arrayListOf<Int>()
             for (c in p) {
@@ -1145,15 +1145,15 @@ val draw = SymbolTable(
             }
             draw.graphics.drawPolygon(xa.toIntArray(), ya.toIntArray(), xa.size.coerceAtMost(ya.size))
             draw.update()
-            return parameters[0]
+            return args[0]
         }),
         // (fill-polygon draw [(x y)])
-        "fill-polygon" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 1)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == LIST)
-            val draw = cast<Draw>(parameters[0].value)
-            val p = cast<List<Token>>(parameters[1].value)
+        "fill-polygon" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == LIST)
+            val draw = cast<Draw>(args[0].value)
+            val p = cast<List<Token>>(args[1].value)
             val xa = arrayListOf<Int>()
             val ya = arrayListOf<Int>()
             for (c in p) {
@@ -1164,156 +1164,156 @@ val draw = SymbolTable(
             }
             draw.graphics.fillPolygon(xa.toIntArray(), ya.toIntArray(), xa.size.coerceAtMost(ya.size))
             draw.update()
-            return parameters[0]
+            return args[0]
         }),
         // (draw-line draw (x1 y1) (x2 y2))
-        "draw-line" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 2)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == COORDINATE)
-            assert(parameters[2].type == COORDINATE)
-            val draw = cast<Draw>(parameters[0].value)
-            val c1 = cast<Coordinate>(parameters[1].value)
-            val c2 = cast<Coordinate>(parameters[2].value)
+        "draw-line" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == COORDINATE)
+            assert(args[2].type == COORDINATE)
+            val draw = cast<Draw>(args[0].value)
+            val c1 = cast<Coordinate>(args[1].value)
+            val c2 = cast<Coordinate>(args[2].value)
             draw.graphics.drawLine(c1.x, c1.y, c2.x, c2.y)
             draw.update()
-            return parameters[0]
+            return args[0]
         }),
         // (draw-rect draw (x y) width height)
-        "draw-rect" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 3)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == COORDINATE)
-            assert(parameters[2].type == NUM)
-            assert(parameters[3].type == NUM)
-            val draw = cast<Draw>(parameters[0].value)
-            val coordinate = cast<Coordinate>(parameters[1].value)
-            val width = cast<Int>(parameters[2].value)
-            val height = cast<Int>(parameters[3].value)
+        "draw-rect" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 3)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == COORDINATE)
+            assert(args[2].type == NUM)
+            assert(args[3].type == NUM)
+            val draw = cast<Draw>(args[0].value)
+            val coordinate = cast<Coordinate>(args[1].value)
+            val width = cast<Int>(args[2].value)
+            val height = cast<Int>(args[3].value)
             draw.graphics.drawRect(coordinate.x, coordinate.y, width, height)
             draw.update()
-            return parameters[0]
+            return args[0]
         }),
         // (fill-rect draw (x y) width height)
-        "fill-rect" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 3)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == COORDINATE)
-            assert(parameters[2].type == NUM)
-            assert(parameters[3].type == NUM)
-            val draw = cast<Draw>(parameters[0].value)
-            val coordinate = cast<Coordinate>(parameters[1].value)
-            val width = cast<Int>(parameters[2].value)
-            val height = cast<Int>(parameters[3].value)
+        "fill-rect" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 3)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == COORDINATE)
+            assert(args[2].type == NUM)
+            assert(args[3].type == NUM)
+            val draw = cast<Draw>(args[0].value)
+            val coordinate = cast<Coordinate>(args[1].value)
+            val width = cast<Int>(args[2].value)
+            val height = cast<Int>(args[3].value)
             draw.graphics.fillRect(coordinate.x, coordinate.y, width, height)
             draw.update()
-            return parameters[0]
+            return args[0]
         }),
         // (draw-oval draw (x y) width height)
-        "draw-oval" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 3)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == COORDINATE)
-            assert(parameters[2].type == NUM)
-            assert(parameters[3].type == NUM)
-            val draw = cast<Draw>(parameters[0].value)
-            val coordinate = cast<Coordinate>(parameters[1].value)
-            val width = cast<Int>(parameters[2].value)
-            val height = cast<Int>(parameters[3].value)
+        "draw-oval" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 3)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == COORDINATE)
+            assert(args[2].type == NUM)
+            assert(args[3].type == NUM)
+            val draw = cast<Draw>(args[0].value)
+            val coordinate = cast<Coordinate>(args[1].value)
+            val width = cast<Int>(args[2].value)
+            val height = cast<Int>(args[3].value)
             draw.graphics.drawOval(coordinate.x, coordinate.y, width, height)
             draw.update()
-            return parameters[0]
+            return args[0]
         }),
         // (fill-oval draw (x y) width height)
-        "fill-oval" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 3)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == COORDINATE)
-            assert(parameters[2].type == NUM)
-            assert(parameters[3].type == NUM)
-            val draw = cast<Draw>(parameters[0].value)
-            val coordinate = cast<Coordinate>(parameters[1].value)
-            val width = cast<Int>(parameters[2].value)
-            val height = cast<Int>(parameters[3].value)
+        "fill-oval" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 3)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == COORDINATE)
+            assert(args[2].type == NUM)
+            assert(args[3].type == NUM)
+            val draw = cast<Draw>(args[0].value)
+            val coordinate = cast<Coordinate>(args[1].value)
+            val width = cast<Int>(args[2].value)
+            val height = cast<Int>(args[3].value)
             draw.graphics.fillOval(coordinate.x, coordinate.y, width, height)
             draw.update()
-            return parameters[0]
+            return args[0]
         }),
         // (draw-round-rect draw (x y) width height arcWidth arcHeight)
-        "draw-round-rect" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 5)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == COORDINATE)
-            assert(parameters[2].type == NUM)
-            assert(parameters[3].type == NUM)
-            assert(parameters[4].type == NUM)
-            assert(parameters[5].type == NUM)
-            val draw = cast<Draw>(parameters[0].value)
-            val coordinate = cast<Coordinate>(parameters[1].value)
-            val width = cast<Int>(parameters[2].value)
-            val height = cast<Int>(parameters[3].value)
-            val arcWidth = cast<Int>(parameters[4].value)
-            val arcHeight = cast<Int>(parameters[5].value)
+        "draw-round-rect" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 5)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == COORDINATE)
+            assert(args[2].type == NUM)
+            assert(args[3].type == NUM)
+            assert(args[4].type == NUM)
+            assert(args[5].type == NUM)
+            val draw = cast<Draw>(args[0].value)
+            val coordinate = cast<Coordinate>(args[1].value)
+            val width = cast<Int>(args[2].value)
+            val height = cast<Int>(args[3].value)
+            val arcWidth = cast<Int>(args[4].value)
+            val arcHeight = cast<Int>(args[5].value)
             draw.graphics.drawRoundRect(coordinate.x, coordinate.y, width, height, arcWidth, arcHeight)
             draw.update()
-            return parameters[0]
+            return args[0]
         }),
         // (fill-round-rect draw (x y) width height arcWidth arcHeight)
-        "fill-round-rect" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 5)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == COORDINATE)
-            assert(parameters[2].type == NUM)
-            assert(parameters[3].type == NUM)
-            assert(parameters[4].type == NUM)
-            assert(parameters[5].type == NUM)
-            val draw = cast<Draw>(parameters[0].value)
-            val coordinate = cast<Coordinate>(parameters[1].value)
-            val width = cast<Int>(parameters[2].value)
-            val height = cast<Int>(parameters[3].value)
-            val arcWidth = cast<Int>(parameters[4].value)
-            val arcHeight = cast<Int>(parameters[5].value)
+        "fill-round-rect" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 5)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == COORDINATE)
+            assert(args[2].type == NUM)
+            assert(args[3].type == NUM)
+            assert(args[4].type == NUM)
+            assert(args[5].type == NUM)
+            val draw = cast<Draw>(args[0].value)
+            val coordinate = cast<Coordinate>(args[1].value)
+            val width = cast<Int>(args[2].value)
+            val height = cast<Int>(args[3].value)
+            val arcWidth = cast<Int>(args[4].value)
+            val arcHeight = cast<Int>(args[5].value)
             draw.graphics.fillRoundRect(coordinate.x, coordinate.y, width, height, arcWidth, arcHeight)
             draw.update()
-            return parameters[0]
+            return args[0]
         }),
         // (draw-arc draw (x y) width height arcWidth arcHeight)
-        "draw-arc" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 5)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == COORDINATE)
-            assert(parameters[2].type == NUM)
-            assert(parameters[3].type == NUM)
-            assert(parameters[4].type == NUM)
-            assert(parameters[5].type == NUM)
-            val draw = cast<Draw>(parameters[0].value)
-            val coordinate = cast<Coordinate>(parameters[1].value)
-            val width = cast<Int>(parameters[2].value)
-            val height = cast<Int>(parameters[3].value)
-            val arcWidth = cast<Int>(parameters[4].value)
-            val arcHeight = cast<Int>(parameters[5].value)
+        "draw-arc" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 5)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == COORDINATE)
+            assert(args[2].type == NUM)
+            assert(args[3].type == NUM)
+            assert(args[4].type == NUM)
+            assert(args[5].type == NUM)
+            val draw = cast<Draw>(args[0].value)
+            val coordinate = cast<Coordinate>(args[1].value)
+            val width = cast<Int>(args[2].value)
+            val height = cast<Int>(args[3].value)
+            val arcWidth = cast<Int>(args[4].value)
+            val arcHeight = cast<Int>(args[5].value)
             draw.graphics.drawArc(coordinate.x, coordinate.y, width, height, arcWidth, arcHeight)
             draw.update()
-            return parameters[0]
+            return args[0]
         }),
         // (fill-arc draw (x y) width height arcWidth arcHeight)
-        "fill-arc" to Token(FUNCTION, fun(parameters: List<Token>, _: SymbolTable): Token {
-            assert(parameters.size > 5)
-            assert(parameters[0].type == DRAW)
-            assert(parameters[1].type == COORDINATE)
-            assert(parameters[2].type == NUM)
-            assert(parameters[3].type == NUM)
-            assert(parameters[4].type == NUM)
-            assert(parameters[5].type == NUM)
-            val draw = cast<Draw>(parameters[0].value)
-            val coordinate = cast<Coordinate>(parameters[1].value)
-            val width = cast<Int>(parameters[2].value)
-            val height = cast<Int>(parameters[3].value)
-            val arcWidth = cast<Int>(parameters[4].value)
-            val arcHeight = cast<Int>(parameters[5].value)
+        "fill-arc" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 5)
+            assert(args[0].type == DRAW)
+            assert(args[1].type == COORDINATE)
+            assert(args[2].type == NUM)
+            assert(args[3].type == NUM)
+            assert(args[4].type == NUM)
+            assert(args[5].type == NUM)
+            val draw = cast<Draw>(args[0].value)
+            val coordinate = cast<Coordinate>(args[1].value)
+            val width = cast<Int>(args[2].value)
+            val height = cast<Int>(args[3].value)
+            val arcWidth = cast<Int>(args[4].value)
+            val arcHeight = cast<Int>(args[5].value)
             draw.graphics.fillArc(coordinate.x, coordinate.y, width, height, arcWidth, arcHeight)
             draw.update()
-            return parameters[0]
+            return args[0]
         })
     ), null
 )
