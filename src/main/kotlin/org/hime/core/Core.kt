@@ -34,16 +34,16 @@ val core = SymbolTable(
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)
                 symbolTable.put(cast<String>(ast[0].tok.value), eval(ast[1], symbolTable.createChild()))
             else {
-                val args = ArrayList<String>()
+                val parameters = ArrayList<String>()
                 for (i in 0 until ast[0].size()) {
                     assert(ast[0][i].tok.type == ID)
-                    args.add(cast<String>(ast[0][i].tok.value))
+                    parameters.add(cast<String>(ast[0][i].tok.value))
                 }
                 val asts = ArrayList<ASTNode>()
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
                 assert(ast[0].tok.type == ID)
-                symbolTable.put(cast<String>(ast[0].tok.value), structureHimeFunction(args, asts, symbolTable))
+                symbolTable.put(cast<String>(ast[0].tok.value), structureHimeFunction(parameters, asts, symbolTable))
             }
             return NIL
         }),
@@ -78,19 +78,19 @@ val core = SymbolTable(
         }),
         "lambda" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
             assert(ast.size() > 1)
-            val args = ArrayList<String>()
+            val parameters = ArrayList<String>()
             if (ast[0].tok.type != EMPTY) {
                 assert(ast[0].tok.type == ID)
-                args.add(cast<String>(ast[0].tok.value))
+                parameters.add(cast<String>(ast[0].tok.value))
                 for (i in 0 until ast[0].size()) {
                     assert(ast[0][i].tok.type == ID)
-                    args.add(cast<String>(ast[0][i].tok.value))
+                    parameters.add(cast<String>(ast[0][i].tok.value))
                 }
             }
             val asts = ArrayList<ASTNode>()
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
-            return structureHimeFunction(args, asts, symbolTable)
+            return structureHimeFunction(parameters, asts, symbolTable)
         }),
         "if" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
             assert(ast.size() > 1)
