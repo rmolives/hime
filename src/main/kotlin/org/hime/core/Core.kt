@@ -139,15 +139,9 @@ val core = SymbolTable(
         }),
         "apply" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
             assert(ast.size() > 0)
-            val newAst = ast.copy()
-            val op = eval(newAst[0], symbolTable)
-            val backups = ArrayList<ASTNode>()
-            for (i in 1 until newAst.size())
-                backups.add(newAst[i])
-            newAst.tok = op
-            newAst.clear()
-            for (i in backups.indices)
-                newAst.add(backups[i])
+            val newAst = ASTNode(eval(ast[0], symbolTable))
+            for (i in 1 until ast.size())
+                newAst.add(ast[i])
             return eval(newAst, symbolTable)
         }),
         "require" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
