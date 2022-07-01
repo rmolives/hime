@@ -15,7 +15,7 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                 if (tokens[index].type == Type.RB) {
                     temp = ASTNode.EMPTY
                     assert(stack.peek() != null)
-                    stack.peek().add(temp)
+                    stack.push(temp)
                     state = -1
                     ++index
                     continue
