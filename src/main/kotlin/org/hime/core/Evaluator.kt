@@ -12,7 +12,7 @@ fun eval(ast: ASTNode, symbolTable: SymbolTable): Token {
         else
             break
     ast.tok = temp
-    if ((ast.isEmpty() && ast.type != AstType.FUNCTION))
+    if (ast.isEmpty() && ast.type != AstType.FUNCTION)
         return ast.tok
     if (ast.tok.type == Type.STATIC_FUNCTION) {
         ast.tok = cast<Hime_StaticFunction>(ast.tok.value)(ast, symbolTable)
