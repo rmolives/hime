@@ -41,7 +41,8 @@ fun preprocessor(s: String): String {
                 ++j
             }
             builder.append(' ')
-        } else builder.append(c)
+        } else
+            builder.append(c)
         ++i
     }
     return builder.toString()
