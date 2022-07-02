@@ -24,4 +24,3 @@
 (draw-koch depth 50 450 275 60)
 (draw-koch depth 275 60 500 450)
 (draw-koch depth 500 450 50 450)
-
