@@ -1026,6 +1026,11 @@ val file = SymbolTable(
             assert(args.isNotEmpty())
             return Files.readString(Paths.get(args[0].toString())).toToken()
         }),
+        "file-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            File(args[0].toString()).delete()
+            return NIL
+        }),
         "file-write-string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             val file = File(args[0].toString())
