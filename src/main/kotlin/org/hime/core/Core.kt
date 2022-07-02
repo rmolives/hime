@@ -1015,7 +1015,7 @@ val file = SymbolTable(
                 file.createNewFile()
             return NIL
         }),
-        "file-new-file" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        "file-new" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             val file = File(args[0].toString())
             if (!file.exists())
