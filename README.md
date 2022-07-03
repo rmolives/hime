@@ -38,11 +38,7 @@ Once a feature is finished and tested, and not considered harmful, I'll copy the
     (def (smallest-divisor n)
         (find-divisor n 2))
     (= n (smallest-divisor n)))
-(while true
-    (print "Input Number: ")
-    (if (prime? (read-num))
-        (println "is prime.")
-        (println "not is prime.")))
+(println (prime? 17))
 ```
 
 ### Fibonacci
