@@ -28,11 +28,11 @@ import kotlin.system.exitProcess
 
 val core = SymbolTable(
     mutableMapOf(
-        "def" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
+        "def" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             assert(ast[0].tok.type == ID)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)
-                symbolTable.put(cast<String>(ast[0].tok.value), eval(ast[1], symbolTable.createChild()))
+                symbol.put(cast<String>(ast[0].tok.value), eval(ast[1], symbol.createChild()))
             else {
                 val parameters = ArrayList<String>()
                 for (i in 0 until ast[0].size()) {
@@ -43,25 +43,25 @@ val core = SymbolTable(
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
                 assert(ast[0].tok.type == ID)
-                symbolTable.put(cast<String>(ast[0].tok.value), structureHimeFunction(parameters, asts, symbolTable))
+                symbol.put(cast<String>(ast[0].tok.value), structureHimeFunction(parameters, asts, symbol))
             }
             return NIL
         }),
-        "undef" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
+        "undef" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 0)
             assert(ast[0].tok.type == ID)
-            assert(symbolTable.contains(cast<String>(ast[0].tok.value)))
-            symbolTable.remove(cast<String>(ast[0].tok.value))
+            assert(symbol.contains(cast<String>(ast[0].tok.value)))
+            symbol.remove(cast<String>(ast[0].tok.value))
             return NIL
         }),
-        "set" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
+        "set" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             assert(ast[0].tok.type == ID)
-            assert(symbolTable.contains(cast<String>(ast[0].tok.value)))
+            assert(symbol.contains(cast<String>(ast[0].tok.value)))
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
                 if (ast[1].isNotEmpty())
-                    ast[1].tok = eval(ast[1], symbolTable.createChild())
-                symbolTable.set(cast<String>(ast[0].tok.value), ast[1].tok)
+                    ast[1].tok = eval(ast[1], symbol.createChild())
+                symbol.set(cast<String>(ast[0].tok.value), ast[1].tok)
             } else {
                 val args = ArrayList<String>()
                 for (i in 0 until ast[0].size()) {
@@ -72,11 +72,11 @@ val core = SymbolTable(
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
                 assert(ast[0].tok.type == ID)
-                symbolTable.set(cast<String>(ast[0].tok.value), structureHimeFunction(args, asts, symbolTable))
+                symbol.set(cast<String>(ast[0].tok.value), structureHimeFunction(args, asts, symbol))
             }
             return NIL
         }),
-        "lambda" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
+        "lambda" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             val parameters = ArrayList<String>()
             if (ast[0].tok.type != EMPTY) {
@@ -90,11 +90,11 @@ val core = SymbolTable(
             val asts = ArrayList<ASTNode>()
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
-            return structureHimeFunction(parameters, asts, symbolTable)
+            return structureHimeFunction(parameters, asts, symbol)
         }),
-        "if" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
+        "if" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
-            val newSymbolTable = symbolTable.createChild()
+            val newSymbolTable = symbol.createChild()
             val condition = eval(ast[0], newSymbolTable)
             assert(condition.type == BOOL)
             if (cast<Boolean>(condition.value))
@@ -103,8 +103,8 @@ val core = SymbolTable(
                 return eval(ast[2].copy(), newSymbolTable)
             return NIL
         }),
-        "cond" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
-            val functionSymbolTable = symbolTable.createChild()
+        "cond" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            val functionSymbolTable = symbol.createChild()
             for (astNode in ast.child) {
                 if (astNode.tok.type == ID && cast<String>(astNode.tok.value) == "else")
                     return eval(astNode[0].copy(), functionSymbolTable)
@@ -117,32 +117,32 @@ val core = SymbolTable(
             }
             return NIL
         }),
-        "begin" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
-            val newSymbolTable = symbolTable.createChild()
+        "begin" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            val newSymbolTable = symbol.createChild()
             var result = NIL
             for (i in 0 until ast.size())
                 result = eval(ast[i].copy(), newSymbolTable)
             return result
         }),
-        "while" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
-            val newSymbolTable = symbolTable.createChild()
+        "while" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            val newSymbolTable = symbol.createChild()
             var result = NIL
-            var bool = eval(ast[0].copy(), symbolTable)
+            var bool = eval(ast[0].copy(), newSymbolTable)
             assert(bool.type == BOOL)
             while (cast<Boolean>(bool.value)) {
                 for (i in 1 until ast.size())
                     result = eval(ast[i].copy(), newSymbolTable)
-                bool = eval(ast[0].copy(), symbolTable)
+                bool = eval(ast[0].copy(), newSymbolTable)
                 assert(bool.type == BOOL)
             }
             return result
         }),
-        "apply" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbolTable: SymbolTable): Token {
+        "apply" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 0)
-            val newAst = ASTNode(eval(ast[0], symbolTable.createChild()))
+            val newAst = ASTNode(eval(ast[0], symbol.createChild()))
             for (i in 1 until ast.size())
                 newAst.add(ast[i])
-            return eval(newAst, symbolTable.createChild())
+            return eval(newAst, symbol.createChild())
         }),
         "require" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
             assert(args.isNotEmpty())
