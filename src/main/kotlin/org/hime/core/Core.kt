@@ -544,7 +544,7 @@ val core = SymbolTable(
                 result.add(e!!.toToken())
             return result.toToken()
         }),
-        "map" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
+        "map" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
             assert(args[1].type == LIST)
@@ -556,13 +556,13 @@ val core = SymbolTable(
                 for (j in 1 until args.size - 1)
                     functionargs.add(cast<List<Token>>(args[j + 1].value)[i])
                 if (args[0].type == FUNCTION)
-                    result.add(cast<Hime_Function>(args[0].value)(functionargs, symbolTable.createChild()))
+                    result.add(cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild()))
                 else if (args[0].type == HIME_FUNCTION)
                     result.add(cast<Hime_HimeFunction>(args[0].value)(functionargs))
             }
             return result.toToken()
         }),
-        "for-each" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
+        "for-each" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
             assert(args[1].type == LIST)
@@ -573,13 +573,13 @@ val core = SymbolTable(
                 for (j in 1 until args.size - 1)
                     functionargs.add(cast<List<Token>>(args[j + 1].value)[i])
                 if (args[0].type == FUNCTION)
-                    cast<Hime_Function>(args[0].value)(functionargs, symbolTable.createChild())
+                    cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild())
                 else if (args[0].type == HIME_FUNCTION)
                     cast<Hime_HimeFunction>(args[0].value)(functionargs)
             }
             return NIL
         }),
-        "filter" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
+        "filter" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
             assert(args[1].type == LIST)
@@ -587,7 +587,7 @@ val core = SymbolTable(
             val tokens = cast<List<Token>>(args[1].value)
             for (token in tokens) {
                 val op = when (args[0].type) {
-                    FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(token), symbolTable.createChild())
+                    FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(token), symbol.createChild())
                     HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(token))
                     else -> NIL
                 }
