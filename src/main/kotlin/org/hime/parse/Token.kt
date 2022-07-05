@@ -10,6 +10,7 @@ import java.math.BigInteger
 import java.util.ArrayList
 
 typealias Hime_HimeFunction = (List<Token>) -> Token
+typealias Hime_HimeFunctionPair = Pair<ASTNode, Hime_HimeFunction>
 typealias Hime_Function = (List<Token>, SymbolTable) -> Token
 typealias Hime_StaticFunction = (ASTNode, SymbolTable) -> Token
 
@@ -37,7 +38,8 @@ class Token(val type: Type, val value: Any) {
                 builder.append("]")
                 return builder.toString()
             }
-            FUNCTION, STATIC_FUNCTION, HIME_FUNCTION -> "<Function: ${this.value.hashCode()}>"
+            FUNCTION, STATIC_FUNCTION -> "<Function: ${this.value.hashCode()}>"
+            HIME_FUNCTION -> cast<Pair<ASTNode, Hime_HimeFunction>>(this.value).first.toString()
             DRAW -> "<Draw: ${this.value.hashCode()}>"
             COORDINATE -> "(${cast<Coordinate>(this.value).x}, ${cast<Coordinate>(this.value).y})"
             else -> this.value.toString()
@@ -47,7 +49,7 @@ class Token(val type: Type, val value: Any) {
 
 fun structureHimeFunction(functionargs: ArrayList<String>, ast: List<ASTNode>, symbol: SymbolTable): Token {
     return Token(HIME_FUNCTION,
-        fun(args: List<Token>): Token {
+        Pair(ast, fun(args: List<Token>): Token {
             assert(args.size >= functionargs.size)
             val newSymbolTable = symbol.createChild()
             for (i in functionargs.indices)
@@ -57,6 +59,7 @@ fun structureHimeFunction(functionargs: ArrayList<String>, ast: List<ASTNode>, s
                 result = eval(astNode.copy(), newSymbolTable)
             return result
         })
+    )
 }
 
 enum class Type {

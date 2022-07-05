@@ -560,7 +560,7 @@ val core = SymbolTable(
                 if (args[0].type == FUNCTION)
                     result.add(cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild()))
                 else if (args[0].type == HIME_FUNCTION)
-                    result.add(cast<Hime_HimeFunction>(args[0].value)(functionargs))
+                    result.add(cast<Hime_HimeFunction>(cast<Hime_HimeFunctionPair>(args[0].value).second)(functionargs))
             }
             return result.toToken()
         }),
@@ -577,7 +577,7 @@ val core = SymbolTable(
                 if (args[0].type == FUNCTION)
                     cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild())
                 else if (args[0].type == HIME_FUNCTION)
-                    cast<Hime_HimeFunction>(args[0].value)(functionargs)
+                    cast<Hime_HimeFunction>(cast<Hime_HimeFunctionPair>(args[0].value).second)(functionargs)
             }
             return NIL
         }),
@@ -590,7 +590,7 @@ val core = SymbolTable(
             for (token in tokens) {
                 val op = when (args[0].type) {
                     FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(token), symbol.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(token))
+                    HIME_FUNCTION -> cast<Hime_HimeFunction>(cast<Hime_HimeFunctionPair>(args[0].value).second)(arrayListOf(token))
                     else -> NIL
                 }
                 assert(op.type == BOOL)

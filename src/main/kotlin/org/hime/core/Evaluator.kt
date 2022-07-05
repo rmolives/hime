@@ -30,7 +30,7 @@ fun eval(ast: ASTNode, symbol: SymbolTable): Token {
         return ast.tok
     }
     if (ast.tok.type == Type.HIME_FUNCTION) {
-        ast.tok = cast<Hime_HimeFunction>(ast.tok.value)(args)
+        ast.tok = cast<Hime_HimeFunction>(cast<Hime_HimeFunctionPair>(ast.tok.value).second)(args)
         ast.clear()
         return ast.tok
     }
