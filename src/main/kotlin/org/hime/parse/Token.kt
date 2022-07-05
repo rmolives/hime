@@ -9,7 +9,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 typealias Hime_HimeFunction = (List<Token>) -> Token
-typealias Hime_HimeFunctionPair = Pair<ASTNode, Hime_HimeFunction>
+typealias Hime_HimeFunctionPair = Pair<Pair<List<String>, List<ASTNode>>, Hime_HimeFunction>
 typealias Hime_Function = (List<Token>, SymbolTable) -> Token
 typealias Hime_StaticFunction = (ASTNode, SymbolTable) -> Token
 
