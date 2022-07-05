@@ -7,10 +7,10 @@ import org.hime.parse.*
 
 val defaultSymbolTable = SymbolTable(HashMap(), core)
 
-fun call(code: String, symbolTable: SymbolTable = defaultSymbolTable): Token {
+fun call(code: String, symbol: SymbolTable = defaultSymbolTable): Token {
     val asts = parser(lexer(preprocessor(code)))
     var result = NIL
     for (ast in asts)
-        result = eval(ast, symbolTable)
+        result = eval(ast, symbol)
     return result
 }
