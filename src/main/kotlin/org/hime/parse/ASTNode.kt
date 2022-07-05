@@ -50,6 +50,20 @@ class ASTNode {
         return !isEmpty()
     }
 
+    override fun toString(): String {
+        val builder = StringBuilder()
+        if (isEmpty())
+            builder.append(tok.toString())
+        else {
+            builder.append("(")
+            builder.append(tok.toString())
+            for (ast in child)
+                builder.append(" ").append(ast.toString())
+            builder.append(")")
+        }
+        return builder.toString()
+    }
+
     companion object {
         val EMPTY = ASTNode(Token(Type.EMPTY, "empty"))
     }

@@ -1,5 +1,6 @@
 package org.hime
 
+import org.hime.parse.ASTNode
 import org.hime.parse.Token
 import org.hime.parse.Type
 import java.io.InputStream
@@ -18,6 +19,7 @@ fun Any.toToken(): Token {
     return when (this) {
         is Token -> this
         is Int -> Token(Type.NUM, this)
+        is ASTNode -> Token(Type.AST, this)
         is Float -> if (floor(this.toDouble()).compareTo(this) == 0)
             this.toInt().toToken()
         else Token(Type.REAL, this)
