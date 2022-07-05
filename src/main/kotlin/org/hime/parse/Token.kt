@@ -39,7 +39,7 @@ class Token(val type: Type, val value: Any) {
                 return builder.toString()
             }
             FUNCTION, STATIC_FUNCTION -> "<Function: ${this.value.hashCode()}>"
-            HIME_FUNCTION -> cast<Hime_HimeFunction>(cast<Hime_HimeFunctionPair>(this.value).first).toString()
+            HIME_FUNCTION -> cast<ASTNode>(cast<Hime_HimeFunctionPair>(this.value).first).toString()
             DRAW -> "<Draw: ${this.value.hashCode()}>"
             COORDINATE -> "(${cast<Coordinate>(this.value).x}, ${cast<Coordinate>(this.value).y})"
             else -> this.value.toString()
