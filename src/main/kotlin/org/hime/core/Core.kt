@@ -282,6 +282,8 @@ val core = SymbolTable(
             assert(args.isNotEmpty())
             assert(args[0].isNum())
             var num = BigDecimal(args[0].toString())
+            if (args.size == 1)
+                return BigDecimal.ZERO.subtract(num).toToken()
             for (i in 1 until args.size) {
                 assert(args[i].isNum())
                 num = num.subtract(BigDecimal(args[i].toString()))
