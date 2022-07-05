@@ -1084,7 +1084,6 @@ val draw = SymbolTable(
                 cast<Int>(args[2].value))
             )
         }),
-        // (draw-color draw r g b)
         "draw-color" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 3)
             assert(args[0].type == DRAW)
@@ -1099,15 +1098,12 @@ val draw = SymbolTable(
                 )
             return args[0]
         }),
-        // (coordinate x y)
         "coordinate" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == NUM)
             assert(args[1].type == NUM)
             return Token(COORDINATE, Coordinate(cast<Int>(args[0].value), cast<Int>(args[1].value)))
         }),
-        // (draw-clear draw)
-        // (draw-clear draw (x y) width height)
         "draw-clear" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             assert(args[0].type == DRAW)
@@ -1129,7 +1125,6 @@ val draw = SymbolTable(
             draw.graphics.color = Color.BLACK
             return args[0]
         }),
-        // (draw-polygon draw [(x y)])
         "draw-polygon" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == DRAW)
@@ -1148,7 +1143,6 @@ val draw = SymbolTable(
             draw.update()
             return args[0]
         }),
-        // (fill-polygon draw [(x y)])
         "fill-polygon" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == DRAW)
@@ -1167,7 +1161,6 @@ val draw = SymbolTable(
             draw.update()
             return args[0]
         }),
-        // (draw-line draw (x1 y1) (x2 y2))
         "draw-line" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 2)
             assert(args[0].type == DRAW)
@@ -1180,7 +1173,6 @@ val draw = SymbolTable(
             draw.update()
             return args[0]
         }),
-        // (draw-rect draw (x y) width height)
         "draw-rect" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 3)
             assert(args[0].type == DRAW)
@@ -1195,7 +1187,6 @@ val draw = SymbolTable(
             draw.update()
             return args[0]
         }),
-        // (fill-rect draw (x y) width height)
         "fill-rect" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 3)
             assert(args[0].type == DRAW)
@@ -1210,7 +1201,6 @@ val draw = SymbolTable(
             draw.update()
             return args[0]
         }),
-        // (draw-oval draw (x y) width height)
         "draw-oval" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 3)
             assert(args[0].type == DRAW)
@@ -1225,7 +1215,6 @@ val draw = SymbolTable(
             draw.update()
             return args[0]
         }),
-        // (fill-oval draw (x y) width height)
         "fill-oval" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 3)
             assert(args[0].type == DRAW)
@@ -1240,7 +1229,6 @@ val draw = SymbolTable(
             draw.update()
             return args[0]
         }),
-        // (draw-round-rect draw (x y) width height arcWidth arcHeight)
         "draw-round-rect" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 5)
             assert(args[0].type == DRAW)
@@ -1259,7 +1247,6 @@ val draw = SymbolTable(
             draw.update()
             return args[0]
         }),
-        // (fill-round-rect draw (x y) width height arcWidth arcHeight)
         "fill-round-rect" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 5)
             assert(args[0].type == DRAW)
@@ -1278,7 +1265,6 @@ val draw = SymbolTable(
             draw.update()
             return args[0]
         }),
-        // (draw-arc draw (x y) width height arcWidth arcHeight)
         "draw-arc" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 5)
             assert(args[0].type == DRAW)
@@ -1297,7 +1283,6 @@ val draw = SymbolTable(
             draw.update()
             return args[0]
         }),
-        // (fill-arc draw (x y) width height arcWidth arcHeight)
         "fill-arc" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 5)
             assert(args[0].type == DRAW)
