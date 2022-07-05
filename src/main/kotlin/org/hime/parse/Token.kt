@@ -7,7 +7,6 @@ import org.hime.draw.Coordinate
 import org.hime.parse.Type.*
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.util.ArrayList
 
 typealias Hime_HimeFunction = (List<Token>) -> Token
 typealias Hime_HimeFunctionPair = Pair<ASTNode, Hime_HimeFunction>
@@ -66,13 +65,13 @@ class Token(val type: Type, val value: Any) {
     }
 }
 
-fun structureHimeFunction(functionargs: ArrayList<String>, ast: List<ASTNode>, symbol: SymbolTable): Token {
+fun structureHimeFunction(functionParmeters: List<String>, ast: List<ASTNode>, symbol: SymbolTable): Token {
     return Token(HIME_FUNCTION,
-        Pair(ast, fun(args: List<Token>): Token {
-            assert(args.size >= functionargs.size)
+        Pair(Pair(functionParmeters, ast), fun(args: List<Token>): Token {
+            assert(args.size >= functionParmeters.size)
             val newSymbolTable = symbol.createChild()
-            for (i in functionargs.indices)
-                newSymbolTable.put(functionargs[i], args[i])
+            for (i in functionParmeters.indices)
+                newSymbolTable.put(functionParmeters[i], args[i])
             var result = NIL
             for (astNode in ast)
                 result = eval(astNode.copy(), newSymbolTable)
