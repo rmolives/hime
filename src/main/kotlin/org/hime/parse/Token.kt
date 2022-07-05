@@ -55,7 +55,8 @@ class Token(val type: Type, val value: Any) {
                 for (ast in asts)
                     builder.append("${if (flag) " " else ""}$ast")
                 if (flag)
-                    builder.append("))")
+                    builder.append(")")
+                builder.append(")")
                 return builder.toString()
             }
             DRAW -> "<Draw: ${this.value.hashCode()}>"
