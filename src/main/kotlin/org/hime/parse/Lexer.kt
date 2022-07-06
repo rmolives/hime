@@ -29,20 +29,17 @@ fun lexer(code: String): List<List<Token>> {
                 var skip = false
                 while (true) {
                     ++index
-                    if (index < code.length - 1 && (code[index + 1] == '\\' || code[index + 1] == '\"') && code[index] == '\\') {
+                    if (index < code.length - 1 && code[index] == '\\') {
                         if (skip) {
                             skip = false
-                            value.append("\\")
+                            value.append("\\\\")
                         } else
-                            if (index < code.length - 1 && code[index + 1] != 'n' && code[index + 1] != 't')
-                                value.append("\\")
-                            else
-                                skip = true
+                            skip = true
                         continue
                     } else if (index >= code.length - 1 || code[index] == '\"') {
                         if (skip) {
                             skip = false
-                            value.append("\"")
+                            value.append("\\\"")
                             continue
                         } else
                             break
