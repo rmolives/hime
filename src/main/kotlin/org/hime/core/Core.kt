@@ -14,7 +14,6 @@ import java.math.MathContext
 import java.math.RoundingMode
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.system.exitProcess
@@ -932,46 +931,6 @@ val core = SymbolTable(
     ), null
 )
 
-val hash = SymbolTable(
-    mutableMapOf(
-        "sha256" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            val messageDigest = MessageDigest.getInstance("SHA-256")
-            messageDigest.update(args[0].toString().toByteArray())
-            val byteBuffer = messageDigest.digest()
-            val strHexString = StringBuilder()
-            for (b in byteBuffer) {
-                val hex = Integer.toHexString(0xff and b.toInt())
-                if (hex.length == 1)
-                    strHexString.append('0')
-                strHexString.append(hex)
-            }
-            return strHexString.toString().toToken()
-        }),
-        "sha512" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            val messageDigest = MessageDigest.getInstance("SHA-512")
-            messageDigest.update(args[0].toString().toByteArray())
-            val byteBuffer = messageDigest.digest()
-            val strHexString = StringBuilder()
-            for (b in byteBuffer) {
-                val hex = Integer.toHexString(0xff and b.toInt())
-                if (hex.length == 1)
-                    strHexString.append('0')
-                strHexString.append(hex)
-            }
-            return strHexString.toString().toToken()
-        }),
-        "md5" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            return BigInteger(
-                1, MessageDigest.getInstance("MD5")
-                    .digest(args[0].toString().toByteArray())
-            ).toString(16)
-                .padStart(32, '0').toToken()
-        })
-    ), null
-)
-
 val file = SymbolTable(
     mutableMapOf(
         "file-input" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
@@ -1065,6 +1024,5 @@ val file = SymbolTable(
 )
 
 val module = mutableMapOf(
-    "util.hash" to hash,
     "util.file" to file
 )
