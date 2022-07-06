@@ -133,18 +133,12 @@ fun lexer(code: String): List<List<Token>> {
                 var skip = false
                 while (true) {
                     ++index
-                    if (index < expression.length - 1
-                        && (expression[index + 1] == '\\' || expression[index + 1] == '\"')
-                        && expression[index] == '\\'
-                    ) {
+                    if (index < expression.length - 1 && expression[index] == '\\') {
                         if (skip) {
                             skip = false
                             builder.append("\\")
                         } else
-                            if (index < expression.length - 1 && expression[index + 1] != 'n' && expression[index + 1] != 't')
-                                builder.append("\\")
-                            else
-                                skip = true
+                            skip = true
                         continue
                     } else if (index >= expression.length - 1 || expression[index] == '\"') {
                         if (skip) {
@@ -154,7 +148,18 @@ fun lexer(code: String): List<List<Token>> {
                         } else
                             break
                     }
-                    builder.append(expression[index])
+                    if (skip) {
+                        skip = false
+                        builder.append(
+                            when (expression[index]) {
+                                'n' -> "\n"
+                                'r' -> "\r"
+                                't' -> "\t"
+                                else -> expression[index]
+                            }
+                        )
+                    } else
+                        builder.append(expression[index])
                 }
                 tokens.add(builder.toString().toToken())
                 continue
