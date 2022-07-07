@@ -17,7 +17,7 @@ fun preprocessor(s: String): String {
                 val peek = chars[++j]
                 // Skip escape sequences in strings.
                 if ((chars[j + 1] == '\\' || chars[j + 1] == '\"') && peek == '\\') {
-                    skip = !skip
+                    skip = false
                 } else if (peek == '\"') {
                     skip = if (!skip) {
                         break
