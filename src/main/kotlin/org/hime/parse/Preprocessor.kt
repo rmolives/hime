@@ -3,7 +3,7 @@ package org.hime.parse
 fun preprocessor(s: String): String {
     val builder = StringBuilder()
     var index = 0
-    // Replace carriage returns and split the code into single lines.
+    // Delete blank lines.
     val chars = s.replace(Regex("(\n|\r\n)$\\s*"), "").toCharArray()
     var i = 0
     while (i < chars.size) {
@@ -41,9 +41,9 @@ fun preprocessor(s: String): String {
             --index
             builder.append(c)
         // Lessen the number of blank characters.
-        } else if (index >= 1 && (c == ' ' || c == '\n' || c == '\t')) {
+        } else if (index >= 1 && (c == ' ' || c == '\n' || c == '\t' || c == '\r')) {
             var j = i + 1
-            while (chars[j] == ' ' || chars[j] == '\n' || chars[j] == '\t') {
+            while (chars[j] == ' ' || chars[j] == '\n' || chars[j] == '\t' || chars[i] == '\r') {
                 ++i
                 ++j
             }
