@@ -63,14 +63,20 @@ class Token(val type: Type, val value: Any) {
     }
 }
 
+// Process functions.
 fun structureHimeFunction(functionParmeters: List<String>, ast: List<ASTNode>, symbol: SymbolTable): Token {
     return Token(HIME_FUNCTION,
+        // Initialize function executing environment.
         Pair(Pair(functionParmeters, ast), fun(args: List<Token>): Token {
+            // When parameter becomes less, cause a runtime error.
             assert(args.size >= functionParmeters.size)
+            // Build function scope for local variables.
             val newSymbolTable = symbol.createChild()
+            // Load args.
             for (i in functionParmeters.indices)
                 newSymbolTable.put(functionParmeters[i], args[i])
             var result = NIL
+            // Analyse AST to execute it.
             for (astNode in ast)
                 result = eval(astNode.copy(), newSymbolTable)
             return result

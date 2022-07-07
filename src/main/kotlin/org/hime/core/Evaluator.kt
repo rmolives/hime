@@ -4,6 +4,7 @@ import org.hime.cast
 import org.hime.parse.*
 import java.util.*
 
+// This function perform every corresponding operations.
 fun eval(ast: ASTNode, symbol: SymbolTable): Token {
     var temp = ast.tok
     while (true)

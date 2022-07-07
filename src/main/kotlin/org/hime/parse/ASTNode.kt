@@ -64,6 +64,7 @@ class ASTNode {
         return builder.toString()
     }
 
+    // It resembles static variable.
     companion object {
         val EMPTY = ASTNode(Token(Type.EMPTY, "empty"))
     }
