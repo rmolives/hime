@@ -56,7 +56,7 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                 }
 
             } else if (tokens[index].type == Type.LB)
-            // Why is it that considering whether stack is empty is critical?
+                // Switch the state according to whether the stack is empty.
                 state = if (stack.isEmpty()) 1 else 2
             else if (tokens[index].type == Type.RB) {
                 // Functions
