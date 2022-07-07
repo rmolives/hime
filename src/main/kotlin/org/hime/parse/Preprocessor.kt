@@ -41,9 +41,9 @@ fun preprocessor(s: String): String {
             --index
             builder.append(c)
         // Lessen the number of blank characters.
-        } else if (index >= 1 && (c == ' ' || c == '\n' || c == '\t' || c == '\r')) {
+        } else if (index >= 1 && (c == ' ' || c == '\n' || c == '\t')) {
             var j = i + 1
-            while (chars[j] == ' ' || chars[j] == '\n' || chars[j] == '\t' || chars[i] == '\r') {
+            while (chars[j] == ' ' || chars[j] == '\n' || chars[j] == '\t') {
                 ++i
                 ++j
             }
