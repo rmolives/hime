@@ -1019,6 +1019,14 @@ val file = SymbolTable(
             }
             Files.write(file.toPath(), bytes)
             return NIL
+        }),
+        "eval" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            val newSymbol = symbol.createChild()
+            var result = NIL
+            for (node in args)
+                result = call(node.toString(), newSymbol)
+            return result
         })
     ), null
 )
