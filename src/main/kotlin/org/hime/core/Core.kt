@@ -136,26 +136,26 @@ val core = SymbolTable(
                 newAst.add(ast[i])
             return eval(newAst, symbol.createChild())
         }),
-        "require" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
+        "require" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.isNotEmpty())
             val path = args[0].toString()
             if (module.containsKey(path)) {
                 for ((key, value) in module[path]!!.table)
-                    symbolTable.put(key, value)
+                    symbol.put(key, value)
                 return NIL
             }
             val file = File(System.getProperty("user.dir") + "/" + path.replace(".", "/") + ".hime")
             if (file.exists()) {
                 for (node in parser(lexer(preprocessor(Files.readString(file.toPath())))))
-                    eval(node, symbolTable)
+                    eval(node, symbol)
                 return NIL
             }
-            val builtURI = symbolTable.javaClass.classLoader.getResource("module/"+ path.replace(".", "/") + ".hime")
+            val builtURI = symbol.javaClass.classLoader.getResource("module/"+ path.replace(".", "/") + ".hime")
             if (builtURI != null) {
             val built = File(builtURI.toURI())
             if (built.exists())
                 for (node in parser(lexer(preprocessor(Files.readString(built.toPath())))))
-                    eval(node, symbolTable)
+                    eval(node, symbol)
             }
             return NIL
         }),
