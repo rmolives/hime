@@ -37,7 +37,7 @@ fun repl() {
                     while (true) {
                         ++index
                         if (index < code.length - 1 && code[index] == '\\') {
-                            skip = !skip
+                            skip = false
                             continue
                         } else if (index >= code.length - 1 || code[index] == '\"') {
                             if (skip) {
@@ -45,6 +45,9 @@ fun repl() {
                                 continue
                             } else
                                 break
+                        } else if (skip) {
+                            skip = false
+                            continue
                         }
                     }
                     ++index

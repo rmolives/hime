@@ -318,49 +318,6 @@ val core = SymbolTable(
             println()
             return NIL
         }),
-        "&" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            var num = 0
-            for (parameter in args) {
-                assert(parameter.isNum())
-                num &= cast<Int>(parameter)
-            }
-            return num.toToken()
-        }), 
-        "|" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            var num = 0
-            for (parameter in args) {
-                assert(parameter.isNum())
-                num |= cast<Int>(parameter)
-            }
-            return num.toToken()
-        }),
-        "^" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            var num = 0
-            for (parameter in args) {
-                assert(parameter.isNum())
-                num ^= cast<Int>(parameter)
-            }
-            return num.toToken()
-        }), 
-        ">>" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size == 2)
-            assert(args[0].isNum())
-            assert(args[1].isNum())
-            var num = cast<Int>(args[0])
-            num >>= cast<Int>(args[1])
-            return num.toToken()
-        }),
-        "<<" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size == 2)
-            assert(args[0].isNum())
-            assert(args[1].isNum())
-            var num = cast<Int>(args[0])
-            num <<= cast<Int>(args[1])
-            return num.toToken()
-        }),
         "+" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var num = BigDecimal.ZERO

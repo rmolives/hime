@@ -50,6 +50,10 @@ fun lexer(code: String): List<List<Token>> {
                             continue
                         } else
                             break
+                    } else if (skip) {
+                        value.append("\\${code[index]}")
+                        skip = false
+                        continue
                     }
                     value.append(code[index])
                 }
