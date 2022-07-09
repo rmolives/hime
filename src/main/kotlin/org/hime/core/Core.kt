@@ -1088,6 +1088,15 @@ val file = SymbolTable(
     ), null
 )
 
+val bit = SymbolTable(
+    mutableMapOf(
+        "&" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            return NIL
+        })
+    ), null
+)
+
 val module = mutableMapOf(
-    "util.file" to file
+    "util.file" to file,
+    "util.bit" to bit
 )
