@@ -311,7 +311,7 @@ val core = SymbolTable(
             print(builder.toString())
             return NIL
         }),
-        "new-line" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+        "newline" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
             println()
             return NIL
         }),
