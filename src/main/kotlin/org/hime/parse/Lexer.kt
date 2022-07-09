@@ -174,6 +174,7 @@ fun lexer(code: String): List<List<Token>> {
                                 'n' -> "\n"
                                 'r' -> "\r"
                                 't' -> "\t"
+                                'b' -> "\b"
                                 else -> expression[index]
                             }
                         )
