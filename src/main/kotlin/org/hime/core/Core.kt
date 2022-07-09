@@ -1110,8 +1110,45 @@ val file = SymbolTable(
 
 val bit = SymbolTable(
     mutableMapOf(
-        "&" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            return NIL
+        "bit-and" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM || args[0].type == BIG_NUM)
+            assert(args[1].type == NUM || args[1].type == BIG_NUM)
+            val m = BigInteger(args[0].toString())
+            val n = BigInteger(args[0].toString())
+            return m.and(n).toToken()
+        }),
+        "bit-or" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM || args[0].type == BIG_NUM)
+            assert(args[1].type == NUM || args[1].type == BIG_NUM)
+            val m = BigInteger(args[0].toString())
+            val n = BigInteger(args[0].toString())
+            return m.or(n).toToken()
+        }),
+        "bit-xor" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM || args[0].type == BIG_NUM)
+            assert(args[1].type == NUM || args[1].type == BIG_NUM)
+            val m = BigInteger(args[0].toString())
+            val n = BigInteger(args[0].toString())
+            return m.xor(n).toToken()
+        }),
+        "bit-left" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM || args[0].type == BIG_NUM)
+            assert(args[1].type == NUM)
+            val m = BigInteger(args[0].toString())
+            val n = cast<Int>(args[0].value)
+            return m.shiftLeft(n).toToken()
+        }),
+        "bit-right" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM || args[0].type == BIG_NUM)
+            assert(args[1].type == NUM)
+            val m = BigInteger(args[0].toString())
+            val n = cast<Int>(args[0].value)
+            return m.shiftRight(n).toToken()
         })
     ), null
 )
