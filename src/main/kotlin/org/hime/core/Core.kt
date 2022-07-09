@@ -1,9 +1,12 @@
 package org.hime.core
 
 import ch.obermuhlner.math.big.BigDecimalMath
-import org.hime.*
+import org.hime.call
+import org.hime.cast
+import org.hime.isNum
 import org.hime.parse.*
 import org.hime.parse.Type.*
+import org.hime.toToken
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -1004,6 +1007,54 @@ val core = SymbolTable(
                 return method.invoke(null, *newArgs).toToken()
             }))
             return NIL
+        }),
+        "eval" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            val newSymbol = symbol.createChild()
+            var result = NIL
+            for (node in args)
+                result = call(node.toString(), newSymbol)
+            return result
+        }),
+        "bit-and" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM || args[0].type == BIG_NUM)
+            assert(args[1].type == NUM || args[1].type == BIG_NUM)
+            val m = BigInteger(args[0].toString())
+            val n = BigInteger(args[0].toString())
+            return m.and(n).toToken()
+        }),
+        "bit-or" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM || args[0].type == BIG_NUM)
+            assert(args[1].type == NUM || args[1].type == BIG_NUM)
+            val m = BigInteger(args[0].toString())
+            val n = BigInteger(args[0].toString())
+            return m.or(n).toToken()
+        }),
+        "bit-xor" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM || args[0].type == BIG_NUM)
+            assert(args[1].type == NUM || args[1].type == BIG_NUM)
+            val m = BigInteger(args[0].toString())
+            val n = BigInteger(args[0].toString())
+            return m.xor(n).toToken()
+        }),
+        "bit-left" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM || args[0].type == BIG_NUM)
+            assert(args[1].type == NUM)
+            val m = BigInteger(args[0].toString())
+            val n = cast<Int>(args[0].value)
+            return m.shiftLeft(n).toToken()
+        }),
+        "bit-right" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == NUM || args[0].type == BIG_NUM)
+            assert(args[1].type == NUM)
+            val m = BigInteger(args[0].toString())
+            val n = cast<Int>(args[0].value)
+            return m.shiftRight(n).toToken()
         })
     ), null
 )
@@ -1096,54 +1147,6 @@ val file = SymbolTable(
             }
             Files.write(file.toPath(), bytes)
             return NIL
-        }),
-        "eval" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            val newSymbol = symbol.createChild()
-            var result = NIL
-            for (node in args)
-                result = call(node.toString(), newSymbol)
-            return result
-        }),
-        "bit-and" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == NUM || args[0].type == BIG_NUM)
-            assert(args[1].type == NUM || args[1].type == BIG_NUM)
-            val m = BigInteger(args[0].toString())
-            val n = BigInteger(args[0].toString())
-            return m.and(n).toToken()
-        }),
-        "bit-or" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == NUM || args[0].type == BIG_NUM)
-            assert(args[1].type == NUM || args[1].type == BIG_NUM)
-            val m = BigInteger(args[0].toString())
-            val n = BigInteger(args[0].toString())
-            return m.or(n).toToken()
-        }),
-        "bit-xor" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == NUM || args[0].type == BIG_NUM)
-            assert(args[1].type == NUM || args[1].type == BIG_NUM)
-            val m = BigInteger(args[0].toString())
-            val n = BigInteger(args[0].toString())
-            return m.xor(n).toToken()
-        }),
-        "bit-left" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == NUM || args[0].type == BIG_NUM)
-            assert(args[1].type == NUM)
-            val m = BigInteger(args[0].toString())
-            val n = cast<Int>(args[0].value)
-            return m.shiftLeft(n).toToken()
-        }),
-        "bit-right" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == NUM || args[0].type == BIG_NUM)
-            assert(args[1].type == NUM)
-            val m = BigInteger(args[0].toString())
-            val n = cast<Int>(args[0].value)
-            return m.shiftRight(n).toToken()
         })
     ), null
 )
