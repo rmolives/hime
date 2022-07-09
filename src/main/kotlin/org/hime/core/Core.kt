@@ -20,6 +20,60 @@ import kotlin.system.exitProcess
 
 val core = SymbolTable(
     mutableMapOf(
+        "let" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            assert(ast.isNotEmpty())
+            val newSymbol = symbol.createChild()
+            var result = NIL
+            for (node in ast[0].child) {
+                if (node.tok.toString() == "apply") {
+                    val parameters = ArrayList<String>()
+                    for (i in 0 until node[0].size()) {
+                        assert(node[0][i].tok.type == ID)
+                        parameters.add(cast<String>(node[0][i].tok.value))
+                    }
+                    val asts = ArrayList<ASTNode>()
+                    for (i in 1 until node.size())
+                        asts.add(node[i].copy())
+                    assert(node[0].tok.type == ID)
+                    newSymbol.put(cast<String>(node[0].tok.value), structureHimeFunction(parameters, asts, symbol))
+                } else {
+                    var value = NIL
+                    for (e in node.child)
+                        value = eval(e.copy(), symbol.createChild())
+                    newSymbol.put(node.tok.toString(), value)
+                }
+            }
+            for (i in 1 until ast.size())
+                result = eval(ast[i].copy(), newSymbol.createChild())
+            return result
+        }),
+        "let*" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            assert(ast.isNotEmpty())
+            val newSymbol = symbol.createChild()
+            var result = NIL
+            for (node in ast[0].child) {
+                if (node.tok.toString() == "apply") {
+                    val parameters = ArrayList<String>()
+                    for (i in 0 until node[0].size()) {
+                        assert(node[0][i].tok.type == ID)
+                        parameters.add(cast<String>(node[0][i].tok.value))
+                    }
+                    val asts = ArrayList<ASTNode>()
+                    for (i in 1 until node.size())
+                        asts.add(node[i].copy())
+                    assert(node[0].tok.type == ID)
+                    newSymbol.put(cast<String>(node[0].tok.value), structureHimeFunction(parameters, asts, newSymbol))
+                } else {
+                    var value = NIL
+                    for (e in node.child)
+                        value = eval(e.copy(), newSymbol.createChild())
+                    newSymbol.put(node.tok.toString(), value)
+                }
+            }
+            for (i in 1 until ast.size())
+                result = eval(ast[i].copy(), newSymbol.createChild())
+            return result
+        }),
         "def" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             assert(ast[0].tok.type == ID)
@@ -86,25 +140,25 @@ val core = SymbolTable(
         }),
         "if" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
-            val newSymbolTable = symbol.createChild()
-            val condition = eval(ast[0], newSymbolTable)
+            val newSymbol = symbol.createChild()
+            val condition = eval(ast[0], newSymbol)
             assert(condition.type == BOOL)
             if (cast<Boolean>(condition.value))
-                return eval(ast[1].copy(), newSymbolTable)
+                return eval(ast[1].copy(), newSymbol)
             else if (ast.size() > 2)
-                return eval(ast[2].copy(), newSymbolTable)
+                return eval(ast[2].copy(), newSymbol)
             return NIL
         }),
         "cond" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
-            val functionSymbolTable = symbol.createChild()
-            for (astNode in ast.child) {
-                if (astNode.tok.type == ID && cast<String>(astNode.tok.value) == "else")
-                    return eval(astNode[0].copy(), functionSymbolTable)
+            val newSymbol = symbol.createChild()
+            for (node in ast.child) {
+                if (node.tok.type == ID && cast<String>(node.tok.value) == "else")
+                    return eval(node[0].copy(), newSymbol)
                 else {
-                    val result = eval(astNode[0].copy(), functionSymbolTable)
+                    val result = eval(node[0].copy(), newSymbol)
                     assert(result.type == BOOL)
                     if (cast<Boolean>(result.value))
-                        return eval(astNode[1].copy(), functionSymbolTable)
+                        return eval(node[1].copy(), newSymbol)
                 }
             }
             return NIL
