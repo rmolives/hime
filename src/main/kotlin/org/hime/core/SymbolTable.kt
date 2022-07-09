@@ -4,7 +4,7 @@ import org.hime.parse.Token
 
 class SymbolTable(
     var table: MutableMap<String, Token>,
-    private var father: SymbolTable?
+    var father: SymbolTable?
 ) {
     fun remove(key: String) {
         var data = this
