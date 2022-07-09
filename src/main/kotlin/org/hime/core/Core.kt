@@ -29,12 +29,12 @@ val core = SymbolTable(
                     val parameters = ArrayList<String>()
                     for (i in 0 until node[0].size()) {
                         assert(node[0][i].tok.type == ID)
-                        parameters.add(node[0][i].tok.value.toString())
+                        parameters.add(node[0][i].tok.toString())
                     }
                     val asts = ArrayList<ASTNode>()
                     for (i in 1 until node.size())
                         asts.add(node[i].copy())
-                    newSymbol.put(node[0].tok.value.toString(), structureHimeFunction(parameters, asts, symbol))
+                    newSymbol.put(node[0].tok.toString(), structureHimeFunction(parameters, asts, symbol))
                 } else {
                     var value = NIL
                     for (e in node.child)
@@ -54,11 +54,11 @@ val core = SymbolTable(
                 if (node.tok.toString() == "apply") {
                     val parameters = ArrayList<String>()
                     for (i in 0 until node[0].size())
-                        parameters.add(node[0][i].tok.value.toString())
+                        parameters.add(node[0][i].tok.toString())
                     val asts = ArrayList<ASTNode>()
                     for (i in 1 until node.size())
                         asts.add(node[i].copy())
-                    newSymbol.put(node[0].tok.value.toString(), structureHimeFunction(parameters, asts, newSymbol))
+                    newSymbol.put(node[0].tok.toString(), structureHimeFunction(parameters, asts, newSymbol))
                 } else {
                     var value = NIL
                     for (e in node.child)
@@ -73,17 +73,17 @@ val core = SymbolTable(
         "static" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             assert(symbol.father != null)
-            if (!symbol.table.containsKey(ast[0].tok.value.toString())) {
+            if (!symbol.table.containsKey(ast[0].tok.toString())) {
                 if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)
                     symbol.father?.put(cast<String>(ast[0].tok.value), eval(ast[1], symbol.createChild()))
                 else {
                     val parameters = ArrayList<String>()
                     for (i in 0 until ast[0].size())
-                        parameters.add(ast[0][i].tok.value.toString())
+                        parameters.add(ast[0][i].tok.toString())
                     val asts = ArrayList<ASTNode>()
                     for (i in 1 until ast.size())
                         asts.add(ast[i].copy())
-                    symbol.father?.put(ast[0].tok.value.toString(), structureHimeFunction(parameters, asts, symbol))
+                    symbol.father?.put(ast[0].tok.toString(), structureHimeFunction(parameters, asts, symbol))
                 }
             }
             return NIL
@@ -91,11 +91,11 @@ val core = SymbolTable(
         "def" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)
-                symbol.put(ast[0].tok.value.toString(), eval(ast[1], symbol.createChild()))
+                symbol.put(ast[0].tok.toString(), eval(ast[1], symbol.createChild()))
             else {
                 val parameters = ArrayList<String>()
                 for (i in 0 until ast[0].size())
-                    parameters.add(ast[0][i].tok.value.toString())
+                    parameters.add(ast[0][i].tok.toString())
                 val asts = ArrayList<ASTNode>()
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
@@ -106,7 +106,7 @@ val core = SymbolTable(
         "undef" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 0)
             assert(ast[0].tok.type == ID)
-            assert(symbol.contains(cast<String>(ast[0].tok.value)))
+            assert(symbol.contains(ast[0].tok.value.toString()))
             symbol.remove(cast<String>(ast[0].tok.value))
             return NIL
         }),
@@ -116,15 +116,15 @@ val core = SymbolTable(
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
                 if (ast[1].isNotEmpty())
                     ast[1].tok = eval(ast[1], symbol.createChild())
-                symbol.set(ast[0].tok.value.toString(), ast[1].tok)
+                symbol.set(ast[0].tok.toString(), ast[1].tok)
             } else {
                 val args = ArrayList<String>()
                 for (i in 0 until ast[0].size())
-                    args.add(ast[0][i].tok.value.toString())
+                    args.add(ast[0][i].tok.toString())
                 val asts = ArrayList<ASTNode>()
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
-                symbol.set(ast[0].tok.value.toString(), structureHimeFunction(args, asts, symbol))
+                symbol.set(ast[0].tok.toString(), structureHimeFunction(args, asts, symbol))
             }
             return NIL
         }),
@@ -132,9 +132,9 @@ val core = SymbolTable(
             assert(ast.size() > 1)
             val parameters = ArrayList<String>()
             if (ast[0].tok.type != EMPTY) {
-                parameters.add(ast[0].tok.value.toString())
+                parameters.add(ast[0].tok.toString())
                 for (i in 0 until ast[0].size())
-                    parameters.add(ast[0][i].tok.value.toString())
+                    parameters.add(ast[0][i].tok.toString())
             }
             val asts = ArrayList<ASTNode>()
             for (i in 1 until ast.size())
