@@ -438,6 +438,26 @@ val core = SymbolTable(
                 if (returnInteger > end) end else returnInteger
             return returnInteger.toToken()
         }),
+        "cons" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size == 2)
+            return ArrayList(args).toToken()
+        }),
+        "car" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            return cast<List<Token>>(args[0].value)[0]
+        }),
+        "cdr" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            val tokens = cast<List<Token>>(args[0].value)
+            val list = ArrayList<Token>()
+            for (i in 1 until tokens.size)
+                list.add(tokens[i])
+            if (list.size == 1)
+                return list[0]
+            return list.toToken()
+        }),
         "list" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             return ArrayList(args).toToken()
         }),
