@@ -1104,12 +1104,7 @@ val file = SymbolTable(
             for (node in args)
                 result = call(node.toString(), newSymbol)
             return result
-        })
-    ), null
-)
-
-val bit = SymbolTable(
-    mutableMapOf(
+        }),
         "bit-and" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == NUM || args[0].type == BIG_NUM)
@@ -1154,6 +1149,5 @@ val bit = SymbolTable(
 )
 
 val module = mutableMapOf(
-    "util.file" to file,
-    "util.bit" to bit
+    "util.file" to file
 )
