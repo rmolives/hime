@@ -10,7 +10,8 @@ import java.math.MathContext
 val ENV: Map<String, Token> = mapOf(
     "true" to TRUE,
     "false" to FALSE,
-    "nil" to NIL
+    "nil" to NIL,
+    "empty-stream" to EMPTY_STREAM
 )
 
 fun lexer(code: String): List<List<Token>> {

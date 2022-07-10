@@ -47,6 +47,64 @@ val core = SymbolTable(
                 return list[0].toToken()
             return list.toToken()
         }),
+        "stream-map" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            val newSymbol = symbol.createChild()
+            newSymbol.put("proc", args[0])
+            newSymbol.put("s", args[1])
+            return eval(
+                parser(
+                    lexer(
+                        "(lambda (proc s) " +
+                                "(if (= n 0) " +
+                                "(= s empty-stream) " +
+                                "empty-stream " +
+                                "(++ (proc (stream-car s)) (delay (stream-map proc (stream-cdr s))))))"
+                    )
+                )[0], symbol
+            )
+        }),
+        "stream-filter" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            val newSymbol = symbol.createChild()
+            newSymbol.put("pred", args[0])
+            newSymbol.put("stream", args[1])
+            return eval(
+                parser(
+                    lexer(
+                        "(lambda (pred stream) " +
+                                "(cond ((= stream empty-stream) the-empty-stream) " +
+                                "((pred (stream-car stream)) " +
+                                "(++ (stream-car stream) " +
+                                "(delay (stream-filter pred (stream-cdr stream))))) " +
+                                "(else (stream-filter pred (stream-cdr stream)))))"
+                    )
+                )[0], symbol
+            )
+        }),
+        "stream-for-each" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            assert(args[1].type == LIST)
+            val tokens = cast<List<Token>>(args[1].value)
+            var functionargs = ArrayList<Token>()
+            functionargs.add(tokens[0])
+            for (j in 1 until args.size - 1)
+                functionargs.add(cast<List<Token>>(args[j + 1].value)[0])
+            if (args[0].type == FUNCTION)
+                cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild())
+            else if (args[0].type == HIME_FUNCTION)
+                cast<Hime_HimeFunctionPair>(args[0].value).second(functionargs)
+            for (i in tokens.indices) {
+                functionargs = ArrayList<Token>()
+                functionargs.add(cast<Hime_HimeFunctionPair>(tokens[i].value).second(arrayListOf()))
+                for (j in 1 until args.size - 1)
+                    functionargs.add(cast<List<Token>>(args[j + 1].value)[i])
+                if (args[0].type == FUNCTION)
+                    cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild())
+                else if (args[0].type == HIME_FUNCTION)
+                    cast<Hime_HimeFunctionPair>(args[0].value).second(functionargs)
+            }
+            return NIL
+        }),
         "delay" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             val asts = ArrayList<ASTNode>()
@@ -497,19 +555,25 @@ val core = SymbolTable(
         }),
         "++" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            return if (args[0].type == LIST) {
+            var flag = false
+            for (arg in args)
+                if (arg.type == LIST) {
+                    flag = true
+                    break
+                }
+            return if (flag) {
                 val list = ArrayList<Token>()
-                for (parameter in args) {
-                    if (parameter.type == LIST)
-                        list.addAll(cast<List<Token>>(parameter.value))
+                for (arg in args) {
+                    if (arg.type == LIST)
+                        list.addAll(cast<List<Token>>(arg.value))
                     else
-                        list.add(parameter)
+                        list.add(arg)
                 }
                 list.toToken()
             } else {
                 val builder = StringBuilder()
-                for (parameter in args)
-                    builder.append(parameter.toString())
+                for (arg in args)
+                    builder.append(arg.toString())
                 builder.toString().toToken()
             }
         }),
