@@ -383,8 +383,6 @@ val core = SymbolTable(
             assert(args.isNotEmpty())
             assert(args[0].type == LIST)
             val tokens = cast<List<Token>>(args[0].value)
-            if (tokens.size == 1)
-                return NIL
             val list = ArrayList<Token>()
             for (i in 1 until tokens.size)
                 list.add(tokens[i])
@@ -398,7 +396,10 @@ val core = SymbolTable(
         "head" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             assert(args[0].type == LIST)
-            return cast<List<Token>>(args[0].value)[0]
+            val list = cast<List<Token>>(args[0].value)
+            if (list.isEmpty())
+                return NIL
+            return list[0]
         }),
         "last" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
