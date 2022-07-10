@@ -21,6 +21,22 @@ import kotlin.system.exitProcess
 
 val core = SymbolTable(
     mutableMapOf(
+        "delay" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            assert(ast.isNotEmpty())
+            val asts = ArrayList<ASTNode>()
+            for (i in 0 until ast.size())
+                asts.add(ast[i].copy())
+            return structureHimeFunction(arrayListOf(), asts, symbol.createChild())
+        }),
+        "force" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            var result = NIL
+            for (token in args) {
+                assert(token.type == HIME_FUNCTION)
+                result = cast<Hime_HimeFunctionPair>(token.value).second(arrayListOf())
+            }
+            return result
+        }),
         "let" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             val newSymbol = symbol.createChild()

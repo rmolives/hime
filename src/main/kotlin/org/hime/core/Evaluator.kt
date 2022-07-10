@@ -2,7 +2,6 @@ package org.hime.core
 
 import org.hime.cast
 import org.hime.parse.*
-import java.util.*
 
 // This function perform every corresponding operations.
 fun eval(ast: ASTNode, symbol: SymbolTable): Token {
@@ -31,7 +30,7 @@ fun eval(ast: ASTNode, symbol: SymbolTable): Token {
         return ast.tok
     }
     if (ast.tok.type == Type.HIME_FUNCTION) {
-        ast.tok = cast<Hime_HimeFunction>(cast<Hime_HimeFunctionPair>(ast.tok.value).second)(args)
+        ast.tok = cast<Hime_HimeFunctionPair>(ast.tok.value).second(args)
         ast.clear()
         return ast.tok
     }
