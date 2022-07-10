@@ -95,6 +95,23 @@ val core = SymbolTable(
                 )[0], newSymbol
             )
         }),
+        "stream-for-ref" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.size > 1)
+            val newSymbol = symbol.createChild()
+            newSymbol.put("s", args[0])
+            newSymbol.put("n", args[1])
+            return eval(
+                parser(
+                    lexer(
+                        "(if (= n 0) " +
+                                "(if (= s empty-stream) " +
+                                "empty-stream " +
+                                "(stream-car s) " +
+                                "(stream-ref (stream-cdr s) (- n 1))))"
+                    )
+                )[0], newSymbol
+            )
+        }),
         "delay" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             val asts = ArrayList<ASTNode>()
