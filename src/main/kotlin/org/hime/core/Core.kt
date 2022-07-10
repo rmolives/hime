@@ -21,6 +21,32 @@ import kotlin.system.exitProcess
 
 val core = SymbolTable(
     mutableMapOf(
+        "cons-stream" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            assert(ast.size() > 1)
+            val t1 = eval(ast[0], symbol.createChild())
+            val asts = ArrayList<ASTNode>()
+            for (i in 1 until ast.size())
+                asts.add(ast[i].copy())
+            return arrayListOf(t1, structureHimeFunction(arrayListOf(), asts, symbol.createChild())).toToken()
+        }),
+        "stream-car" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            return cast<List<Token>>(args[0].value)[0]
+        }),
+        "stream-cdr" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            val tokens = cast<List<Token>>(args[0].value)
+            val list = ArrayList<Token>()
+            for (i in 1 until tokens.size) {
+                assert(tokens[i].type == HIME_FUNCTION)
+                list.add(cast<Hime_HimeFunctionPair>(tokens[i].value).second(arrayListOf()))
+            }
+            if (list.size == 1)
+                return list[0].toToken()
+            return list.toToken()
+        }),
         "delay" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             val asts = ArrayList<ASTNode>()
@@ -28,7 +54,7 @@ val core = SymbolTable(
                 asts.add(ast[i].copy())
             return structureHimeFunction(arrayListOf(), asts, symbol.createChild())
         }),
-        "force" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+        "force" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var result = NIL
             for (token in args) {
@@ -103,7 +129,7 @@ val core = SymbolTable(
             return NIL
         }),
         "undef" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
-            assert(ast.size() > 0)
+            assert(ast.isNotEmpty())
             assert(ast[0].tok.type == ID)
             assert(symbol.contains(ast[0].tok.value.toString()))
             symbol.remove(cast<String>(ast[0].tok.value))
