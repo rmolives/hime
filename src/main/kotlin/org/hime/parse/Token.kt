@@ -87,8 +87,7 @@ fun structureHimeFunction(functionParmeters: List<String>, ast: List<ASTNode>, s
 enum class Type {
     UNKNOWN,
     LB, RB, EMPTY, NIL,
-    ID, BOOL, STR, LIST,
-    IO_INPUT, IO_OUT, BYTE,
+    ID, BOOL, STR, LIST, BYTE,
     NUM, REAL, BIG_NUM, BIG_REAL, AST,
     FUNCTION, STATIC_FUNCTION, HIME_FUNCTION
 }

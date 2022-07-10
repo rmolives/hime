@@ -3,8 +3,6 @@ package org.hime
 import org.hime.parse.ASTNode
 import org.hime.parse.Token
 import org.hime.parse.Type
-import java.io.InputStream
-import java.io.OutputStream
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.math.floor
@@ -30,8 +28,6 @@ fun Any.toToken(): Token {
         is String -> Token(Type.STR, this)
         is Long -> Token(Type.BIG_NUM, BigInteger.valueOf(this))
         is Double -> Token(Type.BIG_REAL, BigDecimal.valueOf(this))
-        is InputStream -> Token(Type.IO_INPUT, this)
-        is OutputStream -> Token(Type.IO_OUT, this)
         is List<*> -> {
             val list = ArrayList<Token>()
             for (e in this)

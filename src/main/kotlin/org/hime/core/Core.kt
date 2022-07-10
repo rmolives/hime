@@ -8,8 +8,6 @@ import org.hime.parse.*
 import org.hime.parse.Type.*
 import org.hime.toToken
 import java.io.File
-import java.io.InputStream
-import java.io.OutputStream
 import java.lang.reflect.Modifier
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -233,75 +231,6 @@ val core = SymbolTable(
         }),
         "read-bool" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
             return Scanner(System.`in`).nextBoolean().toToken()
-        }),
-        "read-line" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            val input = if (args.isNotEmpty()) {
-                assert(args[0].type == IO_INPUT)
-                cast<InputStream>(args[0].value)
-            } else
-                System.`in`
-            return Scanner(input).nextLine().toToken()
-        }),
-        "read" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            val input = if (args.isNotEmpty()) {
-                assert(args[0].type == IO_INPUT)
-                cast<InputStream>(args[0].value)
-            } else
-                System.`in`
-            return Scanner(input).next().toToken()
-        }),
-        "read-num" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            val input = if (args.isNotEmpty()) {
-                assert(args[0].type == IO_INPUT)
-                cast<InputStream>(args[0].value)
-            } else
-                System.`in`
-            return Scanner(input).nextBigInteger().toToken()
-        }),
-        "read-real" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            val input = if (args.isNotEmpty()) {
-                assert(args[0].type == IO_INPUT)
-                cast<InputStream>(args[0].value)
-            } else
-                System.`in`
-            return Scanner(input).nextBigDecimal().toToken()
-        }),
-        "read-bool" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            val input = if (args.isNotEmpty()) {
-                assert(args[0].type == IO_INPUT)
-                cast<InputStream>(args[0].value)
-            } else
-                System.`in`
-            return Scanner(input).nextBoolean().toToken()
-        }),
-        "write" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == IO_OUT)
-            assert(args[1].type == LIST)
-            val list = cast<List<Token>>(args[1].value)
-            val data = ArrayList<Byte>()
-            for (token in list) {
-                assert(token.type == BYTE)
-                data.add(cast<Byte>(token.value))
-            }
-            val output = cast<OutputStream>(args[0].value)
-            output.write(data.toByteArray())
-            return NIL
-        }),
-        "close" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == IO_OUT || args[0].type == IO_INPUT)
-            if (args[0].type == IO_OUT)
-                cast<OutputStream>(args[0].value).close()
-            else
-                cast<InputStream>(args[0].value).close()
-            return NIL
-        }),
-        "flush" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == IO_OUT)
-            cast<OutputStream>(args[0].value).flush()
-            return NIL
         }),
         "println" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()
@@ -1045,14 +974,6 @@ val core = SymbolTable(
 
 val file = SymbolTable(
     mutableMapOf(
-        "file-input" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            return Files.newInputStream(Paths.get(args[0].toString())).toToken()
-        }),
-        "file-out" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            return Files.newOutputStream(Paths.get(args[0].toString())).toToken()
-        }),
         "file-exists" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             return File(args[0].toString()).exists().toToken()
