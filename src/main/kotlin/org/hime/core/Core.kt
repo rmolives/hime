@@ -433,7 +433,7 @@ val core = SymbolTable(
             return list.toToken()
         }),
         "list-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 2)
+            assert(args.size > 1)
             assert(args[0].type == LIST)
             assert(args[1].type == NUM)
             val index = cast<Int>(args[1].value)
