@@ -4,8 +4,8 @@ import java.util.*
 
 /**
  * 语法分析器
- * @lexer lexer返回的内容
- * @return 一系列抽象语法树
+ * @param lexer lexer返回的内容
+ * @return      一系列抽象语法树
  */
 fun parser(lexer: List<List<Token>>): List<ASTNode> {
     val asts: MutableList<ASTNode> = ArrayList()

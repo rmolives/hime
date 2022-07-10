@@ -15,7 +15,7 @@ class ASTNode {
 
     /**
      * 建立新的抽象语法树
-     * @tok 运算符
+     * @param tok 运算符
      */
     constructor(tok: Token) {
         this.tok = tok
@@ -24,8 +24,8 @@ class ASTNode {
 
     /**
      * 建立新的抽象语法树
-     * @tok 运算符
-     * @child 运算对象
+     * @param tok   运算符
+     * @param child 运算对象
      */
     constructor(tok: Token, child: MutableList<ASTNode>) {
         this.tok = tok
@@ -34,8 +34,8 @@ class ASTNode {
 
     /**
      * 建立新的抽象语法树
-     * @tok 运算符
-     * @type 类型
+     * @param tok  运算符
+     * @param type 类型
      */
     constructor(tok: Token, type: AstType) {
         this.tok = tok
@@ -58,7 +58,7 @@ class ASTNode {
 
     /**
      * 添加新的运算对象
-     * @node 运算的抽象语法树
+     * @param node 运算的抽象语法树
      */
     fun add(node: ASTNode) {
         child.add(node)
@@ -66,7 +66,7 @@ class ASTNode {
 
     /**
      * 获取第i个运算对象
-     * @i index
+     * @param i index
      * @return 运算对象
      */
     operator fun get(i: Int): ASTNode {

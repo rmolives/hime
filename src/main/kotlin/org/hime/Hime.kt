@@ -9,9 +9,9 @@ val defaultSymbolTable = SymbolTable(HashMap(), core)
 
 /**
  * 执行代码
- * @code 代码
- * @symbol 符号表
- * @return 结果
+ * @param code   代码
+ * @param symbol 符号表
+ * @return       结果
  */
 fun call(code: String, symbol: SymbolTable = defaultSymbolTable): Token {
     val asts = parser(lexer(preprocessor(code)))

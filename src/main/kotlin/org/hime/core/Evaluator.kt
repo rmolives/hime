@@ -5,9 +5,9 @@ import org.hime.parse.*
 
 /**
  * 求值器
- * @ast 抽象语法树
- * @symbol 符号表
- * @return 求值返回的值
+ * @param ast    抽象语法树
+ * @param symbol 符号表
+ * @return       求值返回的值
  */
 fun eval(ast: ASTNode, symbol: SymbolTable): Token {
     var temp = ast.tok

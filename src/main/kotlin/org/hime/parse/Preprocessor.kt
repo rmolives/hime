@@ -2,8 +2,8 @@ package org.hime.parse
 
 /**
  * 预处理器（主要是把多于的空格、回车之类的删除掉）
- * @s 代码
- * @return 处理完的代码
+ * @param s 代码
+ * @return  处理完的代码
  */
 fun preprocessor(s: String): String {
     val builder = StringBuilder()

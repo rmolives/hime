@@ -3,8 +3,8 @@ package org.hime.core
 import org.hime.parse.Token
 
 /**
- * @table 一系列绑定
- * @father 所属的父SymbolTable
+ * @param table  一系列绑定
+ * @param father 所属的父SymbolTable
  */
 class SymbolTable(
     var table: MutableMap<String, Token>,
@@ -12,7 +12,7 @@ class SymbolTable(
 ) {
     /**
      * 删除绑定
-     * @key binding key
+     * @param key binding key
      */
     fun remove(key: String) {
         var data = this
@@ -23,8 +23,8 @@ class SymbolTable(
 
     /**
      * 更改绑定
-     * @key binding key
-     * @value binding value
+     * @param key   binding key
+     * @param value binding value
      */
     fun set(key: String, value: Token) {
         var data = this
@@ -35,8 +35,8 @@ class SymbolTable(
 
     /**
      * 建立绑定
-     * @key binding key
-     * @value binding value
+     * @param key   binding key
+     * @param value binding value
      */
     fun put(key: String, value: Token) {
         table[key] = value
@@ -44,7 +44,7 @@ class SymbolTable(
 
     /**
      * 判断是否包含key
-     * @key binding key
+     * @param key binding key
      */
     fun contains(key: String): Boolean {
         var data = this
@@ -55,8 +55,8 @@ class SymbolTable(
 
     /**
      * 获取key对应的值
-     * @key binding key
-     * @return binding value
+     * @param key binding key
+     * @return    binding value
      */
     fun get(key: String): Token {
         var data = this

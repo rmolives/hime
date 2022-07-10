@@ -17,8 +17,8 @@ val WORDS: Map<String, Token> = mapOf(
 
 /**
  * 词法分析器
- * @code 代码
- * @return 一系列Token List
+ * @param code  代码
+ * @return      一系列Token List
  */
 fun lexer(code: String): List<List<Token>> {
     // 返回的内容

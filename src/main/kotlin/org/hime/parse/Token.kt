@@ -20,6 +20,10 @@ val EMPTY_STREAM = Token(Type.EMPTY_STREAM, "empty-stream")
 val LB = Token(Type.LB, "(")
 val RB = Token(Type.RB, ")")
 
+/**
+ * @param type  类型
+ * @param value 内容
+ */
 class Token(val type: Type, val value: Any) {
     override fun toString(): String {
         return when (this.type) {
@@ -45,23 +49,24 @@ class Token(val type: Type, val value: Any) {
 }
 
 /**
- *
+ * 建立过程
+ * @param parmeters 形式参数
+ * @param asts      一系列组合式
+ * @param symbol    符号表
+ * @return          返回Hime_HimeFunction
  */
-fun structureHimeFunction(parmeters: List<String>, ast: List<ASTNode>, symbol: SymbolTable): Token {
+fun structureHimeFunction(parmeters: List<String>, asts: List<ASTNode>, symbol: SymbolTable): Token {
     return Token(
         HIME_FUNCTION,
-        // Initialize function executing environment.
         fun(args: List<Token>): Token {
-            // When parameter becomes less, cause a runtime error.
+            // 判断参数的数量
             assert(args.size >= parmeters.size)
-            // Build function scope for local variables.
+            // 新建子符号表（环境）
             val newSymbolTable = symbol.createChild()
-            // Load args.
             for (i in parmeters.indices)
                 newSymbolTable.put(parmeters[i], args[i])
             var result = NIL
-            // Analyse AST to execute it.
-            for (astNode in ast)
+            for (astNode in asts)
                 result = eval(astNode.copy(), newSymbolTable)
             return result
         })
