@@ -336,18 +336,9 @@ val core = SymbolTable(
                 return NIL
             }
             val file = File(System.getProperty("user.dir") + "/" + path.replace(".", "/") + ".hime")
-            if (file.exists()) {
+            if (file.exists())
                 for (node in parser(lexer(preprocessor(Files.readString(file.toPath())))))
                     eval(node, symbol)
-                return NIL
-            }
-            val builtURI = symbol.javaClass.classLoader.getResource("module/"+ path.replace(".", "/") + ".hime")
-            if (builtURI != null) {
-            val built = File(builtURI.toURI())
-            if (built.exists())
-                for (node in parser(lexer(preprocessor(Files.readString(built.toPath())))))
-                    eval(node, symbol)
-            }
             return NIL
         }),
         "read-line" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
