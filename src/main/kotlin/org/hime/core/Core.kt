@@ -49,18 +49,62 @@ val core = SymbolTable(
         }),
         "stream-map" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
-            val newSymbol = symbol.createChild()
-            newSymbol.put("proc", args[0])
-            newSymbol.put("s", args[1])
-            return eval(
-                parser(
-                    lexer(
-                        "(if (= s empty-stream) " +
-                                "empty-stream " +
-                                "(list (proc (stream-car s)) (delay (stream-map proc (stream-cdr s)))))"
-                    )
-                )[0], newSymbol
-            )
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            if (args[1].type == Type.EMPTY_STREAM)
+                return EMPTY_STREAM
+            assert(args[1].type == LIST)
+            var lists = ArrayList<List<Token>>()
+            for (i in 1 until args.size)
+                lists.add(cast<List<Token>>(args[i].value))
+            val result = ArrayList<Token>()
+            top@ while (true) {
+                val functionargs = ArrayList<Token>()
+                for (list in lists)
+                    functionargs.add(list[0])
+                if (args[0].type == FUNCTION)
+                    result.add(cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild()))
+                else if (args[0].type == HIME_FUNCTION)
+                    result.add(cast<Hime_HimeFunctionPair>(args[0].value).second(functionargs))
+                val temp = ArrayList<List<Token>>()
+                for (list in lists) {
+                    assert(list[1].type == HIME_FUNCTION)
+                    val t = cast<Hime_HimeFunctionPair>(list[1].value).second(arrayListOf())
+                    if (t.type == Type.EMPTY_STREAM)
+                        break@top
+                    temp.add(cast<List<Token>>(t.value))
+                }
+                lists = temp
+            }
+            return result.toToken()
+        }),
+        "stream-for-each" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            if (args[1].type == Type.EMPTY_STREAM)
+                return EMPTY_STREAM
+            assert(args[1].type == LIST)
+            var lists = ArrayList<List<Token>>()
+            for (i in 1 until args.size)
+                lists.add(cast<List<Token>>(args[i].value))
+            top@ while (true) {
+                val functionargs = ArrayList<Token>()
+                for (list in lists)
+                    functionargs.add(list[0])
+                if (args[0].type == FUNCTION)
+                    cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild())
+                else if (args[0].type == HIME_FUNCTION)
+                    cast<Hime_HimeFunctionPair>(args[0].value).second(functionargs)
+                val temp = ArrayList<List<Token>>()
+                for (list in lists) {
+                    assert(list[1].type == HIME_FUNCTION)
+                    val t = cast<Hime_HimeFunctionPair>(list[1].value).second(arrayListOf())
+                    if (t.type == Type.EMPTY_STREAM)
+                        break@top
+                    temp.add(cast<List<Token>>(t.value))
+                }
+                lists = temp
+            }
+            return NIL
         }),
         "stream-filter" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
@@ -75,22 +119,6 @@ val core = SymbolTable(
                                 "(list (stream-car stream) " +
                                 "(delay (stream-filter pred (stream-cdr stream))))) " +
                                 "(else (stream-filter pred (stream-cdr stream))))"
-                    )
-                )[0], newSymbol
-            )
-        }),
-        "stream-for-each" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 1)
-            val newSymbol = symbol.createChild()
-            newSymbol.put("proc", args[0])
-            newSymbol.put("s", args[1])
-            return eval(
-                parser(
-                    lexer(
-                        "(if (= s empty-stream) " +
-                                "nil " +
-                                "(begin (proc (stream-car s)) " +
-                                "(stream-for-each proc (stream-cdr s))))"
                     )
                 )[0], newSymbol
             )
