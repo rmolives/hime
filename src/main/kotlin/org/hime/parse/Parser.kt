@@ -2,6 +2,11 @@ package org.hime.parse
 
 import java.util.*
 
+/**
+ * 语法分析器
+ * @lexer lexer返回的内容
+ * @return 一系列抽象语法树
+ */
 fun parser(lexer: List<List<Token>>): List<ASTNode> {
     val asts: MutableList<ASTNode> = ArrayList()
     val stack = ArrayDeque<ASTNode>()
@@ -11,12 +16,12 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
         val tokens = line.toMutableList()
         var index = 0
         while (index < tokens.size) {
-            // State 1: the statement is independent.
+            // State 1: 考虑开头
             if (state == 1) {
+                // 如果组合式为()
                 if (tokens[index].type == Type.RB) {
-                    // New Tree
                     temp = ASTNode.EMPTY
-                    // If push fails, cause a runtime error.
+                    // 如果peek失败，则会导致运行时错误
                     assert(stack.peek() != null)
                     stack.push(temp)
                     state = -1
@@ -24,6 +29,7 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     continue
                 }
                 if (tokens[index].type == Type.LB || tokens[index].type == Type.ID) {
+                    // 如果运算符为组合式，则使用apply进行替换
                     if (tokens[index].type == Type.LB)
                         tokens.add(index, Token(Type.ID,  "apply"))
                     temp = ASTNode(tokens[index])
@@ -31,20 +37,20 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     asts.add(temp)
                     state = -1
                 }
-            // State 2: the return value of statement form the outer one's args, so it is qualified for the AST
+                // State 2: 非开头
             } else if (state == 2) {
+                // 如果组合式为()
                 if (tokens[index].type == Type.RB) {
-                    // New Tree
                     temp = ASTNode.EMPTY
-                    // If push fails, cause a runtime error.
+                    // 如果peek失败，则会导致运行时错误
                     assert(stack.peek() != null)
-                    // Be enrolled in the AST.
                     stack.peek().add(temp)
                     state = -1
                     ++index
                     continue
                 }
                 if (tokens[index].type == Type.LB || tokens[index].type == Type.ID) {
+                    // 如果运算符为组合式，则使用apply进行替换
                     if (tokens[index].type == Type.LB)
                         tokens.add(index, Token(Type.ID,  "apply"))
                     temp = ASTNode(tokens[index])
@@ -53,17 +59,15 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     stack.push(temp)
                     state = -1
                 }
-
             } else if (tokens[index].type == Type.LB)
-                // Switch the state according to whether the stack is empty.
+            // 根据堆栈是否为空切换状态
                 state = if (stack.isEmpty()) 1 else 2
             else if (tokens[index].type == Type.RB) {
-                // Functions
+                // 考虑类似类似(def (<function-name>) <body*>)一类的情况
                 if (index >= 2 && tokens[index - 2].type == Type.LB) {
                     assert(stack.peek() != null)
                     stack.peek().type = AstType.FUNCTION
                 }
-                // Pop the whole AST.
                 assert(stack.isNotEmpty())
                 stack.pop()
             } else {

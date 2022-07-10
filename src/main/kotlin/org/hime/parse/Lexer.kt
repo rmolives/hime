@@ -7,40 +7,45 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 
-val ENV: Map<String, Token> = mapOf(
+// 关键字
+val WORDS: Map<String, Token> = mapOf(
     "true" to TRUE,
     "false" to FALSE,
     "nil" to NIL,
     "empty-stream" to EMPTY_STREAM
 )
 
+/**
+ * 词法分析器
+ * @code 代码
+ * @return 一系列Token List
+ */
 fun lexer(code: String): List<List<Token>> {
-    // Store tokens from every single expression.
+    // 返回的内容
     val result = ArrayList<List<Token>>()
-    // Store every single expression.
+    // 当前计算的内容
     val expressions = ArrayList<String>()
     var index = 0
-    // Split the whole code into multiple expressions.
     while (index < code.length) {
         var flag = 0
         val builder = StringBuilder()
-        // Skip preceding blank characters.
+        // 跳过前面的空白字符
         while (code[index] != '(')
             ++index
+        // 分割代码，例如(+ 2 3)(+ 4 5)分成(+ 2 3)和(+ 4 5)
         do {
-            // Processing literal strings.
             if (code[index] == '\"') {
                 builder.append("\"")
                 val value = StringBuilder()
                 var skip = false
                 while (true) {
                     ++index
-                    // Consider border conditions.
+                    // 考虑边界条件
                     if (index < code.length - 1 && code[index] == '\\') {
                         if (skip) {
                             skip = false
                             value.append("\\\\")
-                        // When encountering a backslash, we shall skip the following quote.
+                            // 当遇到反斜杠时，我们将跳过以下引用
                         } else
                             skip = true
                         continue
@@ -62,25 +67,25 @@ fun lexer(code: String): List<List<Token>> {
                 ++index
                 continue
             }
-            // Once getting into a pair of parentheses, flag will increment.
+            // 一旦进入一对括号，flag将递增
             if (code[index] == '(')
                 ++flag
-            // Once getting out of a pair of parentheses, flag will decrement.
+            // 一旦从一对括号中取出，flag将递减
             else if (code[index] == ')')
                 --flag
             builder.append(code[index++])
         } while (flag > 0)
         expressions.add(builder.toString())
     }
-    // Analyse any one of the expressions.
+    // 分析一个表达式
     for (expressionIndex in expressions.indices) {
-        // Store the tokens from current expression.
+        // 存储当前表达式中的Token
         val tokens = ArrayList<Token>()
         result.add(tokens)
         val expression = expressions[expressionIndex]
-        // Perfectly consider the border conditions.
+        // 考虑边界条件
         index = -1
-        // Commence scanning...
+        // 开始扫描...
         while (++index < expression.length) {
             when (expression[index]) {
                 '(' -> {
@@ -91,16 +96,16 @@ fun lexer(code: String): List<List<Token>> {
                     tokens.add(RB)
                     continue
                 }
-                // Skip blanks
+                // 跳过空格
                 ' ' -> continue
             }
             var negative = false
-            // Processing negative literal numbers.
+            // 处理负数
             if (expression[index] == '-' && index < expression.length - 1 && Character.isDigit(expression[index + 1])) {
                 negative = true
                 ++index
             }
-            // Processing decimals.
+            // 处理小数.
             if (Character.isDigit(expression[index])) {
                 var v = BigInteger.ZERO
                 while (true) {
@@ -112,7 +117,7 @@ fun lexer(code: String): List<List<Token>> {
                         .add(BigInteger.valueOf((expression[index].digitToIntOrNull() ?: -1).toLong()))
                     ++index
                 }
-                // Process floating-point numbers.
+                // 处理浮点数
                 if (expression[index + 1] != '.') {
                     tokens.add(
                         if (v <= INT_MAX) {
@@ -147,7 +152,7 @@ fun lexer(code: String): List<List<Token>> {
                 )
                 continue
             }
-            // Process string
+            // 处理字符串
             if (expression[index] == '\"') {
                 val builder = StringBuilder()
                 var skip = false
@@ -170,6 +175,7 @@ fun lexer(code: String): List<List<Token>> {
                     }
                     if (skip) {
                         skip = false
+                        // 替换特殊值
                         builder.append(
                             when (expression[index]) {
                                 'n' -> "\n"
@@ -185,10 +191,10 @@ fun lexer(code: String): List<List<Token>> {
                 tokens.add(builder.toString().toToken())
                 continue
             }
-            // Process other characters
+            // 处理其他字符
             if (expression[index] != ' ' && expression[index] != '(' && expression[index] != ')') {
                 val builder = StringBuilder()
-                // Other characters often form a single ID.
+                // 其他字符通常形成一个ID
                 while (true) {
                     if (index >= expression.length - 1 || expression[index] == ' ' || expression[index] == ')') {
                         --index
@@ -197,10 +203,9 @@ fun lexer(code: String): List<List<Token>> {
                     builder.append(expression[index])
                     ++index
                 }
-                // Get the ID.
                 val s = builder.toString()
-                // If the ID is true, false or nil, add the corresponding tokens(consider null condition), else add it as normal ID.
-                tokens.add(if (ENV.containsKey(s)) ENV[s]!! else Token(Type.ID, builder.toString()))
+                // 如果ID为关键字，则添加相应的Token（考虑null条件），否则将其添加为普通ID
+                tokens.add(if (WORDS.containsKey(s)) WORDS[s]!! else Token(Type.ID, builder.toString()))
                 continue
             }
         }

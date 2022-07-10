@@ -41,7 +41,7 @@ val core = SymbolTable(
             val list = ArrayList<Token>()
             for (i in 1 until tokens.size) {
                 assert(tokens[i].type == HIME_FUNCTION)
-                list.add(cast<Hime_HimeFunctionPair>(tokens[i].value).second(arrayListOf()))
+                list.add(cast<Hime_HimeFunction>(tokens[i].value)(arrayListOf()))
             }
             if (list.size == 1)
                 return list[0].toToken()
@@ -64,11 +64,11 @@ val core = SymbolTable(
                 if (args[0].type == FUNCTION)
                     result.add(cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild()))
                 else if (args[0].type == HIME_FUNCTION)
-                    result.add(cast<Hime_HimeFunctionPair>(args[0].value).second(functionargs))
+                    result.add(cast<Hime_HimeFunction>(args[0].value)(functionargs))
                 val temp = ArrayList<List<Token>>()
                 for (list in lists) {
                     assert(list[1].type == HIME_FUNCTION)
-                    val t = cast<Hime_HimeFunctionPair>(list[1].value).second(arrayListOf())
+                    val t = cast<Hime_HimeFunction>(list[1].value)(arrayListOf())
                     if (t.type == Type.EMPTY_STREAM)
                         break@top
                     temp.add(cast<List<Token>>(t.value))
@@ -93,11 +93,11 @@ val core = SymbolTable(
                 if (args[0].type == FUNCTION)
                     cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild())
                 else if (args[0].type == HIME_FUNCTION)
-                    cast<Hime_HimeFunctionPair>(args[0].value).second(functionargs)
+                    cast<Hime_HimeFunction>(args[0].value)(functionargs)
                 val temp = ArrayList<List<Token>>()
                 for (list in lists) {
                     assert(list[1].type == HIME_FUNCTION)
-                    val t = cast<Hime_HimeFunctionPair>(list[1].value).second(arrayListOf())
+                    val t = cast<Hime_HimeFunction>(list[1].value)(arrayListOf())
                     if (t.type == Type.EMPTY_STREAM)
                         break@top
                     temp.add(cast<List<Token>>(t.value))
@@ -152,7 +152,7 @@ val core = SymbolTable(
             var result = NIL
             for (token in args) {
                 assert(token.type == HIME_FUNCTION)
-                result = cast<Hime_HimeFunctionPair>(token.value).second(arrayListOf())
+                result = cast<Hime_HimeFunction>(token.value)(arrayListOf())
             }
             return result
         }),
@@ -307,6 +307,7 @@ val core = SymbolTable(
         "apply" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             val newAst = ASTNode(eval(ast[0], symbol.createChild()))
+            newAst.type = AstType.FUNCTION
             for (i in 1 until ast.size())
                 newAst.add(ast[i])
             return eval(newAst, symbol.createChild())
@@ -686,7 +687,7 @@ val core = SymbolTable(
                 if (args[0].type == FUNCTION)
                     result.add(cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild()))
                 else if (args[0].type == HIME_FUNCTION)
-                    result.add(cast<Hime_HimeFunctionPair>(args[0].value).second(functionargs))
+                    result.add(cast<Hime_HimeFunction>(args[0].value)(functionargs))
             }
             return result.toToken()
         }),
@@ -703,7 +704,7 @@ val core = SymbolTable(
                 if (args[0].type == FUNCTION)
                     cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild())
                 else if (args[0].type == HIME_FUNCTION)
-                    cast<Hime_HimeFunctionPair>(args[0].value).second(functionargs)
+                    cast<Hime_HimeFunction>(args[0].value)(functionargs)
             }
             return NIL
         }),
@@ -716,7 +717,7 @@ val core = SymbolTable(
             for (token in tokens) {
                 val op = when (args[0].type) {
                     FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(token), symbol.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunctionPair>(args[0].value).second(arrayListOf(token))
+                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(token))
                     else -> NIL
                 }
                 assert(op.type == BOOL)

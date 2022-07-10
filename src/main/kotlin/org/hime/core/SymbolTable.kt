@@ -2,10 +2,18 @@ package org.hime.core
 
 import org.hime.parse.Token
 
+/**
+ * @table 一系列绑定
+ * @father 所属的父SymbolTable
+ */
 class SymbolTable(
     var table: MutableMap<String, Token>,
     var father: SymbolTable?
 ) {
+    /**
+     * 删除绑定
+     * @key binding key
+     */
     fun remove(key: String) {
         var data = this
         while (data.father != null && !data.table.containsKey(key))
@@ -13,6 +21,11 @@ class SymbolTable(
         data.table.remove(key)
     }
 
+    /**
+     * 更改绑定
+     * @key binding key
+     * @value binding value
+     */
     fun set(key: String, value: Token) {
         var data = this
         while (data.father != null && !data.table.containsKey(key))
@@ -20,24 +33,42 @@ class SymbolTable(
         data.table[key] = value
     }
 
+    /**
+     * 建立绑定
+     * @key binding key
+     * @value binding value
+     */
     fun put(key: String, value: Token) {
         table[key] = value
     }
 
-    fun contains(s: String): Boolean {
+    /**
+     * 判断是否包含key
+     * @key binding key
+     */
+    fun contains(key: String): Boolean {
         var data = this
-        while (data.father != null && !data.table.containsKey(s))
+        while (data.father != null && !data.table.containsKey(key))
             data = data.father!!
-        return data.table.containsKey(s)
+        return data.table.containsKey(key)
     }
 
-    fun get(s: String): Token {
+    /**
+     * 获取key对应的值
+     * @key binding key
+     * @return binding value
+     */
+    fun get(key: String): Token {
         var data = this
-        while (data.father != null && !data.table.containsKey(s))
+        while (data.father != null && !data.table.containsKey(key))
             data = data.father!!
-        return data.table[s]!!
+        return data.table[key]!!
     }
 
+    /**
+     * 建立子SymbolTable
+     * @return child
+     */
     fun createChild(): SymbolTable {
         return SymbolTable(HashMap(), this)
     }

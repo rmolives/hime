@@ -8,6 +8,9 @@ import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
 
+/**
+ * REPL
+ */
 fun repl() {
     val reader = BufferedReader(InputStreamReader(System.`in`))
     var codeBuilder = StringBuilder()

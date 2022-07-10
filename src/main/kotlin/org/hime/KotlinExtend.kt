@@ -10,9 +10,14 @@ import kotlin.math.floor
 val INT_MAX: BigInteger = BigInteger.valueOf(Int.MAX_VALUE.toLong())
 val FLOAT_MAX: BigDecimal = BigDecimal.valueOf(Float.MAX_VALUE.toDouble())
 
-fun Token.isNum(): Boolean = this.isSmallNum() || this.isBigNum()
-fun Token.isSmallNum(): Boolean = this.type == Type.NUM || this.type == Type.REAL
-fun Token.isBigNum(): Boolean = this.type == Type.BIG_NUM || this.type == Type.BIG_REAL
+fun Token.isNum(): Boolean = this.isSmallNum() || this.isBigNum()                           // 如果为数字
+fun Token.isSmallNum(): Boolean = this.type == Type.NUM || this.type == Type.REAL           // 如果为小型数字
+fun Token.isBigNum(): Boolean = this.type == Type.BIG_NUM || this.type == Type.BIG_REAL     // 如果为大型数字
+
+/**
+ * 将对象转换为Token
+ * @return 转换结果
+ */
 fun Any.toToken(): Token {
     return when (this) {
         is Token -> this

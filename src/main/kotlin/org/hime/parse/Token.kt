@@ -7,8 +7,7 @@ import org.hime.parse.Type.*
 import java.math.BigDecimal
 import java.math.BigInteger
 
-typealias Hime_HimeFunction = (List<Token>) -> Token
-typealias Hime_HimeFunctionPair = Pair<Pair<List<String>, List<ASTNode>>, Hime_HimeFunction>
+typealias Hime_HimeFunction = (List<Token>) -> Token                        // 自举函数
 typealias Hime_Function = (List<Token>, SymbolTable) -> Token
 typealias Hime_StaticFunction = (ASTNode, SymbolTable) -> Token
 
@@ -45,25 +44,27 @@ class Token(val type: Type, val value: Any) {
     }
 }
 
-// Process functions.
-fun structureHimeFunction(functionParmeters: List<String>, ast: List<ASTNode>, symbol: SymbolTable): Token {
-    return Token(HIME_FUNCTION,
+/**
+ *
+ */
+fun structureHimeFunction(parmeters: List<String>, ast: List<ASTNode>, symbol: SymbolTable): Token {
+    return Token(
+        HIME_FUNCTION,
         // Initialize function executing environment.
-        Pair(Pair(functionParmeters, ast), fun(args: List<Token>): Token {
+        fun(args: List<Token>): Token {
             // When parameter becomes less, cause a runtime error.
-            assert(args.size >= functionParmeters.size)
+            assert(args.size >= parmeters.size)
             // Build function scope for local variables.
             val newSymbolTable = symbol.createChild()
             // Load args.
-            for (i in functionParmeters.indices)
-                newSymbolTable.put(functionParmeters[i], args[i])
+            for (i in parmeters.indices)
+                newSymbolTable.put(parmeters[i], args[i])
             var result = NIL
             // Analyse AST to execute it.
             for (astNode in ast)
                 result = eval(astNode.copy(), newSymbolTable)
             return result
         })
-    )
 }
 
 enum class Type {
