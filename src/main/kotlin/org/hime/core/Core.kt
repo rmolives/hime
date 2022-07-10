@@ -116,8 +116,8 @@ val core = SymbolTable(
                     lexer(
                         "(cond ((= stream empty-stream) empty-stream) " +
                                 "((pred (stream-car stream)) " +
-                                "(list (stream-car stream) " +
-                                "(delay (stream-filter pred (stream-cdr stream))))) " +
+                                "(cons-stream (stream-car stream) " +
+                                "(stream-filter pred (stream-cdr stream)))) " +
                                 "(else (stream-filter pred (stream-cdr stream))))"
                     )
                 )[0], newSymbol
