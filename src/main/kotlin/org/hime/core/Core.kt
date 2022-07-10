@@ -413,7 +413,7 @@ val core = SymbolTable(
             for (i in 1 until tokens.size)
                 list.add(tokens[i])
             if (list.size == 1)
-                return list[0]
+                return arrayListOf(list[0]).toToken()
             return list.toToken()
         }),
         "init" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
@@ -424,7 +424,7 @@ val core = SymbolTable(
             for (i in 0 until tokens.size - 1)
                 list.add(tokens[i])
             if (list.size == 1)
-                return list[0]
+                return arrayListOf(list[0]).toToken()
             return list.toToken()
         }),
         "list-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
