@@ -87,24 +87,6 @@ val core = SymbolTable(
                 result = eval(ast[i].copy(), newSymbol.createChild())
             return result
         }),
-        "static" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
-            assert(ast.size() > 1)
-            assert(symbol.father != null)
-            if (!symbol.father!!.table.containsKey(ast[0].tok.toString())) {
-                if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)
-                    symbol.father?.put(cast<String>(ast[0].tok.value), eval(ast[1], symbol.createChild()))
-                else {
-                    val parameters = ArrayList<String>()
-                    for (i in 0 until ast[0].size())
-                        parameters.add(ast[0][i].tok.toString())
-                    val asts = ArrayList<ASTNode>()
-                    for (i in 1 until ast.size())
-                        asts.add(ast[i].copy())
-                    symbol.father?.put(ast[0].tok.toString(), structureHimeFunction(parameters, asts, symbol.createChild()))
-                }
-            }
-            return NIL
-        }),
         "def" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)
