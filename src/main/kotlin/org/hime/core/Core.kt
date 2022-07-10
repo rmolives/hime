@@ -186,7 +186,7 @@ val core = SymbolTable(
             return result
         }),
         "apply" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
-            assert(ast.size() > 0)
+            assert(ast.isNotEmpty())
             val newAst = ASTNode(eval(ast[0], symbol.createChild()))
             for (i in 1 until ast.size())
                 newAst.add(ast[i])
