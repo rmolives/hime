@@ -975,22 +975,6 @@ val core = SymbolTable(
             assert(args[0].type == NUM)
             exitProcess(cast<Int>(args[0].value))
         }),
-        "time" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
-            return Date().time.toToken()
-        }),
-        "time-format" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == STR)
-            assert(args[1].type == NUM || args[1].type == BIG_NUM)
-            return SimpleDateFormat(cast<String>(args[0].value)).format(BigInteger(args[1].toString()).toLong())
-                .toToken()
-        }),
-        "time-parse" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == STR)
-            assert(args[1].type == STR)
-            return SimpleDateFormat(cast<String>(args[0].value)).parse(cast<String>(args[1].value)).time.toToken()
-        }),
         "extern" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == STR)
@@ -1151,6 +1135,28 @@ val file = SymbolTable(
     ), null
 )
 
+val time = SymbolTable(
+    mutableMapOf(
+        "time" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+            return Date().time.toToken()
+        }),
+        "time-format" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == STR)
+            assert(args[1].type == NUM || args[1].type == BIG_NUM)
+            return SimpleDateFormat(cast<String>(args[0].value)).format(BigInteger(args[1].toString()).toLong())
+                .toToken()
+        }),
+        "time-parse" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == STR)
+            assert(args[1].type == STR)
+            return SimpleDateFormat(cast<String>(args[0].value)).parse(cast<String>(args[1].value)).time.toToken()
+        })
+    ), null
+)
+
 val module = mutableMapOf(
-    "util.file" to file
+    "util.file" to file,
+    "util.time" to time
 )
