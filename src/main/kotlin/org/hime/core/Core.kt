@@ -428,6 +428,16 @@ val core = SymbolTable(
                 return list[0]
             return list.toToken()
         }),
+        "list-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[0].type == LIST)
+            assert(args[1].type == NUM)
+            val index = cast<Int>(args[1].value)
+            val tokens = ArrayList(cast<List<Token>>(args[0].value))
+            assert(index < tokens.size)
+            tokens.removeAt(index)
+            return tokens.toToken()
+        }),
         "list-set" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 2)
             assert(args[0].type == LIST)
