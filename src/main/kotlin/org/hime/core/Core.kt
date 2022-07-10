@@ -103,9 +103,9 @@ val core = SymbolTable(
             return eval(
                 parser(
                     lexer(
-                        "(if (= n 0) " +
-                                "(if (= s empty-stream) " +
+                        "(if (= s empty-stream) " +
                                 "empty-stream " +
+                                "(if (= n 0) " +
                                 "(stream-car s) " +
                                 "(stream-ref (stream-cdr s) (- n 1))))"
                     )
