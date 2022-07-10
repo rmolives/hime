@@ -420,8 +420,6 @@ val core = SymbolTable(
             assert(args.isNotEmpty())
             assert(args[0].type == LIST)
             val tokens = cast<List<Token>>(args[0].value)
-            if (tokens.size == 1)
-                return tokens[0]
             val list = ArrayList<Token>()
             for (i in 0 until tokens.size - 1)
                 list.add(tokens[i])
