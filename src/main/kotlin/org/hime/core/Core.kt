@@ -95,7 +95,7 @@ val core = SymbolTable(
                 )[0], newSymbol
             )
         }),
-        "stream-for-ref" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+        "stream-ref" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
             val newSymbol = symbol.createChild()
             newSymbol.put("s", args[0])
