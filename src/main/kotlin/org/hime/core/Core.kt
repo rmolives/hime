@@ -40,6 +40,7 @@ val core = SymbolTable(
                         fun rsc(ast: ASTNode, id: String, value: ASTNode) {
                             if (ast.tok.type == ID && ast.tok.toString() == id) {
                                 ast.tok = value.tok
+                                ast.type = AstType.FUNCTION
                                 ast.child = value.child
                             }
                             for (child in ast.child)
