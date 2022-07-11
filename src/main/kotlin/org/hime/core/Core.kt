@@ -1171,9 +1171,30 @@ val core = SymbolTable(
             assert(args[0].type == LIST)
             val list = cast<List<Token>>(args[0].value)
             val bytes = ByteArray(list.size)
-            for (index in list.indices)
+            for (index in list.indices) {
+                assert(list[index].type == BYTE)
                 bytes[index] = cast<Byte>(list[index].value)
+            }
             return String(bytes).toToken()
+        }),
+        "string->bits" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            val s = args[0].toString()
+            val result = ArrayList<Token>()
+            for (c in s)
+                result.add(c.code.toToken())
+            return result.toToken()
+        }),
+        "bits->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            val result = StringBuilder()
+            val tokens = cast<List<Token>>(args[0].value)
+            for (t in tokens) {
+                assert(t.type == NUM)
+                result.append(cast<Int>(t.value).toChar())
+            }
+            return result.toToken()
         }),
         "bool?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
