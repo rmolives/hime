@@ -38,7 +38,6 @@ val core = SymbolTable(
                     val newAsts = ArrayList<ASTNode>()
                     for (node in asts) {
                         val newAst = node.copy()
-
                         // 递归替换宏
                         fun rsc(ast: ASTNode, id: String, value: ASTNode) {
                             if (ast.tok.type == ID && ast.tok.toString() == id) {
