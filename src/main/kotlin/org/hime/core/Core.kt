@@ -28,7 +28,6 @@ val core = SymbolTable(
             for (i in 0 until ast[0].size())
                 parameters.add(ast[0][i].tok.toString())
             val asts = ArrayList<ASTNode>()
-            // 将ast都复制一遍并存到asts中
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
             symbol.put(
