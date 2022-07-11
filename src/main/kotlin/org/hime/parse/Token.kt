@@ -50,27 +50,28 @@ class Token(val type: Type, val value: Any) {
 
 /**
  * 建立过程
- * @param parmeters 形式参数
+ * @param parameters 形式参数
  * @param asts      一系列组合式
  * @param symbol    符号表
  * @return          返回Hime_HimeFunction
  */
-fun structureHimeFunction(parmeters: List<String>, asts: List<ASTNode>, symbol: SymbolTable): Token {
+fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: SymbolTable): Token {
     return Token(
         HIME_FUNCTION,
         fun(args: List<Token>): Token {
             // 判断参数的数量
-            assert(args.size >= parmeters.size)
+            assert(args.size >= parameters.size)
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
-            for (i in parmeters.indices)
-                newSymbol.put(parmeters[i], args[i])
+            for (i in parameters.indices)
+                newSymbol.put(parameters[i], args[i])
             var result = NIL
             for (astNode in asts)
                 result = eval(astNode.copy(), newSymbol)
             return result
         })
 }
+
 enum class Type {
     UNKNOWN,
     LB, RB, EMPTY, NIL,
