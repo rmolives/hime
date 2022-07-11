@@ -62,16 +62,15 @@ fun structureHimeFunction(parmeters: List<String>, asts: List<ASTNode>, symbol: 
             // 判断参数的数量
             assert(args.size >= parmeters.size)
             // 新建执行的新环境（继承）
-            val newSymbolTable = symbol.createChild()
+            val newSymbol = symbol.createChild()
             for (i in parmeters.indices)
-                newSymbolTable.put(parmeters[i], args[i])
+                newSymbol.put(parmeters[i], args[i])
             var result = NIL
             for (astNode in asts)
-                result = eval(astNode.copy(), newSymbolTable)
+                result = eval(astNode.copy(), newSymbol)
             return result
         })
 }
-
 enum class Type {
     UNKNOWN,
     LB, RB, EMPTY, NIL,

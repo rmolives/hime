@@ -21,6 +21,44 @@ import kotlin.system.exitProcess
 
 val core = SymbolTable(
     mutableMapOf(
+        "def-symbol" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            assert(ast.size() > 1)
+            assert(ast[0].isNotEmpty())
+            val parameters = ArrayList<String>()
+            for (i in 0 until ast[0].size())
+                parameters.add(ast[0][i].tok.toString())
+            val asts = ArrayList<ASTNode>()
+            // 将ast都复制一遍并存到asts中
+            for (i in 1 until ast.size())
+                asts.add(ast[i].copy())
+            symbol.put(
+                cast<String>(ast[0].tok.value),
+                Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    val newAsts = ArrayList<ASTNode>()
+                    for (node in asts) {
+                        val newAst = node.copy()
+                        fun rsc(ast: ASTNode, id: String, value: ASTNode) {
+                            if (ast.tok.type == ID && ast.tok.toString() == id) {
+                                ast.tok = value.tok
+                                ast.child = value.child
+                            }
+                            for (child in ast.child)
+                                rsc(child, id, value)
+                        }
+                        assert(ast.size() >= parameters.size)
+                        for (i in parameters.indices)
+                            rsc(newAst, parameters[i], ast[i])
+                        newAsts.add(newAst)
+                    }
+                    val newSymbol = symbol.createChild()
+                    var result = NIL
+                    for (astNode in newAsts)
+                        result = eval(astNode.copy(), newSymbol)
+                    return result
+                })
+            )
+            return NIL
+        }),
         "cons-stream" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             // 对(cons-stream t1 t2)中的t1进行求值
