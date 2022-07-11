@@ -836,6 +836,46 @@ val core = SymbolTable(
             }
             return result.toToken()
         }),
+        "foldr" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
+            assert(args[2].type == LIST)
+            var result = args[1]
+            val tokens = cast<List<Token>>(args[2].value)
+            for (i in tokens.size - 1 downTo 0)
+                result = when (args[0].type) {
+                    FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(tokens[i], result), symbol.createChild())
+                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(tokens[i], result))
+                    STATIC_FUNCTION -> {
+                        val asts = ASTNode.EMPTY.copy()
+                        for (arg in arrayListOf(tokens[i], result))
+                            asts.add(ASTNode(arg))
+                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                    }
+                    else -> arrayListOf(tokens[i], result).toToken()
+                }
+            return result
+        }),
+        "foldl" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
+            assert(args[2].type == LIST)
+            var result = args[1]
+            val tokens = cast<List<Token>>(args[2].value)
+            for (i in tokens.size - 1 downTo 0)
+                result = when (args[0].type) {
+                    FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(result, tokens[i]), symbol.createChild())
+                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(result, tokens[i]))
+                    STATIC_FUNCTION -> {
+                        val asts = ASTNode.EMPTY.copy()
+                        for (arg in arrayListOf(result, tokens[i]))
+                            asts.add(ASTNode(arg))
+                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                    }
+                    else -> arrayListOf(result, tokens[i]).toToken()
+                }
+            return result
+        }),
         "for-each" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
