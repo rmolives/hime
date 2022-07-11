@@ -23,15 +23,19 @@ val core = SymbolTable(
     mutableMapOf(
         "cons-stream" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
+            // 对(cons-stream t1 t2)中的t1进行求值
             val t1 = eval(ast[0], symbol.createChild())
             val asts = ArrayList<ASTNode>()
+            // 对t1后面的内容都作为begin添加到asts中
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
+            // 建立过程，类似(delay t2*)
             return arrayListOf(t1, structureHimeFunction(arrayListOf(), asts, symbol.createChild())).toToken()
         }),
         "stream-car" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             assert(args[0].type == LIST)
+            // 因为(cons-stream t1 t2)的t1已经被求值，所以就直接返回
             return cast<List<Token>>(args[0].value)[0]
         }),
         "stream-cdr" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
@@ -39,33 +43,57 @@ val core = SymbolTable(
             assert(args[0].type == LIST)
             val tokens = cast<List<Token>>(args[0].value)
             val list = ArrayList<Token>()
+            // 将stream-cdr传入的列表，除去第1个外的所有元素都应用force，即便(cons-stream t1 t2)只返回包含2个元素的列表
             for (i in 1 until tokens.size) {
                 assert(tokens[i].type == HIME_FUNCTION)
                 list.add(cast<Hime_HimeFunction>(tokens[i].value)(arrayListOf()))
             }
+            // 如果列表中只存在一个元素，那么就返回这个元素
             if (list.size == 1)
                 return list[0].toToken()
+            // 否则返回整个列表
             return list.toToken()
         }),
         "stream-map" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
             if (args[1].type == Type.EMPTY_STREAM)
                 return EMPTY_STREAM
             assert(args[1].type == LIST)
+            // 每个list只包含2个元素，一个已经求值，一个待求值，这里包含(stream-map function list*)的所有list
             var lists = ArrayList<List<Token>>()
+            // 将所有list添加到lists中
             for (i in 1 until args.size)
                 lists.add(cast<List<Token>>(args[i].value))
             val result = ArrayList<Token>()
+            // 直到遇见EMPTY_STREAM才结束
             top@ while (true) {
-                val functionargs = ArrayList<Token>()
+                // 例如对于(stream-map f (stream-cons a b) (stream-cons c d))，则执行(f a c)等
+                val functionArgs = ArrayList<Token>()
+                // 将所有首项添加到functionArgs
                 for (list in lists)
-                    functionargs.add(list[0])
-                if (args[0].type == FUNCTION)
-                    result.add(cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild()))
-                else if (args[0].type == HIME_FUNCTION)
-                    result.add(cast<Hime_HimeFunction>(args[0].value)(functionargs))
+                    functionArgs.add(list[0])
+                // 将functionArgs按匹配的类型添加到函数中并执行
+                result.add(
+                    when (args[0].type) {
+                        FUNCTION -> cast<Hime_Function>(args[0].value)(functionArgs, symbol.createChild())
+                        HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(functionArgs)
+                        STATIC_FUNCTION -> {
+                            val asts = ASTNode.EMPTY.copy()
+                            for (arg in functionArgs)
+                                asts.add(ASTNode(arg))
+                            cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                        }
+                        else -> {
+                            if (functionArgs.size == 1)
+                                functionArgs[0]
+                            else
+                                functionArgs.toToken()
+                        }
+                    }
+                )
                 val temp = ArrayList<List<Token>>()
+                // 重新计算lists，并应用delay
                 for (list in lists) {
                     assert(list[1].type == HIME_FUNCTION)
                     val t = cast<Hime_HimeFunction>(list[1].value)(arrayListOf())
@@ -79,22 +107,36 @@ val core = SymbolTable(
         }),
         "stream-for-each" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
             if (args[1].type == Type.EMPTY_STREAM)
                 return EMPTY_STREAM
             assert(args[1].type == LIST)
+            // 每个list只包含2个元素，一个已经求值，一个待求值，这里包含(stream-map function list*)的所有list
             var lists = ArrayList<List<Token>>()
+            // 将所有list添加到lists中
             for (i in 1 until args.size)
                 lists.add(cast<List<Token>>(args[i].value))
+            // 直到遇见EMPTY_STREAM才结束
             top@ while (true) {
-                val functionargs = ArrayList<Token>()
+                // 例如对于(stream-map f (stream-cons a b) (stream-cons c d))，则执行(f a c)等
+                val functionArgs = ArrayList<Token>()
+                // 将所有首项添加到functionArgs
                 for (list in lists)
-                    functionargs.add(list[0])
-                if (args[0].type == FUNCTION)
-                    cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild())
-                else if (args[0].type == HIME_FUNCTION)
-                    cast<Hime_HimeFunction>(args[0].value)(functionargs)
+                    functionArgs.add(list[0])
+                // 将functionArgs按匹配的类型添加到函数中并执行
+                when (args[0].type) {
+                    FUNCTION -> cast<Hime_Function>(args[0].value)(functionArgs, symbol.createChild())
+                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(functionArgs)
+                    STATIC_FUNCTION -> {
+                        val asts = ASTNode.EMPTY.copy()
+                        for (arg in functionArgs)
+                            asts.add(ASTNode(arg))
+                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                    }
+                    else -> {}
+                }
                 val temp = ArrayList<List<Token>>()
+                // 重新计算lists，并应用delay
                 for (list in lists) {
                     assert(list[1].type == HIME_FUNCTION)
                     val t = cast<Hime_HimeFunction>(list[1].value)(arrayListOf())
@@ -109,8 +151,10 @@ val core = SymbolTable(
         "stream-filter" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
             val newSymbol = symbol.createChild()
+            // 将匹配的参数添加到newSymbol中
             newSymbol.put("pred", args[0])
             newSymbol.put("stream", args[1])
+            // 解释执行
             return eval(
                 parser(
                     lexer(
@@ -126,8 +170,10 @@ val core = SymbolTable(
         "stream-ref" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
             val newSymbol = symbol.createChild()
+            // 将匹配的参数添加到newSymbol中
             newSymbol.put("s", args[0])
             newSymbol.put("n", args[1])
+            // 解释执行
             return eval(
                 parser(
                     lexer(
@@ -140,6 +186,7 @@ val core = SymbolTable(
                 )[0], newSymbol
             )
         }),
+        // (delay e) => (lambda () e)
         "delay" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             val asts = ArrayList<ASTNode>()
@@ -147,6 +194,7 @@ val core = SymbolTable(
                 asts.add(ast[i].copy())
             return structureHimeFunction(arrayListOf(), asts, symbol.createChild())
         }),
+        // (force d) => (d)
         "force" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var result = NIL
@@ -156,8 +204,10 @@ val core = SymbolTable(
             }
             return result
         }),
+        // 局部变量绑定
         "let" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
+            // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
             var result = NIL
             for (node in ast[0].child) {
@@ -170,6 +220,7 @@ val core = SymbolTable(
                     val asts = ArrayList<ASTNode>()
                     for (i in 1 until node.size())
                         asts.add(node[i].copy())
+                    // 这里采用原环境的继承，因为let不可互相访问
                     newSymbol.put(node[0].tok.toString(), structureHimeFunction(parameters, asts, symbol.createChild()))
                 } else {
                     var value = NIL
@@ -184,6 +235,7 @@ val core = SymbolTable(
         }),
         "let*" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
+            // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
             var result = NIL
             for (node in ast[0].child) {
@@ -194,7 +246,11 @@ val core = SymbolTable(
                     val asts = ArrayList<ASTNode>()
                     for (i in 1 until node.size())
                         asts.add(node[i].copy())
-                    newSymbol.put(node[0].tok.toString(), structureHimeFunction(parameters, asts, newSymbol))
+                    // 这里采用新环境的继承，因为let*可互相访问
+                    newSymbol.put(
+                        node[0].tok.toString(),
+                        structureHimeFunction(parameters, asts, newSymbol.createChild())
+                    )
                 } else {
                     var value = NIL
                     for (e in node.child)
@@ -206,40 +262,53 @@ val core = SymbolTable(
                 result = eval(ast[i].copy(), newSymbol.createChild())
             return result
         }),
+        // 建立新绑定
         "def" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
+            // 如果是(def key value)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)
                 symbol.put(ast[0].tok.toString(), eval(ast[1], symbol.createChild()))
+            // 如果是(def (function-name p*) e)
             else {
                 val parameters = ArrayList<String>()
                 for (i in 0 until ast[0].size())
                     parameters.add(ast[0][i].tok.toString())
                 val asts = ArrayList<ASTNode>()
+                // 将ast都复制一遍并存到asts中
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
-                symbol.put(cast<String>(ast[0].tok.value), structureHimeFunction(parameters, asts, symbol.createChild()))
+                symbol.put(
+                    cast<String>(ast[0].tok.value),
+                    structureHimeFunction(parameters, asts, symbol.createChild())
+                )
             }
             return NIL
         }),
+        // 解除绑定
         "undef" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             assert(ast[0].tok.type == ID)
             assert(symbol.contains(ast[0].tok.value.toString()))
+            // 从环境中删除绑定
             symbol.remove(cast<String>(ast[0].tok.value))
             return NIL
         }),
+        // 更改绑定
         "set" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             assert(symbol.contains(cast<String>(ast[0].tok.value)))
+            // 如果是(set key value)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
                 if (ast[1].isNotEmpty())
                     ast[1].tok = eval(ast[1], symbol.createChild())
                 symbol.set(ast[0].tok.toString(), ast[1].tok)
             } else {
+                // 如果是(set (function-name p*) e)
                 val args = ArrayList<String>()
                 for (i in 0 until ast[0].size())
                     args.add(ast[0][i].tok.toString())
                 val asts = ArrayList<ASTNode>()
+                // 将ast都复制一遍并存到asts中
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
                 symbol.set(ast[0].tok.toString(), structureHimeFunction(args, asts, symbol))
@@ -249,21 +318,26 @@ val core = SymbolTable(
         "lambda" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             val parameters = ArrayList<String>()
+            // 判断非(lambda () e)
             if (ast[0].tok.type != EMPTY) {
                 parameters.add(ast[0].tok.toString())
                 for (i in 0 until ast[0].size())
                     parameters.add(ast[0][i].tok.toString())
             }
             val asts = ArrayList<ASTNode>()
+            // 将ast都复制一遍并存到asts中
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
             return structureHimeFunction(parameters, asts, symbol.createChild())
         }),
         "if" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
+            // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
+            // 执行condition
             val condition = eval(ast[0], newSymbol)
             assert(condition.type == BOOL)
+            // 分支判断
             if (cast<Boolean>(condition.value))
                 return eval(ast[1].copy(), newSymbol)
             else if (ast.size() > 2)
@@ -271,8 +345,10 @@ val core = SymbolTable(
             return NIL
         }),
         "cond" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
             for (node in ast.child) {
+                // 如果碰到else，就直接执行返回
                 if (node.tok.type == ID && cast<String>(node.tok.value) == "else")
                     return eval(node[0].copy(), newSymbol)
                 else {
@@ -284,7 +360,9 @@ val core = SymbolTable(
             }
             return NIL
         }),
+        // 执行多个组合式
         "begin" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            // 新建执行的新环境（继承）
             val newSymbolTable = symbol.createChild()
             var result = NIL
             for (i in 0 until ast.size())
@@ -292,21 +370,25 @@ val core = SymbolTable(
             return result
         }),
         "while" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            // 新建执行的新环境（继承）
             val newSymbolTable = symbol.createChild()
             var result = NIL
-            var bool = eval(ast[0].copy(), newSymbolTable)
-            assert(bool.type == BOOL)
-            while (cast<Boolean>(bool.value)) {
+            // 执行condition
+            var condition = eval(ast[0].copy(), newSymbolTable)
+            assert(condition.type == BOOL)
+            while (cast<Boolean>(condition.value)) {
                 for (i in 1 until ast.size())
                     result = eval(ast[i].copy(), newSymbolTable)
-                bool = eval(ast[0].copy(), newSymbolTable)
-                assert(bool.type == BOOL)
+                // 重新执行condition
+                condition = eval(ast[0].copy(), newSymbolTable)
+                assert(condition.type == BOOL)
             }
             return result
         }),
         "apply" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             val newAst = ASTNode(eval(ast[0], symbol.createChild()))
+            // 防止形如((lambda () e))执行失败
             newAst.type = AstType.FUNCTION
             for (i in 1 until ast.size())
                 newAst.add(ast[i])
@@ -315,11 +397,13 @@ val core = SymbolTable(
         "require" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.isNotEmpty())
             val path = args[0].toString()
+            // 导入内置的模块
             if (module.containsKey(path)) {
                 for ((key, value) in module[path]!!.table)
                     symbol.put(key, value)
                 return NIL
             }
+            // 导入工作目录的模块
             val file = File(System.getProperty("user.dir") + "/" + path.replace(".", "/") + ".hime")
             if (file.exists())
                 for (node in parser(lexer(preprocessor(Files.readString(file.toPath())))))
@@ -493,6 +577,7 @@ val core = SymbolTable(
             assert(args[0].type == LIST)
             val tokens = cast<List<Token>>(args[0].value)
             val list = ArrayList<Token>()
+            // 例如(cdr (list a b c d))将返回(list b c d)
             for (i in 1 until tokens.size)
                 list.add(tokens[i])
             if (list.size == 1)
@@ -583,6 +668,7 @@ val core = SymbolTable(
         "++" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var flag = false
+            // 判断是否是List，还是string
             for (arg in args)
                 if (arg.type == LIST) {
                     flag = true
@@ -609,16 +695,19 @@ val core = SymbolTable(
             val start = if (args.size >= 2) BigInteger(args[0].toString()) else BigInteger.ZERO
             val end =
                 if (args.size >= 2) BigInteger(args[1].toString()) else BigInteger(args[0].toString())
+            // 每次增加的step
             val step = if (args.size >= 3) BigInteger(args[2].toString()) else BigInteger.ONE
             val size = end.subtract(start).divide(step)
             val list = ArrayList<Token>()
             var i = BigInteger.ZERO
+            // index和size是否相等
             while (i.compareTo(size) != 1) {
                 list.add(start.add(i.multiply(step)).toToken())
                 i = i.add(BigInteger.ONE)
             }
             return Token(LIST, list)
         }),
+        // 获取长度，可以是字符串也可以是列表
         "length" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             return when (args[0].type) {
@@ -627,6 +716,7 @@ val core = SymbolTable(
                 else -> args[0].toString().length.toToken()
             }
         }),
+        // 反转列表
         "reverse" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             assert(args[0].type == LIST)
@@ -636,9 +726,11 @@ val core = SymbolTable(
                 result.add(tokens[i])
             return result.toToken()
         }),
+        // 排序
         "sort" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             assert(args[0].type == LIST)
+            // 归并排序
             fun merge(a: Array<BigDecimal?>, low: Int, mid: Int, high: Int) {
                 val temp = arrayOfNulls<BigDecimal>(high - low + 1)
                 var i = low
@@ -653,7 +745,6 @@ val core = SymbolTable(
                 for (k2 in temp.indices)
                     a[k2 + low] = temp[k2]!!
             }
-
             fun mergeSort(a: Array<BigDecimal?>, low: Int, high: Int) {
                 val mid = (low + high) / 2
                 if (low < high) {
@@ -662,7 +753,6 @@ val core = SymbolTable(
                     merge(a, low, mid, high)
                 }
             }
-
             val result = ArrayList<Token>()
             val tokens = cast<List<Token>>(args[0].value)
             val list = arrayOfNulls<BigDecimal>(tokens.size)
@@ -675,42 +765,65 @@ val core = SymbolTable(
         }),
         "map" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
             assert(args[1].type == LIST)
             val result = ArrayList<Token>()
             val tokens = cast<List<Token>>(args[1].value)
             for (i in tokens.indices) {
-                val functionargs = ArrayList<Token>()
-                functionargs.add(tokens[i])
+                val functionArgs = ArrayList<Token>()
+                functionArgs.add(tokens[i])
+                // 例如对于(map f (list a b) (list c d))，则执行(f a c)等
                 for (j in 1 until args.size - 1)
-                    functionargs.add(cast<List<Token>>(args[j + 1].value)[i])
-                if (args[0].type == FUNCTION)
-                    result.add(cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild()))
-                else if (args[0].type == HIME_FUNCTION)
-                    result.add(cast<Hime_HimeFunction>(args[0].value)(functionargs))
+                    functionArgs.add(cast<List<Token>>(args[j + 1].value)[i])
+                result.add(
+                    when (args[0].type) {
+                        FUNCTION -> cast<Hime_Function>(args[0].value)(functionArgs, symbol.createChild())
+                        HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(functionArgs)
+                        STATIC_FUNCTION -> {
+                            val asts = ASTNode.EMPTY.copy()
+                            for (arg in functionArgs)
+                                asts.add(ASTNode(arg))
+                            cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                        }
+                        else -> {
+                            if (functionArgs.size == 1)
+                                functionArgs[0]
+                            else
+                                functionArgs.toToken()
+                        }
+                    }
+                )
             }
             return result.toToken()
         }),
         "for-each" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
             assert(args[1].type == LIST)
             val tokens = cast<List<Token>>(args[1].value)
             for (i in tokens.indices) {
-                val functionargs = ArrayList<Token>()
-                functionargs.add(tokens[i])
+                val functionArgs = ArrayList<Token>()
+                functionArgs.add(tokens[i])
+                // 例如对于(map f (list a b) (list c d))，则执行(f a c)等
                 for (j in 1 until args.size - 1)
-                    functionargs.add(cast<List<Token>>(args[j + 1].value)[i])
-                if (args[0].type == FUNCTION)
-                    cast<Hime_Function>(args[0].value)(functionargs, symbol.createChild())
-                else if (args[0].type == HIME_FUNCTION)
-                    cast<Hime_HimeFunction>(args[0].value)(functionargs)
+                    functionArgs.add(cast<List<Token>>(args[j + 1].value)[i])
+                when (args[0].type) {
+                    FUNCTION -> cast<Hime_Function>(args[0].value)(functionArgs, symbol.createChild())
+                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(functionArgs)
+                    STATIC_FUNCTION -> {
+                        val asts = ASTNode.EMPTY.copy()
+                        for (arg in functionArgs)
+                            asts.add(ASTNode(arg))
+                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                    }
+                    else -> {}
+                }
             }
             return NIL
         }),
         "filter" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
             assert(args[1].type == LIST)
             val result = ArrayList<Token>()
             val tokens = cast<List<Token>>(args[1].value)
@@ -718,7 +831,12 @@ val core = SymbolTable(
                 val op = when (args[0].type) {
                     FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(token), symbol.createChild())
                     HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(token))
-                    else -> NIL
+                    STATIC_FUNCTION -> {
+                        val asts = ASTNode.EMPTY.copy()
+                        asts.add(ASTNode(token))
+                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                    }
+                    else -> token
                 }
                 assert(op.type == BOOL)
                 if (cast<Boolean>(op.value))
@@ -883,6 +1001,7 @@ val core = SymbolTable(
                 temp = temp.gcd(BigInteger(args[i].toString()))
             return temp.toToken()
         }),
+        // (lcm a b) = (/ (* a b) (gcd a b))
         "lcm" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             fun BigInteger.lcm(n: BigInteger): BigInteger = (this.multiply(n).abs()).divide(this.gcd(n))
             assert(args.size > 1)
@@ -1030,6 +1149,7 @@ val core = SymbolTable(
             assert(args[0].type == NUM)
             exitProcess(cast<Int>(args[0].value))
         }),
+        // (extern "class" "function name")
         "extern" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == STR)

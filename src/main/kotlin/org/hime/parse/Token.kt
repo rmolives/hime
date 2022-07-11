@@ -61,7 +61,7 @@ fun structureHimeFunction(parmeters: List<String>, asts: List<ASTNode>, symbol: 
         fun(args: List<Token>): Token {
             // 判断参数的数量
             assert(args.size >= parmeters.size)
-            // 新建子符号表（环境）
+            // 新建执行的新环境（继承）
             val newSymbolTable = symbol.createChild()
             for (i in parmeters.indices)
                 newSymbolTable.put(parmeters[i], args[i])
