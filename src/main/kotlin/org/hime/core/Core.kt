@@ -607,9 +607,9 @@ val core = SymbolTable(
         }),
         "/=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            for (t in args)
-                for (t2 in args)
-                    if (t == t2)
+            for (i in args.indices)
+                for (j in args.indices)
+                    if (i != j && args[i] == args[j])
                         return FALSE
             return TRUE
         }),
