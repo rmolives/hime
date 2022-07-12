@@ -129,12 +129,7 @@ val core = SymbolTable(
                                 asts.add(ASTNode(arg))
                             cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
                         }
-                        else -> {
-                            if (functionArgs.size == 1)
-                                functionArgs[0]
-                            else
-                                functionArgs.toToken()
-                        }
+                        else -> NIL
                     }
                 )
                 val temp = ArrayList<List<Token>>()
@@ -871,6 +866,27 @@ val core = SymbolTable(
                 tokens.add(e!!.toToken())
             return tokens.toToken()
         }),
+        "maybe" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
+            val functionArgs = ArrayList<Token>()
+            for (i in 1 until args.size) {
+                if (args[i].type == Type.NIL)
+                    return NIL
+                functionArgs.add(args[i])
+            }
+            return when (args[0].type) {
+                FUNCTION -> cast<Hime_Function>(args[0].value)(functionArgs, symbol.createChild())
+                HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(functionArgs)
+                STATIC_FUNCTION -> {
+                    val asts = ASTNode.EMPTY.copy()
+                    for (arg in functionArgs)
+                        asts.add(ASTNode(arg))
+                    cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                }
+                else -> NIL
+            }
+        }),
         "map" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
@@ -893,12 +909,7 @@ val core = SymbolTable(
                                 asts.add(ASTNode(arg))
                             cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
                         }
-                        else -> {
-                            if (functionArgs.size == 1)
-                                functionArgs[0]
-                            else
-                                functionArgs.toToken()
-                        }
+                        else -> NIL
                     }
                 )
             }
