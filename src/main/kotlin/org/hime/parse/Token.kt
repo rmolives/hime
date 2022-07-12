@@ -25,6 +25,14 @@ val RB = Token(Type.RB, ")")
  * @param value 内容
  */
 class Token(val type: Type, val value: Any) {
+    override fun equals(other: Any?): Boolean {
+        return super.toString() == this.toString()
+    }
+
+    override fun hashCode(): Int {
+        return super.toString().hashCode()
+    }
+
     override fun toString(): String {
         return when (this.type) {
             STR, Type.LB, Type.RB, EMPTY, Type.NIL, ID -> cast<String>(this.value)
@@ -33,7 +41,7 @@ class Token(val type: Type, val value: Any) {
             REAL -> cast<Float>(this.value).toString()
             BIG_NUM -> cast<BigInteger>(this.value).toString()
             BIG_REAL -> cast<BigDecimal>(this.value).toPlainString()
-            LIST ->  {
+            LIST -> {
                 val builder = StringBuilder("[")
                 val list = cast<List<Token>>(this.value)
                 for (i in list.indices)
@@ -43,6 +51,7 @@ class Token(val type: Type, val value: Any) {
             }
             FUNCTION, STATIC_FUNCTION -> "<Function: ${this.value.hashCode()}>"
             HIME_FUNCTION -> "<Function: ${this.value.hashCode()}>"
+            TABLE -> "<Function: ${this.value.hashCode()}>"
             else -> this.value.toString()
         }
     }
@@ -75,7 +84,7 @@ fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol:
 enum class Type {
     UNKNOWN,
     LB, RB, EMPTY, NIL,
-    ID, BOOL, STR, LIST, BYTE,
+    ID, BOOL, STR, LIST, BYTE, TABLE,
     NUM, REAL, BIG_NUM, BIG_REAL, AST, EMPTY_STREAM,
     FUNCTION, STATIC_FUNCTION, HIME_FUNCTION;
 }

@@ -552,28 +552,66 @@ val core = SymbolTable(
             return if (cast<Boolean>(args[0].value)) FALSE else TRUE
         }),
         "=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            return if (args[0].toString() == args[1].toString()) TRUE else FALSE
+            assert(args.isNotEmpty())
+            var token = args[0]
+            for (t in args) {
+                if (t != token)
+                    return FALSE
+                token = t
+            }
+            return TRUE
         }),
         "/=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            return if (args[0].toString() != args[1].toString()) TRUE else FALSE
+            assert(args.isNotEmpty())
+            for (t in args)
+                for (t2 in args)
+                    if (t == t2)
+                        return FALSE
+            return TRUE
         }),
         ">" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            return if (BigDecimal(args[0].toString()) > BigDecimal(args[1].toString())) TRUE else FALSE
+            assert(args.isNotEmpty())
+            var token = BigDecimal(args[0].toString())
+            for (t in args) {
+                val n = BigDecimal(t.toString())
+                if (token <= n)
+                    return FALSE
+                token = n
+            }
+            return TRUE
         }),
         "<" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            return if (BigDecimal(args[0].toString()) < BigDecimal(args[1].toString())) TRUE else FALSE
+            assert(args.isNotEmpty())
+            var token = BigDecimal(args[0].toString())
+            for (t in args) {
+                val n = BigDecimal(t.toString())
+                if (token >= n)
+                    return FALSE
+                token = n
+            }
+            return TRUE
         }),
         ">=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            return if (BigDecimal(args[0].toString()) >= BigDecimal(args[1].toString())) TRUE else FALSE
+            assert(args.isNotEmpty())
+            var token = BigDecimal(args[0].toString())
+            for (t in args) {
+                val n = BigDecimal(t.toString())
+                if (token < n)
+                    return FALSE
+                token = n
+            }
+            return TRUE
         }),
         "<=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            return if (BigDecimal(args[0].toString()) <= BigDecimal(args[1].toString())) TRUE else FALSE
+            assert(args.isNotEmpty())
+            var token = BigDecimal(args[0].toString())
+            for (t in args) {
+                val n = BigDecimal(t.toString())
+                if (token > n)
+                    return FALSE
+                token = n
+            }
+            return TRUE
         }),
         "random" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
@@ -673,25 +711,25 @@ val core = SymbolTable(
             assert(args[0].type == LIST)
             assert(args[1].type == NUM)
             val index = cast<Int>(args[1].value)
-            val tokens = ArrayList(cast<List<Token>>(args[0].value))
-            assert(index < tokens.size)
-            tokens.removeAt(index)
-            return tokens.toToken()
+            val list = cast<MutableList<Token>>(args[0].value)
+            assert(index < list.size)
+            list.removeAt(index)
+            return args[0]
         }),
         "list-set" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 2)
             assert(args[0].type == LIST)
             assert(args[1].type == NUM)
             val index = cast<Int>(args[1].value)
-            val tokens = ArrayList(cast<List<Token>>(args[0].value))
-            assert(index < tokens.size)
-            tokens[index] = args[2]
-            return tokens.toToken()
+            val list = cast<MutableList<Token>>(args[0].value)
+            assert(index < list.size)
+            list[index] = args[2]
+            return args[0]
         }),
         "list-add" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == LIST)
-            val tokens = ArrayList(cast<List<Token>>(args[0].value))
+            val tokens = cast<MutableList<Token>>(args[0].value)
             if (args.size > 2) {
                 assert(args[1].type == NUM)
                 val index = cast<Int>(args[1].value)
@@ -709,6 +747,11 @@ val core = SymbolTable(
             val tokens = cast<List<Token>>(args[0].value)
             assert(index < tokens.size)
             return tokens[index]
+        }),
+        "list-copy" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            return ArrayList(cast<List<Token>>(args[0])).toToken()
         }),
         "++" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
@@ -766,10 +809,13 @@ val core = SymbolTable(
             assert(args.isNotEmpty())
             assert(args[0].type == LIST)
             val result = ArrayList<Token>()
-            val tokens = cast<List<Token>>(args[0].value)
+            val tokens = cast<MutableList<Token>>(args[0].value)
             for (i in tokens.size - 1 downTo 0)
                 result.add(tokens[i])
-            return result.toToken()
+            tokens.clear()
+            for (t in result)
+                tokens.add(t)
+            return tokens.toToken()
         }),
         // 排序
         "sort" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
@@ -798,15 +844,15 @@ val core = SymbolTable(
                     merge(a, low, mid, high)
                 }
             }
-            val result = ArrayList<Token>()
-            val tokens = cast<List<Token>>(args[0].value)
+
+            val tokens = cast<MutableList<Token>>(args[0].value)
             val list = arrayOfNulls<BigDecimal>(tokens.size)
             for (i in tokens.indices)
                 list[i] = BigDecimal(tokens[i].toString())
             mergeSort(list, 0, list.size - 1)
             for (e in list)
-                result.add(e!!.toToken())
-            return result.toToken()
+                tokens.add(e!!.toToken())
+            return tokens.toToken()
         }),
         "map" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
@@ -1415,21 +1461,57 @@ val time = SymbolTable(
         }),
         "time-format" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
-            assert(args[0].type == STR)
             assert(args[1].type == NUM || args[1].type == BIG_NUM)
-            return SimpleDateFormat(cast<String>(args[0].value)).format(BigInteger(args[1].toString()).toLong())
+            return SimpleDateFormat(args[0].toString()).format(BigInteger(args[1].toString()).toLong())
                 .toToken()
         }),
         "time-parse" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
-            assert(args[0].type == STR)
-            assert(args[1].type == STR)
-            return SimpleDateFormat(cast<String>(args[0].value)).parse(cast<String>(args[1].value)).time.toToken()
+            return SimpleDateFormat(args[0].toString()).parse(args[1].value.toString()).time.toToken()
+        })
+    ), null
+)
+
+val table = SymbolTable(
+    mutableMapOf(
+        "table" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+            return mutableMapOf<Token, Token>().toToken()
+        }),
+        "table-put" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[0].type == TABLE)
+            cast<HashMap<Token, Token>>(args[0].value)[args[1]] = args[2]
+            return args[0]
+        }),
+        "table-get" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == TABLE)
+            val table = cast<HashMap<Token, Token>>(args[0].value)
+            assert(table.containsKey(args[1]))
+            return table[args[1]]!!
+        }),
+        "table-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == TABLE)
+            val table = cast<MutableMap<Token, Token>>(args[0].value)
+            assert(table.containsKey(args[1]))
+            return table.remove(args[1])!!
+        }),
+        "table-keys" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == TABLE)
+            return cast<MutableMap<Token, Token>>(args[0].value).keys.toList().toToken()
+        }),
+        "table-copy" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == LIST)
+            return HashMap(cast<MutableMap<Token, Token>>(args[0].value)).toToken()
         })
     ), null
 )
 
 val module = mutableMapOf(
     "util.file" to file,
-    "util.time" to time
+    "util.time" to time,
+    "util.table" to table
 )
