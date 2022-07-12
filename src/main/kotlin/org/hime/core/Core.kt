@@ -572,9 +572,9 @@ val core = SymbolTable(
         ">" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var token = BigDecimal(args[0].toString())
-            for (t in args) {
-                val n = BigDecimal(t.toString())
-                if (token > n)
+            for (index in 1 until args.size) {
+                val n = BigDecimal(args[index].toString())
+                if (token <= n)
                     return FALSE
                 token = n
             }
@@ -583,9 +583,9 @@ val core = SymbolTable(
         "<" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var token = BigDecimal(args[0].toString())
-            for (t in args) {
-                val n = BigDecimal(t.toString())
-                if (token < n)
+            for (index in 1 until args.size) {
+                val n = BigDecimal(args[index].toString())
+                if (token >= n)
                     return FALSE
                 token = n
             }
@@ -594,9 +594,9 @@ val core = SymbolTable(
         ">=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var token = BigDecimal(args[0].toString())
-            for (t in args) {
-                val n = BigDecimal(t.toString())
-                if (token >= n)
+            for (index in 1 until args.size) {
+                val n = BigDecimal(args[index].toString())
+                if (token < n)
                     return FALSE
                 token = n
             }
@@ -605,9 +605,9 @@ val core = SymbolTable(
         "<=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var token = BigDecimal(args[0].toString())
-            for (t in args) {
-                val n = BigDecimal(t.toString())
-                if (token <= n)
+            for (index in 1 until args.size) {
+                val n = BigDecimal(args[index].toString())
+                if (token > n)
                     return FALSE
                 token = n
             }
