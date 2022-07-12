@@ -447,14 +447,38 @@ val core = SymbolTable(
             }
             return result
         }),
-        "apply" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
-            assert(ast.isNotEmpty())
-            val newAst = ASTNode(eval(ast[0], symbol.createChild()))
-            // 防止形如((lambda () e))执行失败
-            newAst.type = AstType.FUNCTION
-            for (i in 1 until ast.size())
-                newAst.add(ast[i])
-            return eval(newAst, symbol.createChild())
+        "apply" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            val parameters = ArrayList<Token>()
+            for (i in 1 until args.size)
+                parameters.add(args[i])
+            return when (args[0].type) {
+                FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
+                HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
+                STATIC_FUNCTION -> {
+                    val asts = ASTNode.EMPTY.copy()
+                    for (arg in parameters)
+                        asts.add(ASTNode(arg))
+                    cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                }
+                else -> NIL
+            }
+        }),
+        "apply-list" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[1].type == LIST)
+            val parameters = cast<List<Token>>(args[1].value)
+            return when (args[0].type) {
+                FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
+                HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
+                STATIC_FUNCTION -> {
+                    val asts = ASTNode.EMPTY.copy()
+                    for (arg in parameters)
+                        asts.add(ASTNode(arg))
+                    cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                }
+                else -> NIL
+            }
         }),
         "require" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.isNotEmpty())
@@ -848,6 +872,7 @@ val core = SymbolTable(
                 for (k2 in temp.indices)
                     a[k2 + low] = temp[k2]!!
             }
+
             fun mergeSort(a: Array<BigDecimal?>, low: Int, high: Int) {
                 val mid = (low + high) / 2
                 if (low < high) {
@@ -857,14 +882,15 @@ val core = SymbolTable(
                 }
             }
 
-            val tokens = cast<ArrayList<Token>>(args[0].value)
+            val tokens = cast<List<Token>>(args[0].value)
+            val result = ArrayList<Token>()
             val list = arrayOfNulls<BigDecimal>(tokens.size)
             for (i in tokens.indices)
                 list[i] = BigDecimal(tokens[i].toString())
             mergeSort(list, 0, list.size - 1)
             for (e in list)
-                tokens.add(e!!.toToken())
-            return tokens.toToken()
+                result.add(e!!.toToken())
+            return result.toToken()
         }),
         "curry" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
