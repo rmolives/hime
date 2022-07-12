@@ -35,8 +35,9 @@ val core = SymbolTable(
                 Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
                     if (ast.type == AstType.FUNCTION) {
                         var result = NIL
+                        val newSymbol = symbol.createChild()
                         for (node in ast.child)
-                            result = eval(ASTNode(eval(node, symbol.createChild())), symbol.createChild())
+                            result = eval(ASTNode(eval(node, newSymbol)), newSymbol)
                         return result
                     }
                     val newAsts = ArrayList<ASTNode>()
