@@ -574,7 +574,7 @@ val core = SymbolTable(
             var token = BigDecimal(args[0].toString())
             for (t in args) {
                 val n = BigDecimal(t.toString())
-                if (token <= n)
+                if (token > n)
                     return FALSE
                 token = n
             }
@@ -585,7 +585,7 @@ val core = SymbolTable(
             var token = BigDecimal(args[0].toString())
             for (t in args) {
                 val n = BigDecimal(t.toString())
-                if (token >= n)
+                if (token < n)
                     return FALSE
                 token = n
             }
@@ -596,7 +596,7 @@ val core = SymbolTable(
             var token = BigDecimal(args[0].toString())
             for (t in args) {
                 val n = BigDecimal(t.toString())
-                if (token < n)
+                if (token >= n)
                     return FALSE
                 token = n
             }
@@ -607,7 +607,7 @@ val core = SymbolTable(
             var token = BigDecimal(args[0].toString())
             for (t in args) {
                 val n = BigDecimal(t.toString())
-                if (token > n)
+                if (token <= n)
                     return FALSE
                 token = n
             }
