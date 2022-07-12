@@ -114,18 +114,18 @@ val core = SymbolTable(
             // 直到遇见EMPTY_STREAM才结束
             top@ while (true) {
                 // 例如对于(stream-map f (stream-cons a b) (stream-cons c d))，则执行(f a c)等
-                val functionArgs = ArrayList<Token>()
-                // 将所有首项添加到functionArgs
+                val parameters = ArrayList<Token>()
+                // 将所有首项添加到parameters
                 for (list in lists)
-                    functionArgs.add(list[0])
-                // 将functionArgs按匹配的类型添加到函数中并执行
+                    parameters.add(list[0])
+                // 将parameters按匹配的类型添加到函数中并执行
                 result.add(
                     when (args[0].type) {
-                        FUNCTION -> cast<Hime_Function>(args[0].value)(functionArgs, symbol.createChild())
-                        HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(functionArgs)
+                        FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
+                        HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
                         STATIC_FUNCTION -> {
                             val asts = ASTNode.EMPTY.copy()
-                            for (arg in functionArgs)
+                            for (arg in parameters)
                                 asts.add(ASTNode(arg))
                             cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
                         }
@@ -159,17 +159,17 @@ val core = SymbolTable(
             // 直到遇见EMPTY_STREAM才结束
             top@ while (true) {
                 // 例如对于(stream-map f (stream-cons a b) (stream-cons c d))，则执行(f a c)等
-                val functionArgs = ArrayList<Token>()
-                // 将所有首项添加到functionArgs
+                val parameters = ArrayList<Token>()
+                // 将所有首项添加到parameters
                 for (list in lists)
-                    functionArgs.add(list[0])
-                // 将functionArgs按匹配的类型添加到函数中并执行
+                    parameters.add(list[0])
+                // 将parameters按匹配的类型添加到函数中并执行
                 when (args[0].type) {
-                    FUNCTION -> cast<Hime_Function>(args[0].value)(functionArgs, symbol.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(functionArgs)
+                    FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
+                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
                     STATIC_FUNCTION -> {
                         val asts = ASTNode.EMPTY.copy()
-                        for (arg in functionArgs)
+                        for (arg in parameters)
                             asts.add(ASTNode(arg))
                         cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
                     }
@@ -856,7 +856,8 @@ val core = SymbolTable(
                     merge(a, low, mid, high)
                 }
             }
-            val tokens = cast<MutableList<Token>>(args[0].value)
+
+            val tokens = cast<ArrayList<Token>>(args[0].value)
             val list = arrayOfNulls<BigDecimal>(tokens.size)
             for (i in tokens.indices)
                 list[i] = BigDecimal(tokens[i].toString())
@@ -865,21 +866,36 @@ val core = SymbolTable(
                 tokens.add(e!!.toToken())
             return tokens.toToken()
         }),
+        "curry" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
+            assert(args[1].type == NUM)
+            fun rsc(func: Token, n: Int, parameters: ArrayList<Token>): Token {
+                if (n == 0)
+                    return func
+                return Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+                    assert(args.isNotEmpty())
+                    parameters.add(args[0])
+                    return rsc(func, n - 1, parameters)
+                })
+            }
+            return rsc(args[0], cast<Int>(args[1].value), ArrayList<Token>())
+        }),
         "maybe" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
-            val functionArgs = ArrayList<Token>()
+            val parameters = ArrayList<Token>()
             for (i in 1 until args.size) {
                 if (args[i].type == Type.NIL)
                     return NIL
-                functionArgs.add(args[i])
+                parameters.add(args[i])
             }
             return when (args[0].type) {
-                FUNCTION -> cast<Hime_Function>(args[0].value)(functionArgs, symbol.createChild())
-                HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(functionArgs)
+                FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
+                HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
                 STATIC_FUNCTION -> {
                     val asts = ASTNode.EMPTY.copy()
-                    for (arg in functionArgs)
+                    for (arg in parameters)
                         asts.add(ASTNode(arg))
                     cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
                 }
@@ -893,18 +909,18 @@ val core = SymbolTable(
             val result = ArrayList<Token>()
             val tokens = cast<List<Token>>(args[1].value)
             for (i in tokens.indices) {
-                val functionArgs = ArrayList<Token>()
-                functionArgs.add(tokens[i])
+                val parameters = ArrayList<Token>()
+                parameters.add(tokens[i])
                 // 例如对于(map f (list a b) (list c d))，则执行(f a c)等
                 for (j in 1 until args.size - 1)
-                    functionArgs.add(cast<List<Token>>(args[j + 1].value)[i])
+                    parameters.add(cast<List<Token>>(args[j + 1].value)[i])
                 result.add(
                     when (args[0].type) {
-                        FUNCTION -> cast<Hime_Function>(args[0].value)(functionArgs, symbol.createChild())
-                        HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(functionArgs)
+                        FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
+                        HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
                         STATIC_FUNCTION -> {
                             val asts = ASTNode.EMPTY.copy()
-                            for (arg in functionArgs)
+                            for (arg in parameters)
                                 asts.add(ASTNode(arg))
                             cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
                         }
@@ -960,17 +976,17 @@ val core = SymbolTable(
             assert(args[1].type == LIST)
             val tokens = cast<List<Token>>(args[1].value)
             for (i in tokens.indices) {
-                val functionArgs = ArrayList<Token>()
-                functionArgs.add(tokens[i])
+                val parameters = ArrayList<Token>()
+                parameters.add(tokens[i])
                 // 例如对于(map f (list a b) (list c d))，则执行(f a c)等
                 for (j in 1 until args.size - 1)
-                    functionArgs.add(cast<List<Token>>(args[j + 1].value)[i])
+                    parameters.add(cast<List<Token>>(args[j + 1].value)[i])
                 when (args[0].type) {
-                    FUNCTION -> cast<Hime_Function>(args[0].value)(functionArgs, symbol.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(functionArgs)
+                    FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
+                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
                     STATIC_FUNCTION -> {
                         val asts = ASTNode.EMPTY.copy()
-                        for (arg in functionArgs)
+                        for (arg in parameters)
                             asts.add(ASTNode(arg))
                         cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
                     }
