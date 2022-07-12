@@ -496,6 +496,9 @@ val core = SymbolTable(
                     eval(node, symbol)
             return NIL
         }),
+        "read-bit" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+            return System.`in`.read().toToken()
+        }),
         "read-line" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
             return Scanner(System.`in`).nextLine().toToken()
         }),
