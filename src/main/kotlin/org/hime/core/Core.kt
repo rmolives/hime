@@ -759,7 +759,7 @@ val core = SymbolTable(
                 tokens.add(index, args[2])
             } else
                 tokens.add(args[1])
-            return tokens.toToken()
+            return args[0]
         }),
         "list-ref" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
