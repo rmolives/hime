@@ -873,13 +873,13 @@ val core = SymbolTable(
             fun rsc(func: Token, n: Int, parameters: ArrayList<Token>): Token {
                 if (n == 0)
                     return when (func.type) {
-                        FUNCTION -> cast<Hime_Function>(func)(parameters, symbol.createChild())
-                        HIME_FUNCTION -> cast<Hime_HimeFunction>(func)(parameters)
+                        FUNCTION -> cast<Hime_Function>(func.value)(parameters, symbol.createChild())
+                        HIME_FUNCTION -> cast<Hime_HimeFunction>(func.value)(parameters)
                         STATIC_FUNCTION -> {
                             val asts = ASTNode.EMPTY.copy()
                             for (arg in parameters)
                                 asts.add(ASTNode(arg))
-                            cast<Hime_StaticFunction>(func)(asts, symbol.createChild())
+                            cast<Hime_StaticFunction>(func.value)(asts, symbol.createChild())
                         }
                         else -> NIL
                     }
