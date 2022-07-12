@@ -872,7 +872,17 @@ val core = SymbolTable(
             assert(args[1].type == NUM)
             fun rsc(func: Token, n: Int, parameters: ArrayList<Token>): Token {
                 if (n == 0)
-                    return func
+                    return when (func.type) {
+                        FUNCTION -> cast<Hime_Function>(func)(parameters, symbol.createChild())
+                        HIME_FUNCTION -> cast<Hime_HimeFunction>(func)(parameters)
+                        STATIC_FUNCTION -> {
+                            val asts = ASTNode.EMPTY.copy()
+                            for (arg in parameters)
+                                asts.add(ASTNode(arg))
+                            cast<Hime_StaticFunction>(func)(asts, symbol.createChild())
+                        }
+                        else -> NIL
+                    }
                 return Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
                     assert(args.isNotEmpty())
                     parameters.add(args[0])
