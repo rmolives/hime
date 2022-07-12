@@ -28,10 +28,10 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     ++index
                     continue
                 }
-                if (tokens[index].type == Type.LB || tokens[index].type == Type.ID) {
+                if (tokens[index].type == Type.LB || tokens[index].type == Type.ID || tokens[index].type == Type.STR) {
                     // 如果运算符为组合式，则使用apply进行替换
                     if (tokens[index].type == Type.LB)
-                        tokens.add(index, Token(Type.ID,  "apply"))
+                        tokens.add(index, Token(Type.ID, "apply"))
                     temp = ASTNode(tokens[index])
                     stack.push(temp)
                     asts.add(temp)
@@ -49,10 +49,10 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     ++index
                     continue
                 }
-                if (tokens[index].type == Type.LB || tokens[index].type == Type.ID) {
+                if (tokens[index].type == Type.LB || tokens[index].type == Type.ID || tokens[index].type == Type.STR) {
                     // 如果运算符为组合式，则使用apply进行替换
                     if (tokens[index].type == Type.LB)
-                        tokens.add(index, Token(Type.ID,  "apply"))
+                        tokens.add(index, Token(Type.ID, "apply"))
                     temp = ASTNode(tokens[index])
                     assert(stack.peek() != null)
                     stack.peek().add(temp)
