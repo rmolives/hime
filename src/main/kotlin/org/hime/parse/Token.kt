@@ -6,6 +6,7 @@ import org.hime.core.eval
 import org.hime.parse.Type.*
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.*
 
 typealias Hime_HimeFunction = (List<Token>) -> Token                        // 自举函数
 typealias Hime_Function = (List<Token>, SymbolTable) -> Token
@@ -26,11 +27,11 @@ val RB = Token(Type.RB, ")")
  */
 class Token(val type: Type, val value: Any) {
     override fun equals(other: Any?): Boolean {
-        return other.toString() == this.toString()
+        return other.toString() == this.toString() && cast<Token>(other).type == this.type
     }
 
     override fun hashCode(): Int {
-        return this.toString().hashCode()
+        return Objects.hash(type, this.toString())
     }
 
     override fun toString(): String {
