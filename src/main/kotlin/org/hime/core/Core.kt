@@ -33,11 +33,16 @@ val core = SymbolTable(
             symbol.put(
                 cast<String>(ast[0].tok.value),
                 Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
-                    if (ast.type == AstType.FUNCTION)
-                        return eval(ASTNode(eval(ast[0], symbol.createChild())), symbol.createChild())
+                    if (ast.type == AstType.FUNCTION) {
+                        var result = NIL
+                        for (node in ast.child)
+                            result = eval(ASTNode(eval(node, symbol.createChild())), symbol.createChild())
+                        return result
+                    }
                     val newAsts = ArrayList<ASTNode>()
                     for (node in asts) {
                         val newAst = node.copy()
+
                         // 递归替换宏
                         fun rsc(ast: ASTNode, id: String, value: ASTNode) {
                             if (ast.tok.type == ID && ast.tok.toString() == id) {
