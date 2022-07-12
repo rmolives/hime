@@ -28,15 +28,13 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     ++index
                     continue
                 }
-                if (tokens[index].type == Type.LB || tokens[index].type == Type.ID || tokens[index].type == Type.STR) {
-                    // 如果运算符为组合式，则使用apply进行替换
-                    if (tokens[index].type == Type.LB)
-                        tokens.add(index, Token(Type.ID, "apply"))
-                    temp = ASTNode(tokens[index])
-                    stack.push(temp)
-                    asts.add(temp)
-                    state = -1
-                }
+                // 如果运算符为组合式，则使用apply进行替换
+                if (tokens[index].type == Type.LB)
+                    tokens.add(index, Token(Type.ID, "apply"))
+                temp = ASTNode(tokens[index])
+                stack.push(temp)
+                asts.add(temp)
+                state = -1
                 // State 2: 非开头
             } else if (state == 2) {
                 // 如果组合式为()
@@ -49,16 +47,14 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     ++index
                     continue
                 }
-                if (tokens[index].type == Type.LB || tokens[index].type == Type.ID || tokens[index].type == Type.STR) {
-                    // 如果运算符为组合式，则使用apply进行替换
-                    if (tokens[index].type == Type.LB)
-                        tokens.add(index, Token(Type.ID, "apply"))
-                    temp = ASTNode(tokens[index])
-                    assert(stack.peek() != null)
-                    stack.peek().add(temp)
-                    stack.push(temp)
-                    state = -1
-                }
+                // 如果运算符为组合式，则使用apply进行替换
+                if (tokens[index].type == Type.LB)
+                    tokens.add(index, Token(Type.ID, "apply"))
+                temp = ASTNode(tokens[index])
+                assert(stack.peek() != null)
+                stack.peek().add(temp)
+                stack.push(temp)
+                state = -1
             } else if (tokens[index].type == Type.LB)
             // 根据堆栈是否为空切换状态
                 state = if (stack.isEmpty()) 1 else 2
