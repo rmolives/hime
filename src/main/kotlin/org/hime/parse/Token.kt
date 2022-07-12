@@ -27,11 +27,11 @@ val RB = Token(Type.RB, ")")
  */
 class Token(val type: Type, val value: Any) {
     override fun equals(other: Any?): Boolean {
-        return other.toString() == this.toString() && cast<Token>(other).type == this.type
+        return other.hashCode() == this.hashCode()
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(type, this.toString())
+        return Objects.hash(type, value.hashCode())
     }
 
     override fun toString(): String {
