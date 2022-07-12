@@ -31,7 +31,7 @@ class Token(val type: Type, val value: Any) {
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(type, value.hashCode())
+        return Objects.hash(type, value)
     }
 
     override fun toString(): String {
