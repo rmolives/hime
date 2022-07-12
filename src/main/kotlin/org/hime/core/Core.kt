@@ -399,8 +399,12 @@ val core = SymbolTable(
                 else {
                     val result = eval(node[0].copy(), newSymbol)
                     assert(result.type == BOOL)
-                    if (cast<Boolean>(result.value))
-                        return eval(node[1].copy(), newSymbol)
+                    if (cast<Boolean>(result.value)) {
+                        var r = NIL
+                        for (index in 1 until node.size())
+                            r = eval(node[index].copy(), newSymbol)
+                        return r
+                    }
                 }
             }
             return NIL
@@ -408,15 +412,18 @@ val core = SymbolTable(
         "switch" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             val newSymbol = symbol.createChild()
-            for(node in ast[1].child) {
+            val op = eval(ast[0].copy(), newSymbol)
+            for (index in 1 until ast.size()) {
+                val node = ast[index]
                 if (node.tok.type == ID && node.tok.value.toString() == "else")
-                    return eval(node[0].copy(), newSymbol)
-                else {
-                    val result = eval(node[0].copy(), newSymbol)
-                    assert(node.size() == 2)
-                    if (result == ast[1].tok)
-                        return eval(node[1].copy(), newSymbol)
-                }
+                    return eval(node.copy(), newSymbol)
+                else
+                    if (node.tok == op) {
+                        var r = NIL
+                        for (i in 0 until node.size())
+                            r = eval(node[i].copy(), newSymbol)
+                        return r
+                    }
             }
             return NIL
         }),
