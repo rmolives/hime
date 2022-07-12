@@ -33,18 +33,8 @@ fun Any.toToken(): Token {
         is String -> Token(Type.STR, this)
         is Long -> Token(Type.BIG_NUM, BigInteger.valueOf(this))
         is Double -> Token(Type.BIG_REAL, BigDecimal.valueOf(this))
-        is Map<*, *> -> {
-            val table = HashMap<Token, Token>()
-            for (e in this)
-                table[e.key!!.toToken()] = e.value!!.toToken()
-            return Token(Type.TABLE, table.toMap())
-        }
-        is List<*> -> {
-            val list = ArrayList<Token>()
-            for (e in this)
-                list.add(e!!.toToken())
-            return Token(Type.LIST, list.toList())
-        }
+        is Map<*, *> -> Token(Type.TABLE, this.toMap())
+        is List<*> -> Token(Type.LIST, this.toList())
         is Boolean -> Token(Type.BOOL, this)
         else -> Token(Type.UNKNOWN, this)
     }
