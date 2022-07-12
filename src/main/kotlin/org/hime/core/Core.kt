@@ -690,7 +690,7 @@ val core = SymbolTable(
             return list.toToken()
         }),
         "list" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            return ArrayList(args).toToken()
+            return args.toToken()
         }),
         "head" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
@@ -733,25 +733,25 @@ val core = SymbolTable(
             assert(args[0].type == LIST)
             assert(args[1].type == NUM)
             val index = cast<Int>(args[1].value)
-            val list = cast<MutableList<Token>>(args[0].value)
-            assert(index < list.size)
-            list.removeAt(index)
-            return args[0]
+            val tokens = ArrayList(cast<List<Token>>(args[0].value))
+            assert(index < tokens.size)
+            tokens.removeAt(index)
+            return tokens.toToken()
         }),
         "list-set" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 2)
             assert(args[0].type == LIST)
             assert(args[1].type == NUM)
             val index = cast<Int>(args[1].value)
-            val list = cast<MutableList<Token>>(args[0].value)
-            assert(index < list.size)
-            list[index] = args[2]
-            return args[0]
+            val tokens = ArrayList(cast<List<Token>>(args[0].value))
+            assert(index < tokens.size)
+            tokens[index] = args[2]
+            return tokens.toToken()
         }),
         "list-add" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == LIST)
-            val tokens = cast<MutableList<Token>>(args[0].value)
+            val tokens = ArrayList(cast<List<Token>>(args[0].value))
             if (args.size > 2) {
                 assert(args[1].type == NUM)
                 val index = cast<Int>(args[1].value)
@@ -759,7 +759,7 @@ val core = SymbolTable(
                 tokens.add(index, args[2])
             } else
                 tokens.add(args[1])
-            return args[0]
+            return tokens.toToken()
         }),
         "list-ref" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
@@ -769,11 +769,6 @@ val core = SymbolTable(
             val tokens = cast<List<Token>>(args[0].value)
             assert(index < tokens.size)
             return tokens[index]
-        }),
-        "list-copy" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
-            return ArrayList(cast<List<Token>>(args[0])).toToken()
         }),
         "++" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
@@ -1497,37 +1492,33 @@ val time = SymbolTable(
 val table = SymbolTable(
     mutableMapOf(
         "table" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
-            return mutableMapOf<Token, Token>().toToken()
+            return mapOf<Token, Token>().toToken()
         }),
         "table-put" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 2)
             assert(args[0].type == TABLE)
-            cast<HashMap<Token, Token>>(args[0].value)[args[1]] = args[2]
-            return args[0]
+            val table = HashMap(cast<Map<Token, Token>>(args[0].value))
+            table[args[1]] = args[2]
+            return table.toToken()
         }),
         "table-get" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == TABLE)
-            val table = cast<HashMap<Token, Token>>(args[0].value)
+            val table = cast<Map<Token, Token>>(args[0].value)
             assert(table.containsKey(args[1]))
             return table[args[1]]!!
         }),
         "table-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+            assert(args.size > 2)
             assert(args[0].type == TABLE)
-            val table = cast<MutableMap<Token, Token>>(args[0].value)
-            assert(table.containsKey(args[1]))
-            return table.remove(args[1])!!
+            val table = HashMap(cast<Map<Token, Token>>(args[0].value))
+            table.remove(args[1])
+            return table.toToken()
         }),
         "table-keys" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             assert(args[0].type == TABLE)
-            return cast<MutableMap<Token, Token>>(args[0].value).keys.toList().toToken()
-        }),
-        "table-copy" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
-            return HashMap(cast<MutableMap<Token, Token>>(args[0].value)).toToken()
+            return cast<Map<Token, Token>>(args[0].value).keys.toList().toToken()
         })
     ), null
 )

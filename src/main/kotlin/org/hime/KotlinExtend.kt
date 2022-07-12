@@ -37,13 +37,13 @@ fun Any.toToken(): Token {
             val table = HashMap<Token, Token>()
             for (e in this)
                 table[e.key!!.toToken()] = e.value!!.toToken()
-            return Token(Type.TABLE, table)
+            return Token(Type.TABLE, table.toMap())
         }
         is List<*> -> {
             val list = ArrayList<Token>()
             for (e in this)
                 list.add(e!!.toToken())
-            return Token(Type.LIST, list)
+            return Token(Type.LIST, list.toList())
         }
         is Boolean -> Token(Type.BOOL, this)
         else -> Token(Type.UNKNOWN, this)
