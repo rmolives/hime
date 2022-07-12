@@ -856,7 +856,6 @@ val core = SymbolTable(
                     merge(a, low, mid, high)
                 }
             }
-
             val tokens = cast<MutableList<Token>>(args[0].value)
             val list = arrayOfNulls<BigDecimal>(tokens.size)
             for (i in tokens.indices)
