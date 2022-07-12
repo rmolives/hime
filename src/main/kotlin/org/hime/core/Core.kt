@@ -405,6 +405,21 @@ val core = SymbolTable(
             }
             return NIL
         }),
+        "switch" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            assert(ast.size() > 1)
+            val newSymbol = symbol.createChild()
+            for(node in ast[1].child) {
+                if (node.tok.type == ID && cast<String>(node.tok.value) == "else")
+                    return eval(node[0].copy(), newSymbol)
+                else {
+                    val result = eval(node[0].copy(), newSymbol)
+                    assert(node.size() == 2)
+                    if (node.tok == ast[1].tok)
+                        return eval(node[1].copy(), newSymbol)
+                }
+            }
+            return NIL
+        }),
         // 执行多个组合式
         "begin" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             // 新建执行的新环境（继承）
