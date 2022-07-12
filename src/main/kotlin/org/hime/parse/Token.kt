@@ -52,7 +52,6 @@ class Token(val type: Type, val value: Any) {
             }
             FUNCTION, STATIC_FUNCTION -> "<Function: ${this.value.hashCode()}>"
             HIME_FUNCTION -> "<Function: ${this.value.hashCode()}>"
-            TABLE -> "<Function: ${this.value.hashCode()}>"
             else -> this.value.toString()
         }
     }
