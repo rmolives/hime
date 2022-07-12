@@ -414,7 +414,7 @@ val core = SymbolTable(
                 else {
                     val result = eval(node[0].copy(), newSymbol)
                     assert(node.size() == 2)
-                    if (node.tok == ast[1].tok)
+                    if (result == ast[1].tok)
                         return eval(node[1].copy(), newSymbol)
                 }
             }
