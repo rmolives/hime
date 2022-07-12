@@ -394,7 +394,7 @@ val core = SymbolTable(
             val newSymbol = symbol.createChild()
             for (node in ast.child) {
                 // 如果碰到else，就直接执行返回
-                if (node.tok.type == ID && cast<String>(node.tok.value) == "else")
+                if (node.tok.type == ID && node.tok.value.toString() == "else")
                     return eval(node[0].copy(), newSymbol)
                 else {
                     val result = eval(node[0].copy(), newSymbol)
@@ -409,7 +409,7 @@ val core = SymbolTable(
             assert(ast.size() > 1)
             val newSymbol = symbol.createChild()
             for(node in ast[1].child) {
-                if (node.tok.type == ID && cast<String>(node.tok.value) == "else")
+                if (node.tok.type == ID && node.tok.value.toString() == "else")
                     return eval(node[0].copy(), newSymbol)
                 else {
                     val result = eval(node[0].copy(), newSymbol)
