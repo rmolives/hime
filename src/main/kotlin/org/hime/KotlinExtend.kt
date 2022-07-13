@@ -31,11 +31,12 @@ fun Any.toToken(): Token {
             this.toBigIntegerExact().toToken()
         else if (this <= FLOAT_MAX) this.toFloat().toToken() else Token(Type.BIG_REAL, this)
         is String -> Token(Type.STR, this)
-        is Long -> Token(Type.BIG_NUM, BigInteger.valueOf(this))
-        is Double -> Token(Type.BIG_REAL, BigDecimal.valueOf(this))
+        is Long -> BigInteger.valueOf(this).toToken()
+        is Double -> BigDecimal.valueOf(this).toToken()
         is Map<*, *> -> Token(Type.TABLE, this.toMap())
         is List<*> -> Token(Type.LIST, this.toList())
         is Boolean -> Token(Type.BOOL, this)
+        is Byte -> Token(Type.BYTE, this)
         else -> Token(Type.UNKNOWN, this)
     }
 }

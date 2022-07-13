@@ -1,7 +1,5 @@
 package org.hime.parse
 
-import org.hime.FLOAT_MAX
-import org.hime.INT_MAX
 import org.hime.toToken
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -119,13 +117,7 @@ fun lexer(code: String): List<List<Token>> {
                 }
                 // 处理浮点数
                 if (expression[index + 1] != '.') {
-                    tokens.add(
-                        if (v <= INT_MAX) {
-                            val n = v.toInt()
-                            Token(Type.NUM, if (negative) -n else n)
-                        } else
-                            Token(Type.BIG_NUM, if (negative) v.subtract(v.multiply(BigInteger.TWO)) else v)
-                    )
+                    tokens.add((if (negative) v.subtract(v.multiply(BigInteger.TWO)) else v).toToken())
                     continue
                 }
                 var x = BigDecimal(v.toString())
@@ -143,13 +135,7 @@ fun lexer(code: String): List<List<Token>> {
                     )
                     d = d.multiply(BigDecimal.valueOf(10))
                 }
-                tokens.add(
-                    if (x <= FLOAT_MAX) {
-                        val n = x.toFloat()
-                        Token(Type.REAL, if (negative) -n else n)
-                    } else
-                        Token(Type.BIG_REAL, if (negative) x.subtract(x.multiply(BigDecimal.valueOf(2))) else x)
-                )
+                tokens.add((if (negative) x.subtract(x.multiply(BigDecimal.valueOf(2))) else x).toToken())
                 continue
             }
             // 处理字符串
