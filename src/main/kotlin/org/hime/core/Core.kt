@@ -323,8 +323,12 @@ val core = SymbolTable(
         "def" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             // 如果是(def key value)
-            if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)
-                symbol.put(ast[0].tok.toString(), eval(ast[1], symbol.createChild()))
+            if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
+                var result = NIL
+                for (i in 1 until ast.size())
+                    result = eval(ast[i], symbol.createChild())
+                symbol.put(ast[0].tok.toString(), result)
+            }
             // 如果是(def (function-name p*) e)
             else {
                 val parameters = ArrayList<String>()
