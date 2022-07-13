@@ -1288,7 +1288,7 @@ val core = SymbolTable(
             return args[0].toString().lastIndexOf(args[1].toString()).toToken()
         }),
         "string-format" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+            assert(args.isNotEmpty())
             val newArgs = arrayOfNulls<Any>(args.size - 1)
             for (i in 1 until args.size)
                 newArgs[i - 1] = args[i].value
