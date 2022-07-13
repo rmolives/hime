@@ -1448,9 +1448,10 @@ val core = SymbolTable(
         }),
         "eval" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.isNotEmpty())
+            val newSymbol = symbol.createChild()
             var result = NIL
             for (node in args)
-                result = call(node.toString(), symbol)
+                result = call(node.toString(), newSymbol)
             return result
         }),
         "bit-and" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
