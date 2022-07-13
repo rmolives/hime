@@ -94,7 +94,7 @@ fun variableHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: 
         HIME_FUNCTION,
         fun(args: List<Token>): Token {
             // 判断参数的数量
-            assert(args.size >= parameters.size)
+            assert(args.size >= parameters.size - 1)
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
             for (i in 0 until parameters.size - 1)
