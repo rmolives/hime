@@ -1252,15 +1252,15 @@ val core = SymbolTable(
             return temp.toToken()
         }),
         "->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+            assert(args.isNotEmpty())
             return args[0].toString().toToken()
         }),
         "->num" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+            assert(args.isNotEmpty())
             return BigInteger(args[0].toString()).toToken()
         }),
         "->real" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+            assert(args.isNotEmpty())
             return BigDecimal(args[0].toString()).toToken()
         }),
         "string-replace" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
@@ -1302,8 +1302,10 @@ val core = SymbolTable(
             assert(args.isNotEmpty())
             val chars = args[0].toString().toCharArray()
             val list = ArrayList<Token>()
-            for (c in chars)
+            for (c in chars) {
+                assert(args.isNotEmpty())
                 list.add(c.toString().toToken())
+            }
             return list.toToken()
         }),
         "list->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
