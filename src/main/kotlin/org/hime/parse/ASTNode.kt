@@ -104,6 +104,23 @@ class ASTNode {
     }
 
     /**
+     * equals
+     * @param other
+     * @return Eq?
+     */
+    override fun equals(other: Any?): Boolean {
+        return this.hashCode() == other.hashCode()
+    }
+
+    /**
+     * HashCode
+     * @return hash
+     */
+    override fun hashCode(): Int {
+        return Objects.hash(tok, type, child)
+    }
+
+    /**
      * 覆盖toString
      * @return 抽象语法树的String
      */
