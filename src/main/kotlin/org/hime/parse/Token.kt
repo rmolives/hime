@@ -4,6 +4,7 @@ import org.hime.cast
 import org.hime.core.SymbolTable
 import org.hime.core.eval
 import org.hime.parse.Type.*
+import org.hime.toToken
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.*
@@ -74,6 +75,34 @@ fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol:
             val newSymbol = symbol.createChild()
             for (i in parameters.indices)
                 newSymbol.put(parameters[i], args[i])
+            var result = NIL
+            for (astNode in asts)
+                result = eval(astNode.copy(), newSymbol)
+            return result
+        })
+}
+
+/**
+ * 建立变长
+ * @param parameters 形式参数
+ * @param asts      一系列组合式
+ * @param symbol    符号表
+ * @return          返回Hime_HimeFunction
+ */
+fun variableHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: SymbolTable): Token {
+    return Token(
+        HIME_FUNCTION,
+        fun(args: List<Token>): Token {
+            // 判断参数的数量
+            assert(args.size >= parameters.size)
+            // 新建执行的新环境（继承）
+            val newSymbol = symbol.createChild()
+            for (i in 0 until parameters.size - 1)
+                newSymbol.put(parameters[i], args[i])
+            val variableArgs = ArrayList<Token>()
+            for (i in parameters.size - 1 until args.size)
+                variableArgs.add(args[i])
+            newSymbol.put(parameters[parameters.size - 1], variableArgs.toToken())
             var result = NIL
             for (astNode in asts)
                 result = eval(astNode.copy(), newSymbol)
