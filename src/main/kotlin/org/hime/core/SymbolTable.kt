@@ -8,7 +8,7 @@ import org.hime.parse.Token
  */
 class SymbolTable(
     var table: MutableMap<String, Token>,
-    var father: SymbolTable?
+    private var father: SymbolTable?
 ) {
     /**
      * 删除绑定
