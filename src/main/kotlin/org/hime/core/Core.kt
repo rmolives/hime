@@ -302,23 +302,6 @@ val core = SymbolTable(
                 result = eval(ast[i].copy(), newSymbol.createChild())
             return result
         }),
-        // 建立新绑定(变长)
-        "def-variable" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
-            assert(ast.size() > 1)
-            assert(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION)
-            val parameters = ArrayList<String>()
-            for (i in 0 until ast[0].size())
-                parameters.add(ast[0][i].tok.toString())
-            val asts = ArrayList<ASTNode>()
-            // 将ast都复制一遍并存到asts中
-            for (i in 1 until ast.size())
-                asts.add(ast[i].copy())
-            symbol.put(
-                cast<String>(ast[0].tok.value),
-                variableHimeFunction(parameters, asts, symbol.createChild())
-            )
-            return NIL
-        }),
         // 建立新绑定
         "def" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
@@ -345,6 +328,23 @@ val core = SymbolTable(
             }
             return NIL
         }),
+        // 建立新绑定(变长)
+        "def-variable" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            assert(ast.size() > 1)
+            assert(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION)
+            val parameters = ArrayList<String>()
+            for (i in 0 until ast[0].size())
+                parameters.add(ast[0][i].tok.toString())
+            val asts = ArrayList<ASTNode>()
+            // 将ast都复制一遍并存到asts中
+            for (i in 1 until ast.size())
+                asts.add(ast[i].copy())
+            symbol.put(
+                cast<String>(ast[0].tok.value),
+                variableHimeFunction(parameters, asts, symbol.createChild())
+            )
+            return NIL
+        }),
         // 解除绑定
         "undef" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
@@ -360,9 +360,10 @@ val core = SymbolTable(
             assert(symbol.contains(cast<String>(ast[0].tok.value)))
             // 如果是(set key value)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
-                if (ast[1].isNotEmpty())
-                    ast[1].tok = eval(ast[1], symbol.createChild())
-                symbol.set(ast[0].tok.toString(), ast[1].tok)
+                var result = NIL
+                for (i in 1 until ast.size())
+                    result = eval(ast[i], symbol.createChild())
+                symbol.set(ast[0].tok.toString(), result)
             } else {
                 // 如果是(set (function-name p*) e)
                 val args = ArrayList<String>()
@@ -374,6 +375,22 @@ val core = SymbolTable(
                     asts.add(ast[i].copy())
                 symbol.set(ast[0].tok.toString(), structureHimeFunction(args, asts, symbol))
             }
+            return NIL
+        }),
+        "set-variable" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+            assert(ast.size() > 1)
+            assert(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION)
+            val parameters = ArrayList<String>()
+            for (i in 0 until ast[0].size())
+                parameters.add(ast[0][i].tok.toString())
+            val asts = ArrayList<ASTNode>()
+            // 将ast都复制一遍并存到asts中
+            for (i in 1 until ast.size())
+                asts.add(ast[i].copy())
+            symbol.set(
+                cast<String>(ast[0].tok.value),
+                variableHimeFunction(parameters, asts, symbol.createChild())
+            )
             return NIL
         }),
         "lambda" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
