@@ -1,6 +1,7 @@
 package org.hime
 
 import org.hime.parse.ASTNode
+import org.hime.parse.NIL
 import org.hime.parse.Token
 import org.hime.parse.Type
 import java.math.BigDecimal
@@ -33,12 +34,17 @@ fun Any.toToken(): Token {
         is String -> Token(Type.STR, this)
         is Long -> BigInteger.valueOf(this).toToken()
         is Double -> BigDecimal.valueOf(this).toToken()
-        is Map<*, *> -> Token(Type.TABLE, this.toMap())
+        is Map<*, *> -> {
+            val table = HashMap<Token, Token>()
+            for ((key, value) in this)
+                table[key?.toToken() ?: NIL] = value?.toToken() ?: NIL
+            return Token(Type.TABLE, table)
+        }
         is List<*> -> {
             val array = ArrayList<Token>()
             for (e in this)
-                array.add(e!!.toToken())
-            Token(Type.LIST, array.toList())
+                array.add(e?.toToken() ?: NIL)
+            Token(Type.LIST, array)
         }
         is Boolean -> Token(Type.BOOL, this)
         is Byte -> Token(Type.BYTE, this)

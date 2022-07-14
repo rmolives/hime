@@ -788,20 +788,18 @@ val core = SymbolTable(
                 return arrayListOf(list[0]).toToken()
             return list.toToken()
         }),
-        "list-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == LIST)
-            assert(args[1].type == NUM)
-            val index = cast<Int>(args[1].value)
-            val tokens = ArrayList(cast<List<Token>>(args[0].value))
-            assert(index < tokens.size)
-            tokens.removeAt(index)
-            return tokens.toToken()
-        }),
         "list-contains" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == LIST)
             return ArrayList(cast<List<Token>>(args[0].value)).contains(args[1]).toToken()
+        }),
+        "list-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == LIST)
+            assert(args[1].type == NUM)
+            val tokens = ArrayList(cast<List<Token>>(args[0].value))
+            tokens.removeAt(cast<Int>(args[1].value))
+            return tokens.toToken()
         }),
         "list-set" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 2)
@@ -819,12 +817,35 @@ val core = SymbolTable(
             val tokens = ArrayList(cast<List<Token>>(args[0].value))
             if (args.size > 2) {
                 assert(args[1].type == NUM)
-                val index = cast<Int>(args[1].value)
-                assert(index < tokens.size)
-                tokens.add(index, args[2])
+                tokens.add(cast<Int>(args[1].value), args[2])
             } else
                 tokens.add(args[1])
             return tokens.toToken()
+        }),
+        "list-remove!" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == LIST)
+            assert(args[1].type == NUM)
+            cast<MutableList<Token>>(args[0].value).removeAt(cast<Int>(args[1].value))
+            return args[0].toToken()
+        }),
+        "list-set!" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[0].type == LIST)
+            assert(args[1].type == NUM)
+            cast<MutableList<Token>>(args[0].value)[cast<Int>(args[1].value)] = args[2]
+            return args[0].toToken()
+        }),
+        "list-add!" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 1)
+            assert(args[0].type == LIST)
+            val tokens = cast<MutableList<Token>>(args[0].value)
+            if (args.size > 2) {
+                assert(args[1].type == NUM)
+                tokens.add(cast<Int>(args[1].value), args[2])
+            } else
+                tokens.add(args[1])
+            return args[0].toToken()
         }),
         "list-ref" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
@@ -1629,6 +1650,18 @@ val table = SymbolTable(
             assert(args.isNotEmpty())
             assert(args[0].type == TABLE)
             return cast<Map<Token, Token>>(args[0].value).keys.toList().toToken()
+        }),
+        "table-put!" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[0].type == TABLE)
+            cast<MutableMap<Token, Token>>(args[0].value)[args[1]] = args[2]
+            return args[0].toToken()
+        }),
+        "table-remove!" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.size > 2)
+            assert(args[0].type == TABLE)
+            cast<MutableMap<Token, Token>>(args[0].value).remove(args[1])
+            return args[0].toToken()
         })
     ), null
 )
