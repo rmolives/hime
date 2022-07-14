@@ -348,7 +348,6 @@ val core = SymbolTable(
         // 解除绑定
         "undef" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
-            assert(ast[0].tok.type == ID)
             assert(symbol.contains(ast[0].tok.toString()))
             // 从环境中删除绑定
             symbol.remove(ast[0].tok.toString())
