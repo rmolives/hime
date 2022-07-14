@@ -1397,52 +1397,57 @@ val core = SymbolTable(
         }),
         "bool?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            for (parameter in args)
-                if (parameter.type != BOOL)
+            for (arg in args)
+                if (arg.type != BOOL)
                     return FALSE
             return TRUE
         }),
         "string?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            for (parameter in args)
-                if (parameter.type != STR)
+            for (arg in args)
+                if (arg.type != STR)
                     return FALSE
             return TRUE
         }),
         "num?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            for (parameter in args)
-                if (parameter.type != NUM && parameter.type != BIG_NUM)
+            for (arg in args)
+                if (arg.type != NUM && arg.type != BIG_NUM)
                     return FALSE
             return TRUE
         }),
         "real?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            for (parameter in args)
-                if (parameter.type != REAL && parameter.type != BIG_REAL)
+            for (arg in args)
+                if (arg.type != REAL && arg.type != BIG_REAL)
                     return FALSE
             return TRUE
         }),
         "list?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            for (parameter in args)
-                if (parameter.type != LIST)
+            for (arg in args)
+                if (arg.type != LIST)
                     return FALSE
             return TRUE
         }),
         "byte?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            for (parameter in args)
-                if (parameter.type != BYTE)
+            for (arg in args)
+                if (arg.type != BYTE)
                     return FALSE
             return TRUE
         }),
         "function?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            for (parameter in args)
-                if (parameter.type != FUNCTION && parameter.type != STATIC_FUNCTION && parameter.type != HIME_FUNCTION)
+            for (arg in args)
+                if (arg.type != FUNCTION && arg.type != STATIC_FUNCTION && arg.type != HIME_FUNCTION)
                     return FALSE
             return TRUE
+        }),
+        "exit" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].type == NUM)
+            exitProcess(cast<Int>(args[0].value))
         }),
         "exit" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
