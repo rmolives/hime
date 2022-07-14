@@ -523,9 +523,8 @@ val core = SymbolTable(
             val path = args[0].toString()
             // 导入内置的模块
             if (module.containsKey(path)) {
-                val father = module[path]
-                father!!.father = symbol.father
-                symbol.father = father
+                for ((key, value) in module[path]!!.table)
+                    symbol.put(key, value)
                 return NIL
             }
             // 导入工作目录的模块
