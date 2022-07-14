@@ -31,7 +31,7 @@ val core = SymbolTable(
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
             symbol.put(
-                cast<String>(ast[0].tok.value),
+                ast[0].tok.toString(),
                 Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
                     if (ast.type == AstType.FUNCTION) {
                         var result = NIL
@@ -322,7 +322,7 @@ val core = SymbolTable(
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
                 symbol.put(
-                    cast<String>(ast[0].tok.value),
+                    ast[0].tok.toString(),
                     structureHimeFunction(parameters, asts, symbol.createChild())
                 )
             }
@@ -340,7 +340,7 @@ val core = SymbolTable(
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
             symbol.put(
-                cast<String>(ast[0].tok.value),
+                ast[0].tok.toString(),
                 variableHimeFunction(parameters, asts, symbol.createChild())
             )
             return NIL
@@ -349,15 +349,15 @@ val core = SymbolTable(
         "undef" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             assert(ast[0].tok.type == ID)
-            assert(symbol.contains(ast[0].tok.value.toString()))
+            assert(symbol.contains(ast[0].tok.toString()))
             // 从环境中删除绑定
-            symbol.remove(cast<String>(ast[0].tok.value))
+            symbol.remove(ast[0].tok.toString())
             return NIL
         }),
         // 更改绑定
         "set" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
-            assert(symbol.contains(cast<String>(ast[0].tok.value)))
+            assert(symbol.contains(ast[0].tok.toString()))
             // 如果是(set key value)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
                 var result = NIL
@@ -388,7 +388,7 @@ val core = SymbolTable(
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
             symbol.set(
-                cast<String>(ast[0].tok.value),
+                ast[0].tok.toString(),
                 variableHimeFunction(parameters, asts, symbol.createChild())
             )
             return NIL
