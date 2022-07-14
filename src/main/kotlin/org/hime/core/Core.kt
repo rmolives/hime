@@ -357,7 +357,6 @@ val core = SymbolTable(
         // 更改绑定
         "set" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
-            assert(symbol.contains(ast[0].tok.toString()))
             // 如果是(set key value)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
                 var result = NIL
