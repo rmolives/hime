@@ -34,7 +34,12 @@ fun Any.toToken(): Token {
         is Long -> BigInteger.valueOf(this).toToken()
         is Double -> BigDecimal.valueOf(this).toToken()
         is Map<*, *> -> Token(Type.TABLE, this.toMap())
-        is List<*> -> Token(Type.LIST, this.toList())
+        is List<*> -> {
+            val array = ArrayList<Token>()
+            for (e in this)
+                array.add(e!!.toToken())
+            Token(Type.LIST, array.toList())
+        }
         is Boolean -> Token(Type.BOOL, this)
         is Byte -> Token(Type.BYTE, this)
         else -> Token(Type.UNKNOWN, this)
