@@ -43,14 +43,6 @@ class Token(val type: Type, val value: Any) {
             REAL -> cast<Float>(this.value).toString()
             BIG_NUM -> cast<BigInteger>(this.value).toString()
             BIG_REAL -> cast<BigDecimal>(this.value).toPlainString()
-            LIST -> {
-                val builder = StringBuilder("[")
-                val list = cast<List<Token>>(this.value)
-                for (i in list.indices)
-                    builder.append(if (i == 0) list[i].toString() else ", ${list[i]}")
-                builder.append("]")
-                return builder.toString()
-            }
             FUNCTION, STATIC_FUNCTION -> "<Function: ${this.value.hashCode()}>"
             HIME_FUNCTION -> "<Function: ${this.value.hashCode()}>"
             else -> this.value.toString()
