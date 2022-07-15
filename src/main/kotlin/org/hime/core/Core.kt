@@ -612,18 +612,18 @@ val core = SymbolTable(
         }),
         "and" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            for (parameter in args) {
-                assert(parameter.type == BOOL)
-                if (!cast<Boolean>(parameter.value))
+            for (arg in args) {
+                assert(arg.type == BOOL)
+                if (!cast<Boolean>(arg.value))
                     return FALSE
             }
             return TRUE
         }),
         "or" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
-            for (parameter in args) {
-                assert(parameter.type == BOOL)
-                if (cast<Boolean>(parameter.value))
+            for (arg in args) {
+                assert(arg.type == BOOL)
+                if (cast<Boolean>(arg.value))
                     return TRUE
             }
             return FALSE
