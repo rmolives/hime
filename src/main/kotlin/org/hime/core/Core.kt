@@ -1646,7 +1646,7 @@ val table = SymbolTable(
             assert(args[0].type == TABLE)
             val table = cast<Map<Token, Token>>(args[0].value)
             assert(table.containsKey(args[1]))
-            return table[args[1]]!!
+            return table[args[1]] ?: NIL
         }),
         "table-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 2)
