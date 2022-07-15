@@ -1615,7 +1615,7 @@ val time = SymbolTable(
         "time-format" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[1].type == NUM || args[1].type == BIG_NUM)
-            return SimpleDateFormat(args[0].toString()).format(BigInteger(args[1].toString()).toLong())
+            return SimpleDateFormat(args[0].toString()).format(args[1].toString().toLong())
                 .toToken()
         }),
         "time-parse" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
