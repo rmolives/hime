@@ -791,7 +791,7 @@ val core = SymbolTable(
         "list-contains" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == LIST)
-            return ArrayList(cast<List<Token>>(args[0].value)).contains(args[1]).toToken()
+            return cast<List<Token>>(args[0].value).contains(args[1]).toToken()
         }),
         "list-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
