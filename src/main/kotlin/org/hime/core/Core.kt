@@ -1289,6 +1289,10 @@ val core = SymbolTable(
                 temp = temp.lcm(BigInteger(args[i].toString()))
             return temp.toToken()
         }),
+        "->bool" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            return if (args[0].toString() == "true") TRUE else FALSE
+        }),
         "->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             return args[0].toString().toToken()
