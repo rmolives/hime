@@ -1319,11 +1319,7 @@ val core = SymbolTable(
         }),
         "string-split" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
-            val result = ArrayList<Token>()
-            val list = args[0].toString().split(args[1].toString())
-            for (s in list)
-                result.add(s.toToken())
-            return result.toToken()
+            return args[0].toString().split(args[1].toString()).toList().toToken()
         }),
         "string-index" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
