@@ -698,7 +698,7 @@ val core = SymbolTable(
         "random" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             assert(args[0].type == NUM)
-            if (args.size >= 2)
+            if (args.size > 1)
                 assert(args[1].type == NUM)
             val start = if (args.size == 1) BigInteger.ZERO else BigInteger(args[0].toString())
             val end =
