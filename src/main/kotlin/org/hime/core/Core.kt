@@ -463,10 +463,10 @@ val core = SymbolTable(
         // 执行多个组合式
         "begin" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             // 新建执行的新环境（继承）
-            val newSymbolTable = symbol.createChild()
+            val newSymbol = symbol.createChild()
             var result = NIL
             for (i in 0 until ast.size())
-                result = eval(ast[i].copy(), newSymbolTable)
+                result = eval(ast[i].copy(), newSymbol)
             return result
         }),
         "while" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
