@@ -471,16 +471,16 @@ val core = SymbolTable(
         }),
         "while" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
             // 新建执行的新环境（继承）
-            val newSymbolTable = symbol.createChild()
+            val newSymbol = symbol.createChild()
             var result = NIL
             // 执行condition
-            var condition = eval(ast[0].copy(), newSymbolTable)
+            var condition = eval(ast[0].copy(), newSymbol)
             assert(condition.type == BOOL)
             while (cast<Boolean>(condition.value)) {
                 for (i in 1 until ast.size())
-                    result = eval(ast[i].copy(), newSymbolTable)
+                    result = eval(ast[i].copy(), newSymbol)
                 // 重新执行condition
-                condition = eval(ast[0].copy(), newSymbolTable)
+                condition = eval(ast[0].copy(), newSymbol)
                 assert(condition.type == BOOL)
             }
             return result
