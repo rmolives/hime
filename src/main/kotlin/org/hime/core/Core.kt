@@ -1533,6 +1533,7 @@ val file = SymbolTable(
             return File(args[0].toString()).exists().toToken()
         }),
         "file-list" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
             fun listAllFile(f: File): Token {
                 val list = ArrayList<Token>()
                 val files = f.listFiles()
