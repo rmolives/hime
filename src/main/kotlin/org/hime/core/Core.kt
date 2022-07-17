@@ -207,24 +207,17 @@ val core = SymbolTable(
                 )[0], newSymbol
             )
         }),
-        "stream-ref" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
+        "stream-ref" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
-            val newSymbol = symbol.createChild()
-            // 将匹配的参数添加到newSymbol中
-            newSymbol.put("s", args[0])
-            newSymbol.put("n", args[1])
-            // 解释执行
-            return eval(
-                parser(
-                    lexer(
-                        "(if (= s empty-stream) " +
-                                "empty-stream " +
-                                "(if (= n 0) " +
-                                "(stream-car s) " +
-                                "(stream-ref (stream-cdr s) (- n 1))))"
-                    )
-                )[0], newSymbol
-            )
+            assert(args[0].type == LIST)
+            assert(args[1].type == NUM)
+            var temp = cast<List<Token>>(args[0].value)
+            var index = cast<Int>(args[1].value)
+            while ((index--) != 0) {
+                assert(temp[1].type == HIME_FUNCTION)
+                temp = cast<List<Token>>(cast<Hime_HimeFunction>(temp[1].value)(arrayListOf()).value)
+            }
+            return temp[0]
         }),
         // (delay e) => (lambda () e)
         "delay" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
