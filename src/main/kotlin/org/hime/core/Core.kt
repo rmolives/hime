@@ -1538,10 +1538,7 @@ val file = SymbolTable(
                 val list = ArrayList<Token>()
                 val files = f.listFiles()
                 for (file in files!!) {
-                    if (file.isDirectory)
-                        list.add(listAllFile(file))
-                    else
-                        list.add(file.path.toToken())
+                    list.add(file.path.toToken())
                 }
                 return list.toToken()
             }
