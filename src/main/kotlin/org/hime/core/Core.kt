@@ -190,22 +190,32 @@ val core = SymbolTable(
         }),
         "stream-filter" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
             assert(args.size > 1)
-            val newSymbol = symbol.createChild()
-            // 将匹配的参数添加到newSymbol中
-            newSymbol.put("pred", args[0])
-            newSymbol.put("stream", args[1])
-            // 解释执行
-            return eval(
-                parser(
-                    lexer(
-                        "(cond ((= stream empty-stream) empty-stream) " +
-                                "((pred (stream-car stream)) " +
-                                "(cons-stream (stream-car stream) " +
-                                "(stream-filter pred (stream-cdr stream)))) " +
-                                "(else (stream-filter pred (stream-cdr stream))))"
-                    )
-                )[0], newSymbol
-            )
+            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
+            if (args[1] == EMPTY_STREAM)
+                return arrayListOf<Token>().toToken()
+            assert(args[1].type == LIST)
+            val result = ArrayList<Token>()
+            var tokens = cast<List<Token>>(args[1].value)
+            while (tokens[0].value != EMPTY_STREAM) {
+                val op = when (args[0].type) {
+                    FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(tokens[0]), symbol.createChild())
+                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(tokens[0]))
+                    STATIC_FUNCTION -> {
+                        val asts = ASTNode.EMPTY.copy()
+                        asts.add(ASTNode(tokens[0]))
+                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
+                    }
+                    else -> FALSE
+                }
+                assert(op.type == BOOL)
+                if (cast<Boolean>(op.value))
+                    result.add(tokens[0])
+                val temp = cast<Hime_HimeFunction>(tokens[1].value)(arrayListOf())
+                if (temp == EMPTY_STREAM)
+                    break
+                tokens = cast<List<Token>>(temp.value)
+            }
+            return result.toToken()
         }),
         "stream-ref" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
@@ -1106,7 +1116,7 @@ val core = SymbolTable(
                         asts.add(ASTNode(token))
                         cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
                     }
-                    else -> token
+                    else -> FALSE
                 }
                 assert(op.type == BOOL)
                 if (cast<Boolean>(op.value))
