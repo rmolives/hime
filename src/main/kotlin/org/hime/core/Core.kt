@@ -1,10 +1,11 @@
-package org.hime.core
-
 import ch.obermuhlner.math.big.BigDecimalMath
 import org.hime.call
 import org.hime.cast
 import org.hime.core.FuncType.BUILT_IN
 import org.hime.core.FuncType.STATIC
+import org.hime.core.HimeFunction
+import org.hime.core.SymbolTable
+import org.hime.core.eval
 import org.hime.isNum
 import org.hime.parse.*
 import org.hime.parse.Type.*
@@ -756,9 +757,7 @@ val core = SymbolTable(
             return tokens.toToken()
         }, listOf(LIST, UNKNOWN), true)).toToken(),
         "list-remove!" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 cast<MutableList<Token>>(args[0].value).removeAt(cast<Int>(args[1].value))
                 return args[0].toToken()
             },
@@ -766,9 +765,7 @@ val core = SymbolTable(
             false
         )).toToken(),
         "list-set!" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 cast<MutableList<Token>>(args[0].value)[cast<Int>(args[1].value)] = args[2]
                 return args[0].toToken()
             },
@@ -776,9 +773,7 @@ val core = SymbolTable(
             false
         )).toToken(),
         "list-add!" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val tokens = cast<MutableList<Token>>(args[0].value)
                 if (args.size > 2) {
                     assert(args[1].type == NUM)
@@ -1349,9 +1344,7 @@ val file = SymbolTable(
             return list.toToken()
         }, 1)).toToken(),
         "file-mkdirs" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val file = File(args[0].toString())
                 if (!file.parentFile.exists())
                     !file.parentFile.mkdirs()
@@ -1362,9 +1355,7 @@ val file = SymbolTable(
             1
         )).toToken(),
         "file-new" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val file = File(args[0].toString())
                 if (!file.exists())
                     file.createNewFile()
@@ -1376,18 +1367,14 @@ val file = SymbolTable(
             return Files.readString(Paths.get(args[0].toString())).toToken()
         }, 1)).toToken(),
         "file-remove" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 File(args[0].toString()).delete()
                 return NIL
             },
             1
         )).toToken(),
         "file-write-string" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val file = File(args[0].toString())
                 if (!file.parentFile.exists())
                     !file.parentFile.mkdirs()
@@ -1406,9 +1393,7 @@ val file = SymbolTable(
             return list.toToken()
         }, 1)).toToken(),
         "file-write-bytes" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val file = File(args[0].toString())
                 if (!file.parentFile.exists())
                     !file.parentFile.mkdirs()
@@ -1468,18 +1453,14 @@ val table = SymbolTable(
             return table.toToken()
         }, listOf(TABLE, UNKNOWN), false)).toToken(),
         "table-keys" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return cast<Map<Token, Token>>(args[0].value).keys.toList().toToken()
             },
             listOf(TABLE),
             false
         )).toToken(),
         "table-put!" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 cast<MutableMap<Token, Token>>(args[0].value)[args[1]] = args[2]
                 return args[0].toToken()
             },
@@ -1487,9 +1468,7 @@ val table = SymbolTable(
             false
         )).toToken(),
         "table-remove!" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 cast<MutableMap<Token, Token>>(args[0].value).remove(args[1])
                 return args[0].toToken()
             },
@@ -1507,9 +1486,8 @@ val thread = SymbolTable(
             Thread.sleep(args[0].toString().toLong())
             return NIL
         })).toToken(),
-        "thread" to (HimeFunction(BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, symbol: SymbolTable): Token {
+        "thread" to (HimeFunction(
+            BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                 // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                 val asts = ASTNode.EMPTY.copy()
                 asts.add(ASTNode(Thread.currentThread().toToken()))
@@ -1520,20 +1498,19 @@ val thread = SymbolTable(
                 else
                     Thread {
                         cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
-                }.toToken()
-        }, listOf(FUNCTION), true)).toToken(), //这种类重载函数的参数数量处理还比较棘手
+                    }.toToken()
+            },
+            listOf(FUNCTION),
+            true
+        )).toToken(), //这种类重载函数的参数数量处理还比较棘手
         "thread-start" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 cast<Thread>(args[0].value).start()
                 return NIL
             }, listOf(THREAD), false
         )).toToken(),
         "thread-current" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(_: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
                 return Thread.currentThread().toToken()
             }, 0
         )).toToken(),
@@ -1541,9 +1518,7 @@ val thread = SymbolTable(
             return cast<Thread>(args[0].value).name.toToken()
         }, listOf(THREAD), false)).toToken(),
         "thread-set-daemon" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 cast<Thread>(args[0].value).isDaemon = cast<Boolean>(args[1].value)
                 return NIL
             }, listOf(THREAD, BOOL), false
@@ -1552,17 +1527,13 @@ val thread = SymbolTable(
             return cast<Thread>(args[0].value).isDaemon.toToken()
         }, listOf(THREAD), false)).toToken(),
         "thread-interrupt" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 cast<Thread>(args[0].value).interrupt()
                 return NIL
             }, listOf(THREAD), false
         )).toToken(),
         "thread-join" to (HimeFunction(
-            BUILT_IN,
-            @Synchronized
-            fun(args: List<Token>, _: SymbolTable): Token {
+            BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 if (args.size > 1) {
                     assert(args[1].isNum())
                     cast<Thread>(args[0].value).join(args[1].toString().toLong())

@@ -37,7 +37,7 @@ class HimeFunction(
         return call(args, symbol)
     }
 
-    private fun call(args: List<Token>, symbol: SymbolTable): Token {
+    fun call(args: List<Token>, symbol: SymbolTable): Token {
         assert(funcType != FuncType.STATIC)
         assert(args.size >= paramTypes.size) { "not enough arguments." }
         for (i in paramTypes.indices)
