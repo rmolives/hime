@@ -1207,12 +1207,6 @@ val core = SymbolTable(
                     return FALSE
             return TRUE
         }, listOf(UNKNOWN), true)).toToken(),
-        "num?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            for (arg in args)
-                if (arg.type != INT && arg.type != REAL)
-                    return FALSE
-            return TRUE
-        }, listOf(UNKNOWN), true)).toToken(),
         "int?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args)
                 if (arg.type != INT)
