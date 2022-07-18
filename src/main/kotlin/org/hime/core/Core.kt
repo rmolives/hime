@@ -1537,9 +1537,8 @@ val file = SymbolTable(
             fun listAllFile(f: File): Token {
                 val list = ArrayList<Token>()
                 val files = f.listFiles()
-                for (file in files!!) {
+                for (file in files!!)
                     list.add(file.path.toToken())
-                }
                 return list.toToken()
             }
             assert(args.isNotEmpty())
