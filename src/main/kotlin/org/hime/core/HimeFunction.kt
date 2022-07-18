@@ -21,7 +21,7 @@ class HimeFunction(
 
     // 接受任意类型，指定个数的参数的函数
     constructor(funcType: FuncType, func: Any, size: Int) :
-            this(funcType, func, List(size, fun(_): Type = Type.UNKNOWN), false)
+            this(funcType, func, List(size, fun(_) = Type.UNKNOWN), false)
 
     fun call(ast: ASTNode, symbol: SymbolTable): Token {
         if (funcType == FuncType.STATIC) {
