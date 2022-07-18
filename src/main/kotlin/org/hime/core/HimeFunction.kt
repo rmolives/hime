@@ -39,7 +39,6 @@ class HimeFunction(
 
     private fun call(args: List<Token>, symbol: SymbolTable): Token {
         assert(funcType != FuncType.STATIC)
-
         assert(args.size >= paramTypes.size) { "not enough arguments." }
         for (i in paramTypes.indices)
             assert(
@@ -48,7 +47,6 @@ class HimeFunction(
             ) { "${paramTypes[i]} expected but ${args[i].type} at position $i" }
         if (!variadic)
             assert(args.size == paramTypes.size) { "too many arguments." }
-
         val result = when (this.funcType) {
             FuncType.USER_DEFINED -> cast<Hime_HimeFunction>(func)(args)
             FuncType.BUILT_IN -> cast<Hime_Function>(func)(args, symbol)
