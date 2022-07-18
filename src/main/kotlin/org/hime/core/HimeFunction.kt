@@ -25,7 +25,7 @@ class HimeFunction(
 
     fun call(ast: ASTNode, symbol: SymbolTable): Token {
         if (funcType == FuncType.STATIC) {
-            ast.tok = cast<Hime_StaticFunction>(ast.tok.value)(ast, symbol)
+            ast.tok = cast<Hime_StaticFunction>(func)(ast, symbol)
             ast.clear()
             return ast.tok
         }
