@@ -1114,7 +1114,7 @@ val core = SymbolTable(
         "->string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].toString().toToken()
         }, 1)).toToken(),
-        "->num" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+        "->int" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return BigInteger(args[0].toString()).toToken()
         }, 1)).toToken(),
         "->real" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
