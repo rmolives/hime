@@ -1,11 +1,10 @@
+package org.hime.core
+
 import ch.obermuhlner.math.big.BigDecimalMath
 import org.hime.call
 import org.hime.cast
 import org.hime.core.FuncType.BUILT_IN
 import org.hime.core.FuncType.STATIC
-import org.hime.core.HimeFunction
-import org.hime.core.SymbolTable
-import org.hime.core.eval
 import org.hime.isNum
 import org.hime.parse.*
 import org.hime.parse.Type.*
