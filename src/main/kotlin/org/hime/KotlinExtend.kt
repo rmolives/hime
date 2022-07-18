@@ -1,5 +1,6 @@
 package org.hime
 
+import org.hime.core.HimeFunction
 import org.hime.parse.ASTNode
 import org.hime.parse.NIL
 import org.hime.parse.Token
@@ -48,6 +49,7 @@ fun Any.toToken(): Token {
         }
         is Boolean -> Token(Type.BOOL, this)
         is Byte -> Token(Type.BYTE, this)
+        is HimeFunction -> Token(Type.FUNCTION, this)
         else -> Token(Type.UNKNOWN, this)
     }
 }

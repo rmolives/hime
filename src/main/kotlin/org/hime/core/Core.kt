@@ -7,6 +7,7 @@ import org.hime.isNum
 import org.hime.parse.*
 import org.hime.parse.Type.*
 import org.hime.toToken
+import org.hime.core.FuncType.*
 import java.io.File
 import java.lang.reflect.Modifier
 import java.math.BigDecimal
@@ -21,7 +22,7 @@ import kotlin.system.exitProcess
 
 val core = SymbolTable(
     mutableMapOf(
-        "def-symbol" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "def-symbol" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             assert(ast[0].isNotEmpty())
             val parameters = ArrayList<String>()
@@ -32,7 +33,7 @@ val core = SymbolTable(
                 asts.add(ast[i].copy())
             symbol.put(
                 ast[0].tok.toString(),
-                Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+                (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
                     if (ast.type == AstType.FUNCTION) {
                         var result = NIL
                         val newSymbol = symbol.createChild()
@@ -43,6 +44,7 @@ val core = SymbolTable(
                     val newAsts = ArrayList<ASTNode>()
                     for (node in asts) {
                         val newAst = node.copy()
+
                         // 递归替换宏
                         fun rsc(ast: ASTNode, id: String, value: ASTNode) {
                             if (ast.tok.type == ID && ast.tok.toString() == id) {
@@ -62,11 +64,11 @@ val core = SymbolTable(
                     for (astNode in newAsts)
                         result = eval(astNode.copy(), newSymbol)
                     return result
-                })
+                })).toToken()
             )
             return NIL
-        }),
-        "cons-stream" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        })).toToken(),
+        "cons-stream" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             // 对(cons-stream t1 t2)中的t1进行求值
             val t1 = eval(ast[0], symbol.createChild())
@@ -76,32 +78,26 @@ val core = SymbolTable(
                 asts.add(ast[i].copy())
             // 建立过程，类似(delay t2*)
             return arrayListOf(t1, structureHimeFunction(arrayListOf(), asts, symbol.createChild())).toToken()
-        }),
-        "stream-car" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        })).toToken(),
+        "stream-car" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             // 因为(cons-stream t1 t2)的t1已经被求值，所以就直接返回
             return cast<List<Token>>(args[0].value)[0]
-        }),
-        "stream-cdr" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        }, listOf(LIST), false)).toToken(),
+        "stream-cdr" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = cast<List<Token>>(args[0].value)
             val list = ArrayList<Token>()
             // 将stream-cdr传入的列表，除去第1个外的所有元素都应用force，即便(cons-stream t1 t2)只返回包含2个元素的列表
             for (i in 1 until tokens.size) {
-                assert(tokens[i].type == HIME_FUNCTION)
-                list.add(cast<Hime_HimeFunction>(tokens[i].value)(arrayListOf()))
+                assert(tokens[i].type == FUNCTION)
+                list.add(cast<HimeFunction>(tokens[i].value).call(arrayListOf()))
             }
             // 如果列表中只存在一个元素，那么就返回这个元素
             if (list.size == 1)
                 return list[0].toToken()
             // 否则返回整个列表
             return list.toToken()
-        }),
-        "stream-map" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
+        }, listOf(LIST), false)).toToken(),
+        "stream-map" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             if (args[1].type == Type.EMPTY_STREAM)
                 return EMPTY_STREAM
             assert(args[1].type == LIST)
@@ -118,25 +114,16 @@ val core = SymbolTable(
                 // 将所有首项添加到parameters
                 for (list in lists)
                     parameters.add(list[0])
+                // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+                val asts = ASTNode.EMPTY.copy()
+                for (arg in parameters)
+                    asts.add(ASTNode(arg))
                 // 将parameters按匹配的类型添加到函数中并执行
-                result.add(
-                    when (args[0].type) {
-                        FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
-                        HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
-                        STATIC_FUNCTION -> {
-                            val asts = ASTNode.EMPTY.copy()
-                            for (arg in parameters)
-                                asts.add(ASTNode(arg))
-                            cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                        }
-                        else -> NIL
-                    }
-                )
+                result.add(cast<HimeFunction>(args[0].value).call(asts, symbol))
                 val temp = ArrayList<List<Token>>()
                 // 重新计算lists，并应用delay
                 for (list in lists) {
-                    assert(list[1].type == HIME_FUNCTION)
-                    val t = cast<Hime_HimeFunction>(list[1].value)(arrayListOf())
+                    val t = cast<HimeFunction>(list[1].value).call(arrayListOf())
                     if (t.type == Type.EMPTY_STREAM)
                         break@top
                     temp.add(cast<List<Token>>(t.value))
@@ -144,10 +131,8 @@ val core = SymbolTable(
                 lists = temp
             }
             return result.toToken()
-        }),
-        "stream-for-each" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
+        }, listOf(LIST, UNKNOWN), true)).toToken(),
+        "stream-for-each" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             if (args[1].type == Type.EMPTY_STREAM)
                 return EMPTY_STREAM
             assert(args[1].type == LIST)
@@ -163,23 +148,17 @@ val core = SymbolTable(
                 // 将所有首项添加到parameters
                 for (list in lists)
                     parameters.add(list[0])
+                // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+                val asts = ASTNode.EMPTY.copy()
+                for (arg in parameters)
+                    asts.add(ASTNode(arg))
                 // 将parameters按匹配的类型添加到函数中并执行
-                when (args[0].type) {
-                    FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
-                    STATIC_FUNCTION -> {
-                        val asts = ASTNode.EMPTY.copy()
-                        for (arg in parameters)
-                            asts.add(ASTNode(arg))
-                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                    }
-                    else -> {}
-                }
+                cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
                 val temp = ArrayList<List<Token>>()
                 // 重新计算lists，并应用delay
                 for (list in lists) {
-                    assert(list[1].type == HIME_FUNCTION)
-                    val t = cast<Hime_HimeFunction>(list[1].value)(arrayListOf())
+                    assert(list[1].type == FUNCTION)
+                    val t = cast<HimeFunction>(list[1].value).call(arrayListOf())
                     if (t.type == Type.EMPTY_STREAM)
                         break@top
                     temp.add(cast<List<Token>>(t.value))
@@ -187,68 +166,59 @@ val core = SymbolTable(
                 lists = temp
             }
             return NIL
-        }),
-        "stream-filter" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
+        }, listOf(LIST, UNKNOWN), true)).toToken(),
+        "stream-filter" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             if (args[1] == EMPTY_STREAM)
                 return arrayListOf<Token>().toToken()
             assert(args[1].type == LIST)
             val result = ArrayList<Token>()
             var tokens = cast<List<Token>>(args[1].value)
             while (tokens[0].value != EMPTY_STREAM) {
-                val op = when (args[0].type) {
-                    FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(tokens[0]), symbol.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(tokens[0]))
-                    STATIC_FUNCTION -> {
-                        val asts = ASTNode.EMPTY.copy()
-                        asts.add(ASTNode(tokens[0]))
-                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                    }
-                    else -> FALSE
-                }
+                // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+                val asts = ASTNode.EMPTY.copy()
+                asts.add(ASTNode(tokens[0]))
+                val op = cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
                 assert(op.type == BOOL)
                 if (cast<Boolean>(op.value))
                     result.add(tokens[0])
-                val temp = cast<Hime_HimeFunction>(tokens[1].value)(arrayListOf())
+                val temp = cast<HimeFunction>(tokens[1].value).call(arrayListOf())
                 if (temp == EMPTY_STREAM)
                     break
                 tokens = cast<List<Token>>(temp.value)
             }
             return result.toToken()
-        }),
-        "stream-ref" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(FUNCTION), true)).toToken(),
+        "stream-ref" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == LIST)
             assert(args[1].type == NUM)
             var temp = cast<List<Token>>(args[0].value)
             var index = cast<Int>(args[1].value)
             while ((index--) != 0) {
-                assert(temp[1].type == HIME_FUNCTION)
-                temp = cast<List<Token>>(cast<Hime_HimeFunction>(temp[1].value)(arrayListOf()).value)
+                assert(temp[1].type == FUNCTION)
+                temp = cast<List<Token>>(cast<HimeFunction>(temp[1].value).call(arrayListOf()).value)
             }
             return temp[0]
-        }),
+        }, listOf(LIST, UNKNOWN), false)).toToken(),
         // (delay e) => (lambda () e)
-        "delay" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "delay" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             val asts = ArrayList<ASTNode>()
             for (i in 0 until ast.size())
                 asts.add(ast[i].copy())
             return structureHimeFunction(arrayListOf(), asts, symbol.createChild())
-        }),
+        })).toToken(),
         // (force d) => (d)
-        "force" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        "force" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             var result = NIL
             for (token in args) {
-                assert(token.type == HIME_FUNCTION)
-                result = cast<Hime_HimeFunction>(token.value)(arrayListOf())
+                assert(token.type == FUNCTION)
+                result = cast<HimeFunction>(token.value).call(arrayListOf())
             }
             return result
-        }),
+        }, listOf(UNKNOWN), true)).toToken(),
         // 局部变量绑定
-        "let" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "let" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
@@ -275,8 +245,8 @@ val core = SymbolTable(
             for (i in 1 until ast.size())
                 result = eval(ast[i].copy(), newSymbol.createChild())
             return result
-        }),
-        "let*" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        })).toToken(),
+        "let*" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
@@ -304,9 +274,9 @@ val core = SymbolTable(
             for (i in 1 until ast.size())
                 result = eval(ast[i].copy(), newSymbol.createChild())
             return result
-        }),
+        })).toToken(),
         // 建立新绑定
-        "def" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "def" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             // 如果是(def key value)
             if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
@@ -330,9 +300,9 @@ val core = SymbolTable(
                 )
             }
             return NIL
-        }),
+        })).toToken(),
         // 建立新绑定(变长)
-        "def-variable" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "def-variable" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             assert(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION)
             val parameters = ArrayList<String>()
@@ -347,17 +317,17 @@ val core = SymbolTable(
                 variableHimeFunction(parameters, asts, symbol.createChild())
             )
             return NIL
-        }),
+        })).toToken(),
         // 解除绑定
-        "undef" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "undef" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.isNotEmpty())
             assert(symbol.contains(ast[0].tok.toString()))
             // 从环境中删除绑定
             symbol.remove(ast[0].tok.toString())
             return NIL
-        }),
+        })).toToken(),
         // 更改绑定
-        "set" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "set" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             assert(symbol.contains(ast[0].tok.toString()))
             // 如果是(set key value)
@@ -378,8 +348,8 @@ val core = SymbolTable(
                 symbol.set(ast[0].tok.toString(), structureHimeFunction(args, asts, symbol))
             }
             return NIL
-        }),
-        "set-variable" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        })).toToken(),
+        "set-variable" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             assert(symbol.contains(ast[0].tok.toString()))
             assert(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION)
@@ -395,8 +365,8 @@ val core = SymbolTable(
                 variableHimeFunction(parameters, asts, symbol.createChild())
             )
             return NIL
-        }),
-        "lambda" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        })).toToken(),
+        "lambda" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             val parameters = ArrayList<String>()
             // 判断非(lambda () e)
@@ -410,8 +380,8 @@ val core = SymbolTable(
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
             return structureHimeFunction(parameters, asts, symbol.createChild())
-        }),
-        "if" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        })).toToken(),
+        "if" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
@@ -424,8 +394,8 @@ val core = SymbolTable(
             else if (ast.size() > 2)
                 return eval(ast[2].copy(), newSymbol)
             return NIL
-        }),
-        "cond" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        })).toToken(),
+        "cond" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
             for (node in ast.child) {
@@ -444,8 +414,8 @@ val core = SymbolTable(
                 }
             }
             return NIL
-        }),
-        "switch" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        })).toToken(),
+        "switch" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             val newSymbol = symbol.createChild()
             val op = eval(ast[0].copy(), newSymbol)
@@ -462,17 +432,17 @@ val core = SymbolTable(
                     }
             }
             return NIL
-        }),
+        })).toToken(),
         // 执行多个组合式
-        "begin" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "begin" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
             var result = NIL
             for (i in 0 until ast.size())
                 result = eval(ast[i].copy(), newSymbol)
             return result
-        }),
-        "while" to Token(STATIC_FUNCTION, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        })).toToken(),
+        "while" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
             var result = NIL
@@ -487,42 +457,26 @@ val core = SymbolTable(
                 assert(condition.type == BOOL)
             }
             return result
-        }),
-        "apply" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        })).toToken(),
+        "apply" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val parameters = ArrayList<Token>()
             for (i in 1 until args.size)
                 parameters.add(args[i])
-            return when (args[0].type) {
-                FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
-                HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
-                STATIC_FUNCTION -> {
-                    val asts = ASTNode.EMPTY.copy()
-                    for (arg in parameters)
-                        asts.add(ASTNode(arg))
-                    cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                }
-                else -> NIL
-            }
-        }),
-        "apply-list" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[1].type == LIST)
+            // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+            val asts = ASTNode.EMPTY.copy()
+            for (arg in parameters)
+                asts.add(ASTNode(arg))
+            return cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+        }, listOf(FUNCTION), true)).toToken(),
+        "apply-list" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val parameters = cast<List<Token>>(args[1].value)
-            return when (args[0].type) {
-                FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
-                HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
-                STATIC_FUNCTION -> {
-                    val asts = ASTNode.EMPTY.copy()
-                    for (arg in parameters)
-                        asts.add(ASTNode(arg))
-                    cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                }
-                else -> NIL
-            }
-        }),
-        "require" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.isNotEmpty())
+            // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+            val asts = ASTNode.EMPTY.copy()
+            for (arg in parameters)
+                asts.add(ASTNode(arg))
+            return cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+        }, listOf(FUNCTION), true)).toToken(),
+        "require" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val path = args[0].toString()
             // 导入内置的模块
             if (module.containsKey(path)) {
@@ -536,44 +490,44 @@ val core = SymbolTable(
                 for (node in parser(lexer(preprocessor(Files.readString(file.toPath())))))
                     eval(node, symbol)
             return NIL
-        }),
-        "read-bit" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+        }, 1)).toToken(),
+        "read-bit" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
             return System.`in`.read().toToken()
-        }),
-        "read-line" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+        }, 0)).toToken(),
+        "read-line" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
             return Scanner(System.`in`).nextLine().toToken()
-        }),
-        "read" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+        }, 0)).toToken(),
+        "read" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
             return Scanner(System.`in`).next().toToken()
-        }),
-        "read-num" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+        }, 0)).toToken(),
+        "read-num" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
             return Scanner(System.`in`).nextBigInteger().toToken()
-        }),
-        "read-real" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+        }, 0)).toToken(),
+        "read-real" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
             return Scanner(System.`in`).nextBigDecimal().toToken()
-        }),
-        "read-bool" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+        }, 0)).toToken(),
+        "read-bool" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
             return Scanner(System.`in`).nextBoolean().toToken()
-        }),
-        "println" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, 0)).toToken(),
+        "println" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()
             for (token in args)
                 builder.append(token.toString())
             println(builder.toString())
             return NIL
-        }),
-        "print" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        })).toToken(),
+        "print" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()
             for (token in args)
                 builder.append(token.toString())
             print(builder.toString())
             return NIL
-        }),
-        "newline" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+        })).toToken(),
+        "newline" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
             println()
             return NIL
-        }),
-        "+" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, 0)).toToken(),
+        "+" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var num = BigDecimal.ZERO
             for (parameter in args) {
@@ -581,8 +535,8 @@ val core = SymbolTable(
                 num = num.add(BigDecimal(parameter.toString()))
             }
             return num.toToken()
-        }),
-        "-" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(UNKNOWN), true)).toToken(),
+        "-" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             assert(args[0].isNum())
             var num = BigDecimal(args[0].toString())
@@ -593,8 +547,8 @@ val core = SymbolTable(
                 num = num.subtract(BigDecimal(args[i].toString()))
             }
             return num.toToken()
-        }),
-        "*" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(UNKNOWN), true)).toToken(),
+        "*" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var num = BigDecimal.ONE
             for (parameter in args) {
@@ -602,8 +556,8 @@ val core = SymbolTable(
                 num = num.multiply(BigDecimal(parameter.toString()))
             }
             return num.toToken()
-        }),
-        "/" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(UNKNOWN), true)).toToken(),
+        "/" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             assert(args[0].isNum())
             var num = BigDecimal(args[0].toString())
@@ -612,8 +566,8 @@ val core = SymbolTable(
                 num = num.divide(BigDecimal(args[i].toString()), MathContext.DECIMAL64)
             }
             return num.toToken()
-        }),
-        "and" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(UNKNOWN), true)).toToken(),
+        "and" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             for (arg in args) {
                 assert(arg.type == BOOL)
@@ -621,22 +575,21 @@ val core = SymbolTable(
                     return FALSE
             }
             return TRUE
-        }),
-        "or" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(BOOL), true)).toToken(),
+        "or" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args) {
                 assert(arg.type == BOOL)
                 if (cast<Boolean>(arg.value))
                     return TRUE
             }
             return FALSE
-        }),
-        "not" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(BOOL), true)).toToken(),
+        "not" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             assert(args[0].type == BOOL)
             return if (cast<Boolean>(args[0].value)) FALSE else TRUE
-        }),
-        "=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(BOOL), false)).toToken(),
+        "=" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var token = args[0]
             for (t in args) {
@@ -645,16 +598,16 @@ val core = SymbolTable(
                 token = t
             }
             return TRUE
-        }),
-        "/=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(UNKNOWN), true)).toToken(),
+        "/=" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             for (i in args.indices)
                 for (j in args.indices)
                     if (i != j && args[i] == args[j])
                         return FALSE
             return TRUE
-        }),
-        ">" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(UNKNOWN), true)).toToken(),
+        ">" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var token = BigDecimal(args[0].toString())
             for (index in 1 until args.size) {
@@ -664,8 +617,8 @@ val core = SymbolTable(
                 token = n
             }
             return TRUE
-        }),
-        "<" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(UNKNOWN), true)).toToken(),
+        "<" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var token = BigDecimal(args[0].toString())
             for (index in 1 until args.size) {
@@ -675,8 +628,8 @@ val core = SymbolTable(
                 token = n
             }
             return TRUE
-        }),
-        ">=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(UNKNOWN), true)).toToken(),
+        ">=" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var token = BigDecimal(args[0].toString())
             for (index in 1 until args.size) {
@@ -686,8 +639,8 @@ val core = SymbolTable(
                 token = n
             }
             return TRUE
-        }),
-        "<=" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(UNKNOWN), true)).toToken(),
+        "<=" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var token = BigDecimal(args[0].toString())
             for (index in 1 until args.size) {
@@ -697,9 +650,8 @@ val core = SymbolTable(
                 token = n
             }
             return TRUE
-        }),
-        "random" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "random" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             if (args.size > 1)
                 assert(args[1].isNum())
@@ -730,19 +682,14 @@ val core = SymbolTable(
             returnInteger =
                 if (returnInteger > end) end else returnInteger
             return returnInteger.toToken()
-        }),
-        "cons" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size == 2)
+        }, listOf(UNKNOWN), true)).toToken(),
+        "cons" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return ArrayList(args).toToken()
-        }),
-        "car" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        }, 2)).toToken(),
+        "car" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return cast<List<Token>>(args[0].value)[0]
-        }),
-        "cdr" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        }, listOf(LIST), false)).toToken(),
+        "cdr" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = cast<List<Token>>(args[0].value)
             val list = ArrayList<Token>()
             // 例如(cdr (list a b c d))将返回(list b c d)
@@ -751,27 +698,21 @@ val core = SymbolTable(
             if (list.size == 1)
                 return list[0].toToken()
             return list.toToken()
-        }),
-        "list" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(LIST), false)).toToken(),
+        "list" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args.toToken()
-        }),
-        "head" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        })).toToken(),
+        "head" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val list = cast<List<Token>>(args[0].value)
             if (list.isEmpty())
                 return NIL
             return list[0]
-        }),
-        "last" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        }, listOf(LIST), false)).toToken(),
+        "last" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = cast<List<Token>>(args[0].value)
             return tokens[tokens.size - 1]
-        }),
-        "tail" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        }, listOf(LIST), false)).toToken(),
+        "tail" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = cast<List<Token>>(args[0].value)
             val list = ArrayList<Token>()
             for (i in 1 until tokens.size)
@@ -779,10 +720,8 @@ val core = SymbolTable(
             if (list.size == 1)
                 return arrayListOf(list[0]).toToken()
             return list.toToken()
-        }),
-        "init" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        }, listOf(LIST), false)).toToken(),
+        "init" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = cast<List<Token>>(args[0].value)
             val list = ArrayList<Token>()
             for (i in 0 until tokens.size - 1)
@@ -790,33 +729,23 @@ val core = SymbolTable(
             if (list.size == 1)
                 return arrayListOf(list[0]).toToken()
             return list.toToken()
-        }),
-        "list-contains" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == LIST)
+        }, listOf(LIST), false)).toToken(),
+        "list-contains" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return cast<List<Token>>(args[0].value).contains(args[1]).toToken()
-        }),
-        "list-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == LIST)
-            assert(args[1].type == NUM)
+        }, listOf(LIST, NUM), false)).toToken(),
+        "list-remove" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = ArrayList(cast<List<Token>>(args[0].value))
             tokens.removeAt(cast<Int>(args[1].value))
             return tokens.toToken()
-        }),
-        "list-set" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 2)
-            assert(args[0].type == LIST)
-            assert(args[1].type == NUM)
+        }, listOf(LIST, NUM), false)).toToken(),
+        "list-set" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val index = cast<Int>(args[1].value)
             val tokens = ArrayList(cast<List<Token>>(args[0].value))
             assert(index < tokens.size)
             tokens[index] = args[2]
             return tokens.toToken()
-        }),
-        "list-add" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == LIST)
+        }, listOf(LIST, NUM, UNKNOWN), false)).toToken(),
+        "list-add" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = ArrayList(cast<List<Token>>(args[0].value))
             if (args.size > 2) {
                 assert(args[1].type == NUM)
@@ -824,24 +753,16 @@ val core = SymbolTable(
             } else
                 tokens.add(args[1])
             return tokens.toToken()
-        }),
-        "list-remove!" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == LIST)
-            assert(args[1].type == NUM)
+        }, listOf(LIST, UNKNOWN), true)).toToken(),
+        "list-remove!" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             cast<MutableList<Token>>(args[0].value).removeAt(cast<Int>(args[1].value))
             return args[0].toToken()
-        }),
-        "list-set!" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 2)
-            assert(args[0].type == LIST)
-            assert(args[1].type == NUM)
+        }, listOf(LIST, NUM), false)).toToken(),
+        "list-set!" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             cast<MutableList<Token>>(args[0].value)[cast<Int>(args[1].value)] = args[2]
             return args[0].toToken()
-        }),
-        "list-add!" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == LIST)
+        }, listOf(LIST, NUM, UNKNOWN), false)).toToken(),
+        "list-add!" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = cast<MutableList<Token>>(args[0].value)
             if (args.size > 2) {
                 assert(args[1].type == NUM)
@@ -849,18 +770,14 @@ val core = SymbolTable(
             } else
                 tokens.add(args[1])
             return args[0].toToken()
-        }),
-        "list-ref" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == LIST)
-            assert(args[1].type == NUM)
+        }, listOf(LIST, UNKNOWN), true)).toToken(),
+        "list-ref" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val index = cast<Int>(args[1].value)
             val tokens = cast<List<Token>>(args[0].value)
             assert(index < tokens.size)
             return tokens[index]
-        }),
-        "++" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(LIST, NUM), false)).toToken(),
+        "++" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             var flag = false
             // 判断是否是List，还是string
             for (arg in args)
@@ -883,9 +800,8 @@ val core = SymbolTable(
                     builder.append(arg.toString())
                 builder.toString().toToken()
             }
-        }),
-        "range" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "range" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val start = if (args.size >= 2) BigInteger(args[0].toString()) else BigInteger.ZERO
             val end =
                 if (args.size >= 2) BigInteger(args[1].toString()) else BigInteger(args[0].toString())
@@ -900,20 +816,17 @@ val core = SymbolTable(
                 i = i.add(BigInteger.ONE)
             }
             return Token(LIST, list)
-        }),
+        }, listOf(UNKNOWN), true)).toToken(),
         // 获取长度，可以是字符串也可以是列表
-        "length" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        "length" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return when (args[0].type) {
                 STR -> cast<String>(args[0].value).length.toToken()
                 LIST -> cast<List<Token>>(args[0].value).size.toToken()
                 else -> args[0].toString().length.toToken()
             }
-        }),
+        }, listOf(UNKNOWN), false)).toToken(),
         // 反转列表
-        "reverse" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        "reverse" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val result = ArrayList<Token>()
             val tokens = cast<MutableList<Token>>(args[0].value)
             for (i in tokens.size - 1 downTo 0)
@@ -922,11 +835,9 @@ val core = SymbolTable(
             for (t in result)
                 tokens.add(t)
             return tokens.toToken()
-        }),
+        }, listOf(LIST), false)).toToken(),
         // 排序
-        "sort" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        "sort" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             // 归并排序
             fun merge(a: Array<BigDecimal?>, low: Int, mid: Int, high: Int) {
                 val temp = arrayOfNulls<BigDecimal>(high - low + 1)
@@ -961,236 +872,165 @@ val core = SymbolTable(
             for (e in list)
                 result.add(e!!.toToken())
             return result.toToken()
-        }),
-        "curry" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
-            assert(args[1].type == NUM)
+        }, listOf(LIST), false)).toToken(),
+        "curry" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             fun rsc(func: Token, n: Int, parameters: ArrayList<Token>): Token {
-                if (n == 0)
-                    return when (func.type) {
-                        FUNCTION -> cast<Hime_Function>(func.value)(parameters, symbol.createChild())
-                        HIME_FUNCTION -> cast<Hime_HimeFunction>(func.value)(parameters)
-                        STATIC_FUNCTION -> {
-                            val asts = ASTNode.EMPTY.copy()
-                            for (arg in parameters)
-                                asts.add(ASTNode(arg))
-                            cast<Hime_StaticFunction>(func.value)(asts, symbol.createChild())
-                        }
-                        else -> NIL
-                    }
-                return Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-                    assert(args.isNotEmpty())
+                if (n == 0) {
+                    // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+                    val asts = ASTNode.EMPTY.copy()
+                    for (arg in parameters)
+                        asts.add(ASTNode(arg))
+                    return cast<HimeFunction>(func.value).call(asts, symbol.createChild())
+                }
+                return (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     parameters.add(args[0])
                     return rsc(func, n - 1, parameters)
-                })
+                }, 1)).toToken()
             }
             return rsc(args[0], cast<Int>(args[1].value), ArrayList<Token>())
-        }),
-        "maybe" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
+        }, listOf(FUNCTION, NUM), false)).toToken(),
+        "maybe" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val parameters = ArrayList<Token>()
             for (i in 1 until args.size) {
                 if (args[i].type == Type.NIL)
                     return NIL
                 parameters.add(args[i])
             }
-            return when (args[0].type) {
-                FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
-                HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
-                STATIC_FUNCTION -> {
-                    val asts = ASTNode.EMPTY.copy()
-                    for (arg in parameters)
-                        asts.add(ASTNode(arg))
-                    cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                }
-                else -> NIL
-            }
-        }),
-        "map" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
-            assert(args[1].type == LIST)
+            // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+            val asts = ASTNode.EMPTY.copy()
+            for (arg in parameters)
+                asts.add(ASTNode(arg))
+            return cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+
+        }, listOf(FUNCTION), true)).toToken(),
+        "map" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val result = ArrayList<Token>()
             val tokens = cast<List<Token>>(args[1].value)
             for (i in tokens.indices) {
                 val parameters = ArrayList<Token>()
                 parameters.add(tokens[i])
                 // 例如对于(map f (list a b) (list c d))，则执行(f a c)等
-                for (j in 1 until args.size - 1)
+                for (j in 1 until args.size - 1) {
+                    assert(args[j + 1].type == LIST)
                     parameters.add(cast<List<Token>>(args[j + 1].value)[i])
-                result.add(
-                    when (args[0].type) {
-                        FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
-                        HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
-                        STATIC_FUNCTION -> {
-                            val asts = ASTNode.EMPTY.copy()
-                            for (arg in parameters)
-                                asts.add(ASTNode(arg))
-                            cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                        }
-                        else -> NIL
-                    }
-                )
+                }
+                // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+                val asts = ASTNode.EMPTY.copy()
+                for (arg in parameters)
+                    asts.add(ASTNode(arg))
+                result.add(cast<HimeFunction>(args[0].value).call(asts, symbol.createChild()))
             }
             return result.toToken()
-        }),
-        "foldr" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 2)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
-            assert(args[2].type == LIST)
+        }, listOf(FUNCTION, LIST), true)).toToken(),
+        "foldr" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             var result = args[1]
             val tokens = cast<List<Token>>(args[2].value)
-            for (i in tokens.size - 1 downTo 0)
-                result = when (args[0].type) {
-                    FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(tokens[i], result), symbol.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(tokens[i], result))
-                    STATIC_FUNCTION -> {
-                        val asts = ASTNode.EMPTY.copy()
-                        for (arg in arrayListOf(tokens[i], result))
-                            asts.add(ASTNode(arg))
-                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                    }
-                    else -> arrayListOf(tokens[i], result).toToken()
-                }
+            for (i in tokens.size - 1 downTo 0) {
+                // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+                val asts = ASTNode.EMPTY.copy()
+                for (arg in arrayListOf(tokens[i], result))
+                    asts.add(ASTNode(arg))
+                result = cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+            }
             return result
-        }),
-        "foldl" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 2)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
-            assert(args[2].type == LIST)
+        }, listOf(FUNCTION, UNKNOWN, LIST), false)).toToken(),
+        "foldl" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             var result = args[1]
             val tokens = cast<List<Token>>(args[2].value)
-            for (i in tokens.size - 1 downTo 0)
-                result = when (args[0].type) {
-                    FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(result, tokens[i]), symbol.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(result, tokens[i]))
-                    STATIC_FUNCTION -> {
-                        val asts = ASTNode.EMPTY.copy()
-                        for (arg in arrayListOf(result, tokens[i]))
-                            asts.add(ASTNode(arg))
-                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                    }
-                    else -> arrayListOf(result, tokens[i]).toToken()
-                }
+            for (i in tokens.size - 1 downTo 0) {
+                // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+                val asts = ASTNode.EMPTY.copy()
+                for (arg in arrayListOf(result, tokens[i]))
+                    asts.add(ASTNode(arg))
+                result = cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+            }
             return result
-        }),
-        "for-each" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
-            assert(args[1].type == LIST)
+        }, listOf(FUNCTION, UNKNOWN, LIST), false)).toToken(),
+        "for-each" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val tokens = cast<List<Token>>(args[1].value)
             for (i in tokens.indices) {
                 val parameters = ArrayList<Token>()
                 parameters.add(tokens[i])
                 // 例如对于(map f (list a b) (list c d))，则执行(f a c)等
-                for (j in 1 until args.size - 1)
+                for (j in 1 until args.size - 1) {
+                    assert(args[j + 1].type == LIST)
                     parameters.add(cast<List<Token>>(args[j + 1].value)[i])
-                when (args[0].type) {
-                    FUNCTION -> cast<Hime_Function>(args[0].value)(parameters, symbol.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(parameters)
-                    STATIC_FUNCTION -> {
-                        val asts = ASTNode.EMPTY.copy()
-                        for (arg in parameters)
-                            asts.add(ASTNode(arg))
-                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                    }
-                    else -> {}
                 }
+                // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+                val asts = ASTNode.EMPTY.copy()
+                for (arg in parameters)
+                    asts.add(ASTNode(arg))
+                cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
             }
             return NIL
-        }),
-        "filter" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == FUNCTION || args[0].type == HIME_FUNCTION || args[0].type == STATIC_FUNCTION)
-            assert(args[1].type == LIST)
+        }, listOf(FUNCTION, LIST), true)).toToken(),
+        "filter" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val result = ArrayList<Token>()
             val tokens = cast<List<Token>>(args[1].value)
             for (token in tokens) {
-                val op = when (args[0].type) {
-                    FUNCTION -> cast<Hime_Function>(args[0].value)(arrayListOf(token), symbol.createChild())
-                    HIME_FUNCTION -> cast<Hime_HimeFunction>(args[0].value)(arrayListOf(token))
-                    STATIC_FUNCTION -> {
-                        val asts = ASTNode.EMPTY.copy()
-                        asts.add(ASTNode(token))
-                        cast<Hime_StaticFunction>(args[0].value)(asts, symbol.createChild())
-                    }
-                    else -> FALSE
-                }
+                // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+                val asts = ASTNode.EMPTY.copy()
+                asts.add(ASTNode(token))
+                val op = cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
                 assert(op.type == BOOL)
                 if (cast<Boolean>(op.value))
                     result.add(token)
             }
             return result.toToken()
-        }),
-        "sqrt" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(FUNCTION, LIST), false)).toToken(),
+        "sqrt" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.sqrt(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "sin" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "sin" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.sin(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "sinh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "sinh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.sinh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "asin" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "asin" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.asin(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "asinh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "asinh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.asinh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "cos" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "cos" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.cos(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "cosh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "cosh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.cosh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "acos" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "acos" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.acos(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "acosh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "acosh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.acosh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "tan" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "tan" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.tan(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "tanh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "tanh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.tanh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "atan" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "atan" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.atan(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "atanh" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "atanh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.atanh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "atan2" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 1)).toToken(),
+        "atan2" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             assert(args[1].isNum())
             return BigDecimalMath.atan2(
@@ -1198,29 +1038,24 @@ val core = SymbolTable(
                 BigDecimal(args[1].toString()),
                 MathContext.DECIMAL64
             ).toToken()
-        }),
-        "log" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 2)).toToken(),
+        "log" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.log(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "log10" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "log10" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.log10(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "log2" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "log2" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.log2(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "exp" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "exp" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             return BigDecimalMath.exp(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }),
-        "pow" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 1)).toToken(),
+        "pow" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             assert(args[1].isNum())
             return BigDecimalMath.pow(
@@ -1228,119 +1063,105 @@ val core = SymbolTable(
                 BigDecimal(args[1].toString()),
                 MathContext.DECIMAL64
             ).toToken()
-        }),
-        "mod" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 2)).toToken(),
+        "mod" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].isNum())
             assert(args[1].isNum())
             return BigInteger(args[0].toString()).mod(BigInteger(args[1].toString())).toToken()
-        }),
-        "max" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 2)).toToken(),
+        "max" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             var max = BigDecimal(args[0].toString())
-            for (i in 1 until args.size)
+            for (i in 1 until args.size) {
+                assert(args[i].isNum())
                 max = max.max(BigDecimal(args[i].toString()))
+            }
             return max.toToken()
-        }),
-        "min" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "min" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             var min = BigDecimal(args[0].toString())
-            for (i in 1 until args.size)
+            for (i in 1 until args.size) {
+                assert(args[i].isNum())
                 min = min.min(BigDecimal(args[i].toString()))
+            }
             return min.toToken()
-        }),
-        "abs" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "abs" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return BigDecimal(args[0].toString()).abs().toToken()
-        }),
-        "average" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, 1)).toToken(),
+        "average" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             var num = BigDecimal.ZERO
-            for (parameter in args)
+            for (parameter in args) {
+                assert(parameter.isNum())
                 num = num.add(BigDecimal(parameter.value.toString()))
+            }
             return num.divide(args.size.toBigDecimal()).toToken()
-        }),
-        "floor" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "floor" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return BigInteger(
                 BigDecimal(args[0].toString()).setScale(0, RoundingMode.FLOOR).toPlainString()
             ).toToken()
-        }),
-        "ceil" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "ceil" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return BigInteger(
                 BigDecimal(args[0].toString()).setScale(0, RoundingMode.CEILING).toPlainString()
             ).toToken()
-        }),
-        "gcd" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 1)).toToken(),
+        "gcd" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (parameter in args)
                 assert(parameter.type == NUM || parameter.type == BIG_NUM)
             var temp = BigInteger(args[0].toString()).gcd(BigInteger(args[1].toString()))
             for (i in 2 until args.size)
                 temp = temp.gcd(BigInteger(args[i].toString()))
             return temp.toToken()
-        }),
+        }, listOf(UNKNOWN, UNKNOWN), true)).toToken(),
         // (lcm a b) = (/ (* a b) (gcd a b))
-        "lcm" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        "lcm" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             fun BigInteger.lcm(n: BigInteger): BigInteger = (this.multiply(n).abs()).divide(this.gcd(n))
-            assert(args.size > 1)
             for (parameter in args)
-                assert(parameter.type == NUM || parameter.type == BIG_NUM)
+                assert(parameter.isNum())
             var temp = BigInteger(args[0].toString()).lcm(BigInteger(args[1].toString()))
             for (i in 2 until args.size)
                 temp = temp.lcm(BigInteger(args[i].toString()))
             return temp.toToken()
-        }),
-        "->bool" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN, UNKNOWN), true)).toToken(),
+        "->bool" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return if (args[0].toString() == "true") TRUE else FALSE
-        }),
-        "->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "->string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].toString().toToken()
-        }),
-        "->num" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "->num" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return BigInteger(args[0].toString()).toToken()
-        }),
-        "->real" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "->real" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return BigDecimal(args[0].toString()).toToken()
-        }),
-        "string-replace" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 2)
+        }, 1)).toToken(),
+        "string-replace" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].toString().replace(args[1].toString(), args[2].toString()).toToken()
-        }),
-        "string-substring" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 2)
-            assert(args[1].type == NUM)
-            assert(args[2].type == NUM)
+        }, 3)).toToken(),
+        "string-substring" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].toString()
                 .substring(cast<Int>(args[1].value), cast<Int>(args[2].value))
                 .toToken()
-        }),
-        "string-split" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, listOf(UNKNOWN, NUM, NUM), false)).toToken(),
+        "string-split" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].toString().split(args[1].toString()).toList().toToken()
-        }),
-        "string-index" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 2)).toToken(),
+        "string-index" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].toString().indexOf(args[1].toString()).toToken()
-        }),
-        "string-last-index" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, 2)).toToken(),
+        "string-last-index" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             return args[0].toString().lastIndexOf(args[1].toString()).toToken()
-        }),
-        "string-format" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 2)).toToken(),
+        "string-format" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val newArgs = arrayOfNulls<Any>(args.size - 1)
             for (i in 1 until args.size)
                 newArgs[i - 1] = args[i].value
             return String.format(args[0].toString(), *newArgs).toToken()
-        }),
-        "string->list" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "string->list" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val chars = args[0].toString().toCharArray()
             val list = ArrayList<Token>()
             for (c in chars) {
@@ -1348,17 +1169,15 @@ val core = SymbolTable(
                 list.add(c.toString().toToken())
             }
             return list.toToken()
-        }),
-        "list->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        }, listOf(UNKNOWN), false)).toToken(),
+        "list->string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()
             val list = cast<List<Token>>(args[0].value)
             for (token in list)
                 builder.append(token.toString())
             return builder.toString().toToken()
-        }),
-        "string->bytes" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(LIST), false)).toToken(),
+        "string->bytes" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()
             for (token in args)
                 builder.append(token.toString())
@@ -1367,10 +1186,8 @@ val core = SymbolTable(
             for (byte in bytes)
                 list.add(byte.toToken())
             return list.toToken()
-        }),
-        "bytes->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        })).toToken(),
+        "bytes->string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val list = cast<List<Token>>(args[0].value)
             val bytes = ByteArray(list.size)
             for (index in list.indices) {
@@ -1378,18 +1195,15 @@ val core = SymbolTable(
                 bytes[index] = cast<Byte>(list[index].value)
             }
             return String(bytes).toToken()
-        }),
-        "string->bits" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(LIST), false)).toToken(),
+        "string->bits" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val s = args[0].toString()
             val result = ArrayList<Token>()
             for (c in s)
                 result.add(c.code.toToken())
             return result.toToken()
-        }),
-        "bits->string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == LIST)
+        }, 1)).toToken(),
+        "bits->string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val result = StringBuilder()
             val tokens = cast<List<Token>>(args[0].value)
             for (t in tokens) {
@@ -1397,180 +1211,146 @@ val core = SymbolTable(
                 result.append(cast<Int>(t.value).toChar())
             }
             return result.toToken()
-        }),
-        "bool?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(LIST), false)).toToken(),
+        "bool?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args)
                 if (arg.type != BOOL)
                     return FALSE
             return TRUE
-        }),
-        "string?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "string?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args)
                 if (arg.type != STR)
                     return FALSE
             return TRUE
-        }),
-        "num?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "num?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args)
                 if (arg.type != NUM && arg.type != BIG_NUM)
                     return FALSE
             return TRUE
-        }),
-        "real?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "real?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args)
                 if (arg.type != REAL && arg.type != BIG_REAL)
                     return FALSE
             return TRUE
-        }),
-        "list?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "list?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args)
                 if (arg.type != LIST)
                     return FALSE
             return TRUE
-        }),
-        "byte?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "byte?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args)
                 if (arg.type != BYTE)
                     return FALSE
             return TRUE
-        }),
-        "function?" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN), true)).toToken(),
+        "function?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args)
-                if (arg.type != FUNCTION && arg.type != STATIC_FUNCTION && arg.type != HIME_FUNCTION)
+                if (arg.type != FUNCTION)
                     return FALSE
             return TRUE
-        }),
-        "exit" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == NUM)
+        }, listOf(UNKNOWN), true)).toToken(),
+        "exit" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             exitProcess(cast<Int>(args[0].value))
-        }),
-        "exit" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == NUM)
-            exitProcess(cast<Int>(args[0].value))
-        }),
+        }, listOf(NUM), false)).toToken(),
         // (extern "class" "function name")
-        "extern" to Token(FUNCTION, fun(args: List<Token>, symbolTable: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[0].type == STR)
-            assert(args[1].type == STR)
+        "extern" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbolTable: SymbolTable): Token {
             val clazz = args[0].toString()
             val name = args[1].toString()
             val method = Class.forName(clazz).declaredMethods
                 .firstOrNull { Modifier.isStatic(it.modifiers) && it.name == name }
                 ?: throw UnsatisfiedLinkError("Method $name not found for class $clazz.")
-            symbolTable.put(name, Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+            symbolTable.put(name, (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val newArgs = arrayOfNulls<Any>(args.size)
                 for (i in args.indices)
                     newArgs[i] = args[i].value
                 return method.invoke(null, *newArgs).toToken()
-            }))
+            })).toToken())
             return NIL
-        }),
-        "eval" to Token(FUNCTION, fun(args: List<Token>, symbol: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, listOf(UNKNOWN, UNKNOWN), false)).toToken(),
+        "eval" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val newSymbol = symbol.createChild()
             var result = NIL
             for (node in args)
                 result = call(node.toString(), newSymbol)
             return result
-        }),
-        "bit-and" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, listOf(UNKNOWN), true)).toToken(),
+        "bit-and" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].type == NUM || args[0].type == BIG_NUM)
             assert(args[1].type == NUM || args[1].type == BIG_NUM)
             val m = BigInteger(args[0].toString())
             val n = BigInteger(args[1].toString())
             return m.and(n).toToken()
-        }),
-        "bit-or" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 2)).toToken(),
+        "bit-or" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].type == NUM || args[0].type == BIG_NUM)
             assert(args[1].type == NUM || args[1].type == BIG_NUM)
             val m = BigInteger(args[0].toString())
             val n = BigInteger(args[1].toString())
             return m.or(n).toToken()
-        }),
-        "bit-xor" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 2)).toToken(),
+        "bit-xor" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].type == NUM || args[0].type == BIG_NUM)
             assert(args[1].type == NUM || args[1].type == BIG_NUM)
             val m = BigInteger(args[0].toString())
             val n = BigInteger(args[1].toString())
             return m.xor(n).toToken()
-        }),
-        "bit-left" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 2)).toToken(),
+        "bit-left" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].type == NUM || args[0].type == BIG_NUM)
             assert(args[1].type == NUM)
             val m = BigInteger(args[0].toString())
             val n = cast<Int>(args[1].value)
             return m.shiftLeft(n).toToken()
-        }),
-        "bit-right" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 2)).toToken(),
+        "bit-right" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[0].type == NUM || args[0].type == BIG_NUM)
             assert(args[1].type == NUM)
             val m = BigInteger(args[0].toString())
             val n = cast<Int>(args[1].value)
             return m.shiftRight(n).toToken()
-        })
+        }, 2)).toToken()
     ), null
 )
 
 val file = SymbolTable(
     mutableMapOf(
-        "file-exists" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        "file-exists" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return File(args[0].toString()).exists().toToken()
-        }),
-        "file-list" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            fun listAllFile(f: File): Token {
-                val list = ArrayList<Token>()
-                val files = f.listFiles()
-                for (file in files!!)
-                    list.add(file.path.toToken())
-                return list.toToken()
-            }
-            assert(args.isNotEmpty())
-            return listAllFile(File(args[0].toString()))
-        }),
-        "file-mkdirs" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "file-list" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            val list = ArrayList<Token>()
+            val files = File(args[0].toString()).listFiles()
+            for (file in files!!)
+                list.add(file.path.toToken())
+            return list.toToken()
+        }, 1)).toToken(),
+        "file-mkdirs" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val file = File(args[0].toString())
             if (!file.parentFile.exists())
                 !file.parentFile.mkdirs()
             if (!file.exists())
                 file.createNewFile()
             return NIL
-        }),
-        "file-new" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "file-new" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val file = File(args[0].toString())
             if (!file.exists())
                 file.createNewFile()
             return NIL
-        }),
-        "file-read-string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "file-read-string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return Files.readString(Paths.get(args[0].toString())).toToken()
-        }),
-        "file-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 1)).toToken(),
+        "file-remove" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             File(args[0].toString()).delete()
             return NIL
-        }),
-        "file-write-string" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 1)).toToken(),
+        "file-write-string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val file = File(args[0].toString())
             if (!file.parentFile.exists())
                 !file.parentFile.mkdirs()
@@ -1578,18 +1358,15 @@ val file = SymbolTable(
                 file.createNewFile()
             Files.writeString(file.toPath(), args[1].toString())
             return NIL
-        }),
-        "file-read-bytes" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
+        }, 2)).toToken(),
+        "file-read-bytes" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val list = ArrayList<Token>()
             val bytes = Files.readAllBytes(Paths.get(args[0].toString()))
             for (byte in bytes)
                 list.add(byte.toToken())
             return list.toToken()
-        }),
-        "file-write-bytes" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
-            assert(args[1].type == LIST)
+        }, 1)).toToken(),
+        "file-write-bytes" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val file = File(args[0].toString())
             if (!file.parentFile.exists())
                 !file.parentFile.mkdirs()
@@ -1603,76 +1380,153 @@ val file = SymbolTable(
             }
             Files.write(file.toPath(), bytes)
             return NIL
-        })
+        }, listOf(UNKNOWN, LIST), false)).toToken()
     ), null
 )
 
 val time = SymbolTable(
     mutableMapOf(
-        "time" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+        "time" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
             return Date().time.toToken()
-        }),
-        "time-format" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 0)).toToken(),
+        "time-format" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args[1].type == NUM || args[1].type == BIG_NUM)
             return SimpleDateFormat(args[0].toString()).format(args[1].toString().toLong())
                 .toToken()
-        }),
-        "time-parse" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 1)
+        }, 2)).toToken(),
+        "time-parse" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return SimpleDateFormat(args[0].toString()).parse(args[1].value.toString()).time.toToken()
-        })
+        }, 2)).toToken()
     ), null
 )
 
 val table = SymbolTable(
     mutableMapOf(
-        "table" to Token(FUNCTION, fun(_: List<Token>, _: SymbolTable): Token {
+        "table" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
             return mapOf<Token, Token>().toToken()
-        }),
-        "table-put" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 2)
-            assert(args[0].type == TABLE)
+        }, 0)).toToken(),
+        "table-put" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val table = HashMap(cast<Map<Token, Token>>(args[0].value))
             table[args[1]] = args[2]
             return table.toToken()
-        }),
-        "table-get" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
+        }, listOf(TABLE, UNKNOWN, UNKNOWN), false)).toToken(),
+        "table-get" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == TABLE)
             val table = cast<Map<Token, Token>>(args[0].value)
             assert(table.containsKey(args[1]))
             return table[args[1]] ?: NIL
-        }),
-        "table-remove" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 2)
-            assert(args[0].type == TABLE)
+        }, listOf(TABLE, UNKNOWN), false)).toToken(),
+        "table-remove" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val table = HashMap(cast<Map<Token, Token>>(args[0].value))
             table.remove(args[1])
             return table.toToken()
-        }),
-        "table-keys" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].type == TABLE)
+        }, listOf(TABLE, UNKNOWN), false)).toToken(),
+        "table-keys" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return cast<Map<Token, Token>>(args[0].value).keys.toList().toToken()
-        }),
-        "table-put!" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 2)
-            assert(args[0].type == TABLE)
+        }, listOf(TABLE), false)).toToken(),
+        "table-put!" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             cast<MutableMap<Token, Token>>(args[0].value)[args[1]] = args[2]
             return args[0].toToken()
-        }),
-        "table-remove!" to Token(FUNCTION, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.size > 2)
-            assert(args[0].type == TABLE)
+        }, listOf(TABLE, UNKNOWN, UNKNOWN), false)).toToken(),
+        "table-remove!" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             cast<MutableMap<Token, Token>>(args[0].value).remove(args[1])
             return args[0].toToken()
-        })
+        }, listOf(TABLE, UNKNOWN), false)).toToken()
+    ), null
+)
+
+val thread = SymbolTable(
+    mutableMapOf(
+        "sleep" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            assert(args.isNotEmpty())
+            assert(args[0].isNum())
+            Thread.sleep(args[0].toString().toLong())
+            return NIL
+        })).toToken(),
+        "thread" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
+            // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+            val asts = ASTNode.EMPTY.copy()
+            asts.add(ASTNode(Thread.currentThread().toToken()))
+            return if (args.size > 1)
+                Thread({
+                    cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+                }, args[1].toString()).toToken()
+            else
+                Thread {
+                    cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+                }.toToken()
+        }, listOf(FUNCTION), true)).toToken(), //这种类重载函数的参数数量处理还比较棘手
+        "thread-start" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                cast<Thread>(args[0].value).start()
+                return NIL
+            }, listOf(THREAD), false
+        )).toToken(),
+        "thread-current" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(_: List<Token>, _: SymbolTable): Token {
+                return Thread.currentThread().toToken()
+            }, 0
+        )).toToken(),
+        "thread-name" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            return cast<Thread>(args[0].value).name.toToken()
+        }, listOf(THREAD), false)).toToken(),
+        "thread-set-daemon" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                cast<Thread>(args[0].value).isDaemon = cast<Boolean>(args[1].value)
+                return NIL
+            }, listOf(THREAD, BOOL), false
+        )).toToken(),
+        "thread-daemon" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            return cast<Thread>(args[0].value).isDaemon.toToken()
+        }, listOf(THREAD), false)).toToken(),
+        "thread-interrupt" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                cast<Thread>(args[0].value).interrupt()
+                return NIL
+            }, listOf(THREAD), false
+        )).toToken(),
+        "thread-join" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                if (args.size > 1) {
+                    assert(args[1].isNum())
+                    cast<Thread>(args[0].value).join(args[1].toString().toLong())
+                } else
+                    cast<Thread>(args[0].value).join()
+                return NIL
+            }, listOf(THREAD), false
+        )).toToken(),
+        "thread-alive" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            return cast<Thread>(args[0].value).isAlive.toToken()
+        }, listOf(THREAD), false)).toToken(),
+        "thread-interrupted" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            return cast<Thread>(args[0].value).isInterrupted.toToken()
+        }, listOf(THREAD), false)).toToken()
+    ), null
+)
+
+val regex = SymbolTable(
+    mutableMapOf(
+        "match" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            return args[0].toString().matches(Regex(args[1].toString())).toToken()
+        }, 2)).toToken()
     ), null
 )
 
 val module = mutableMapOf(
     "util.file" to file,
     "util.time" to time,
-    "util.table" to table
+    "util.table" to table,
+    "util.thread" to thread,
+    "util.regex" to regex
 )

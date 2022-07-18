@@ -1,17 +1,15 @@
 package org.hime.parse
 
 import org.hime.cast
+import org.hime.core.FuncType
 import org.hime.core.SymbolTable
 import org.hime.core.eval
+import org.hime.core.HimeFunction
 import org.hime.parse.Type.*
 import org.hime.toToken
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.*
-
-typealias Hime_HimeFunction = (List<Token>) -> Token                        // 自举函数
-typealias Hime_Function = (List<Token>, SymbolTable) -> Token
-typealias Hime_StaticFunction = (ASTNode, SymbolTable) -> Token
 
 val TRUE = Token(BOOL, true)
 val FALSE = Token(BOOL, false)
@@ -43,8 +41,6 @@ class Token(val type: Type, val value: Any) {
             REAL -> cast<Float>(this.value).toString()
             BIG_NUM -> cast<BigInteger>(this.value).toString()
             BIG_REAL -> cast<BigDecimal>(this.value).toPlainString()
-            FUNCTION, STATIC_FUNCTION -> "<Function: ${this.value.hashCode()}>"
-            HIME_FUNCTION -> "<Function: ${this.value.hashCode()}>"
             else -> this.value.toString()
         }
     }
@@ -59,8 +55,8 @@ class Token(val type: Type, val value: Any) {
  */
 fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: SymbolTable): Token {
     return Token(
-        HIME_FUNCTION,
-        fun(args: List<Token>): Token {
+        FUNCTION,
+        HimeFunction(FuncType.USER_DEFINED, fun(args: List<Token>): Token {
             // 判断参数的数量
             assert(args.size >= parameters.size)
             // 新建执行的新环境（继承）
@@ -71,7 +67,7 @@ fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol:
             for (astNode in asts)
                 result = eval(astNode.copy(), newSymbol)
             return result
-        })
+        }, parameters.size))
 }
 
 /**
@@ -83,8 +79,8 @@ fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol:
  */
 fun variableHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: SymbolTable): Token {
     return Token(
-        HIME_FUNCTION,
-        fun(args: List<Token>): Token {
+        FUNCTION,
+        HimeFunction(FuncType.USER_DEFINED, fun(args: List<Token>): Token {
             // 判断参数的数量
             assert(args.size >= parameters.size - 1)
             // 新建执行的新环境（继承）
@@ -99,7 +95,7 @@ fun variableHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: 
             for (astNode in asts)
                 result = eval(astNode.copy(), newSymbol)
             return result
-        })
+        }, listOf(), true))
 }
 
 enum class Type {
@@ -107,5 +103,6 @@ enum class Type {
     LB, RB, EMPTY, NIL,
     ID, BOOL, STR, LIST, BYTE, TABLE,
     NUM, REAL, BIG_NUM, BIG_REAL, AST, EMPTY_STREAM,
-    FUNCTION, STATIC_FUNCTION, HIME_FUNCTION;
+    FUNCTION,
+    THREAD;
 }
