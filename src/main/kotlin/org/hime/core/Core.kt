@@ -3,11 +3,12 @@ package org.hime.core
 import ch.obermuhlner.math.big.BigDecimalMath
 import org.hime.call
 import org.hime.cast
+import org.hime.core.FuncType.BUILT_IN
+import org.hime.core.FuncType.STATIC
 import org.hime.isNum
 import org.hime.parse.*
 import org.hime.parse.Type.*
 import org.hime.toToken
-import org.hime.core.FuncType.*
 import java.io.File
 import java.lang.reflect.Modifier
 import java.math.BigDecimal
@@ -754,23 +755,41 @@ val core = SymbolTable(
                 tokens.add(args[1])
             return tokens.toToken()
         }, listOf(LIST, UNKNOWN), true)).toToken(),
-        "list-remove!" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            cast<MutableList<Token>>(args[0].value).removeAt(cast<Int>(args[1].value))
-            return args[0].toToken()
-        }, listOf(LIST, NUM), false)).toToken(),
-        "list-set!" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            cast<MutableList<Token>>(args[0].value)[cast<Int>(args[1].value)] = args[2]
-            return args[0].toToken()
-        }, listOf(LIST, NUM, UNKNOWN), false)).toToken(),
-        "list-add!" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            val tokens = cast<MutableList<Token>>(args[0].value)
-            if (args.size > 2) {
-                assert(args[1].type == NUM)
-                tokens.add(cast<Int>(args[1].value), args[2])
-            } else
-                tokens.add(args[1])
-            return args[0].toToken()
-        }, listOf(LIST, UNKNOWN), true)).toToken(),
+        "list-remove!" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                cast<MutableList<Token>>(args[0].value).removeAt(cast<Int>(args[1].value))
+                return args[0].toToken()
+            },
+            listOf(LIST, NUM),
+            false
+        )).toToken(),
+        "list-set!" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                cast<MutableList<Token>>(args[0].value)[cast<Int>(args[1].value)] = args[2]
+                return args[0].toToken()
+            },
+            listOf(LIST, NUM, UNKNOWN),
+            false
+        )).toToken(),
+        "list-add!" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                val tokens = cast<MutableList<Token>>(args[0].value)
+                if (args.size > 2) {
+                    assert(args[1].type == NUM)
+                    tokens.add(cast<Int>(args[1].value), args[2])
+                } else
+                    tokens.add(args[1])
+                return args[0].toToken()
+            },
+            listOf(LIST, UNKNOWN),
+            true
+        )).toToken(),
         "list-ref" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val index = cast<Int>(args[1].value)
             val tokens = cast<List<Token>>(args[0].value)
@@ -1329,36 +1348,56 @@ val file = SymbolTable(
                 list.add(file.path.toToken())
             return list.toToken()
         }, 1)).toToken(),
-        "file-mkdirs" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            val file = File(args[0].toString())
-            if (!file.parentFile.exists())
-                !file.parentFile.mkdirs()
-            if (!file.exists())
-                file.createNewFile()
-            return NIL
-        }, 1)).toToken(),
-        "file-new" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            val file = File(args[0].toString())
-            if (!file.exists())
-                file.createNewFile()
-            return NIL
-        }, 1)).toToken(),
+        "file-mkdirs" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                val file = File(args[0].toString())
+                if (!file.parentFile.exists())
+                    !file.parentFile.mkdirs()
+                if (!file.exists())
+                    file.createNewFile()
+                return NIL
+            },
+            1
+        )).toToken(),
+        "file-new" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                val file = File(args[0].toString())
+                if (!file.exists())
+                    file.createNewFile()
+                return NIL
+            },
+            1
+        )).toToken(),
         "file-read-string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return Files.readString(Paths.get(args[0].toString())).toToken()
         }, 1)).toToken(),
-        "file-remove" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            File(args[0].toString()).delete()
-            return NIL
-        }, 1)).toToken(),
-        "file-write-string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            val file = File(args[0].toString())
-            if (!file.parentFile.exists())
-                !file.parentFile.mkdirs()
-            if (!file.exists())
-                file.createNewFile()
-            Files.writeString(file.toPath(), args[1].toString())
-            return NIL
-        }, 2)).toToken(),
+        "file-remove" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                File(args[0].toString()).delete()
+                return NIL
+            },
+            1
+        )).toToken(),
+        "file-write-string" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                val file = File(args[0].toString())
+                if (!file.parentFile.exists())
+                    !file.parentFile.mkdirs()
+                if (!file.exists())
+                    file.createNewFile()
+                Files.writeString(file.toPath(), args[1].toString())
+                return NIL
+            },
+            2
+        )).toToken(),
         "file-read-bytes" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val list = ArrayList<Token>()
             val bytes = Files.readAllBytes(Paths.get(args[0].toString()))
@@ -1366,21 +1405,27 @@ val file = SymbolTable(
                 list.add(byte.toToken())
             return list.toToken()
         }, 1)).toToken(),
-        "file-write-bytes" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            val file = File(args[0].toString())
-            if (!file.parentFile.exists())
-                !file.parentFile.mkdirs()
-            if (!file.exists())
-                file.createNewFile()
-            val list = cast<List<Token>>(args[1].value)
-            val bytes = ByteArray(list.size)
-            for (index in list.indices) {
-                assert(list[index].type == BYTE)
-                bytes[index] = cast<Byte>(list[index].value)
-            }
-            Files.write(file.toPath(), bytes)
-            return NIL
-        }, listOf(UNKNOWN, LIST), false)).toToken()
+        "file-write-bytes" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                val file = File(args[0].toString())
+                if (!file.parentFile.exists())
+                    !file.parentFile.mkdirs()
+                if (!file.exists())
+                    file.createNewFile()
+                val list = cast<List<Token>>(args[1].value)
+                val bytes = ByteArray(list.size)
+                for (index in list.indices) {
+                    assert(list[index].type == BYTE)
+                    bytes[index] = cast<Byte>(list[index].value)
+                }
+                Files.write(file.toPath(), bytes)
+                return NIL
+            },
+            listOf(UNKNOWN, LIST),
+            false
+        )).toToken()
     ), null
 )
 
@@ -1422,17 +1467,35 @@ val table = SymbolTable(
             table.remove(args[1])
             return table.toToken()
         }, listOf(TABLE, UNKNOWN), false)).toToken(),
-        "table-keys" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            return cast<Map<Token, Token>>(args[0].value).keys.toList().toToken()
-        }, listOf(TABLE), false)).toToken(),
-        "table-put!" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            cast<MutableMap<Token, Token>>(args[0].value)[args[1]] = args[2]
-            return args[0].toToken()
-        }, listOf(TABLE, UNKNOWN, UNKNOWN), false)).toToken(),
-        "table-remove!" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            cast<MutableMap<Token, Token>>(args[0].value).remove(args[1])
-            return args[0].toToken()
-        }, listOf(TABLE, UNKNOWN), false)).toToken()
+        "table-keys" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                return cast<Map<Token, Token>>(args[0].value).keys.toList().toToken()
+            },
+            listOf(TABLE),
+            false
+        )).toToken(),
+        "table-put!" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                cast<MutableMap<Token, Token>>(args[0].value)[args[1]] = args[2]
+                return args[0].toToken()
+            },
+            listOf(TABLE, UNKNOWN, UNKNOWN),
+            false
+        )).toToken(),
+        "table-remove!" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                cast<MutableMap<Token, Token>>(args[0].value).remove(args[1])
+                return args[0].toToken()
+            },
+            listOf(TABLE, UNKNOWN),
+            false
+        )).toToken()
     ), null
 )
 
