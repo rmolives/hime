@@ -1507,17 +1507,19 @@ val thread = SymbolTable(
             Thread.sleep(args[0].toString().toLong())
             return NIL
         })).toToken(),
-        "thread" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
-            // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
-            val asts = ASTNode.EMPTY.copy()
-            asts.add(ASTNode(Thread.currentThread().toToken()))
-            return if (args.size > 1)
-                Thread({
-                    cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
-                }, args[1].toString()).toToken()
-            else
-                Thread {
-                    cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+        "thread" to (HimeFunction(BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, symbol: SymbolTable): Token {
+                // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
+                val asts = ASTNode.EMPTY.copy()
+                asts.add(ASTNode(Thread.currentThread().toToken()))
+                return if (args.size > 1)
+                    Thread({
+                        cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+                    }, args[1].toString()).toToken()
+                else
+                    Thread {
+                        cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
                 }.toToken()
         }, listOf(FUNCTION), true)).toToken(), //这种类重载函数的参数数量处理还比较棘手
         "thread-start" to (HimeFunction(
