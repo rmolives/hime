@@ -7,14 +7,8 @@ import org.hime.parse.Token
 import org.hime.parse.Type
 import java.math.BigDecimal
 import java.math.BigInteger
-import kotlin.math.floor
 
-val INT_MAX: BigInteger = BigInteger.valueOf(Int.MAX_VALUE.toLong())
-val FLOAT_MAX: BigDecimal = BigDecimal.valueOf(Float.MAX_VALUE.toDouble())
-
-fun Token.isNum(): Boolean = this.isSmallNum() || this.isBigNum()                           // 如果为数字
-fun Token.isSmallNum(): Boolean = this.type == Type.NUM || this.type == Type.REAL           // 如果为小型数字
-fun Token.isBigNum(): Boolean = this.type == Type.BIG_NUM || this.type == Type.BIG_REAL     // 如果为大型数字
+fun Token.isNum(): Boolean = this.type == Type.INT || this.type == Type.REAL
 
 /**
  * 将对象转换为Token
@@ -23,16 +17,12 @@ fun Token.isBigNum(): Boolean = this.type == Type.BIG_NUM || this.type == Type.B
 fun Any.toToken(): Token {
     return when (this) {
         is Token -> this
-        is Int -> Token(Type.NUM, this)
         is ASTNode -> Token(Type.AST, this)
-        is Float -> if (floor(this.toDouble()).compareTo(this) == 0)
-            this.toInt().toToken()
-        else Token(Type.REAL, this)
-        is BigInteger -> if (this <= INT_MAX) this.toInt().toToken() else Token(Type.BIG_NUM, this)
-        is BigDecimal -> if (this.signum() == 0 || this.scale() <= 0 || this.stripTrailingZeros().scale() <= 0)
-            this.toBigIntegerExact().toToken()
-        else if (this <= FLOAT_MAX) this.toFloat().toToken() else Token(Type.BIG_REAL, this)
+        is Float -> this.toDouble().toToken()
+        is BigInteger -> Token(Type.INT, this)
+        is BigDecimal -> Token(Type.REAL, this)
         is String -> Token(Type.STR, this)
+        is Int -> this.toLong().toToken()
         is Long -> BigInteger.valueOf(this).toToken()
         is Double -> BigDecimal.valueOf(this).toToken()
         is Map<*, *> -> {

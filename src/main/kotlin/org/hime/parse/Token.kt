@@ -2,13 +2,12 @@ package org.hime.parse
 
 import org.hime.cast
 import org.hime.core.FuncType
+import org.hime.core.HimeFunction
 import org.hime.core.SymbolTable
 import org.hime.core.eval
-import org.hime.core.HimeFunction
 import org.hime.parse.Type.*
 import org.hime.toToken
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.util.*
 
 val TRUE = Token(BOOL, true)
@@ -35,12 +34,7 @@ class Token(val type: Type, val value: Any) {
 
     override fun toString(): String {
         return when (this.type) {
-            STR, Type.LB, Type.RB, EMPTY, Type.NIL, ID -> cast<String>(this.value)
-            BOOL -> cast<Boolean>(this.value).toString()
-            NUM -> cast<Int>(this.value).toString()
-            REAL -> cast<Float>(this.value).toString()
-            BIG_NUM -> cast<BigInteger>(this.value).toString()
-            BIG_REAL -> cast<BigDecimal>(this.value).toPlainString()
+            REAL -> cast<BigDecimal>(this.value).toPlainString()
             else -> this.value.toString()
         }
     }
@@ -102,7 +96,7 @@ enum class Type {
     UNKNOWN,
     LB, RB, EMPTY, NIL,
     ID, BOOL, STR, LIST, BYTE, TABLE,
-    NUM, REAL, BIG_NUM, BIG_REAL, AST, EMPTY_STREAM,
+    NUM, INT, REAL, AST, EMPTY_STREAM,
     FUNCTION,
     THREAD;
 }

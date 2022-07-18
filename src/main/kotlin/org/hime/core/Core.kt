@@ -10,7 +10,6 @@ import org.hime.parse.*
 import org.hime.parse.Type.*
 import org.hime.toToken
 import java.io.File
-import java.lang.reflect.Modifier
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -192,9 +191,9 @@ val core = SymbolTable(
         "stream-ref" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             assert(args[0].type == LIST)
-            assert(args[1].type == NUM)
+            assert(args[1].type == INT)
             var temp = cast<List<Token>>(args[0].value)
-            var index = cast<Int>(args[1].value)
+            var index = args[1].value.toString().toInt().toString().toInt()
             while ((index--) != 0) {
                 assert(temp[1].type == FUNCTION)
                 temp = cast<List<Token>>(cast<HimeFunction>(temp[1].value).call(arrayListOf()).value)
@@ -529,17 +528,14 @@ val core = SymbolTable(
             return NIL
         }, 0)).toToken(),
         "+" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
             var num = BigDecimal.ZERO
             for (parameter in args) {
                 assert(parameter.isNum())
                 num = num.add(BigDecimal(parameter.toString()))
             }
             return num.toToken()
-        }, listOf(UNKNOWN), true)).toToken(),
+        }, listOf(NUM), true)).toToken(),
         "-" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].isNum())
             var num = BigDecimal(args[0].toString())
             if (args.size == 1)
                 return BigDecimal.ZERO.subtract(num).toToken()
@@ -548,26 +544,23 @@ val core = SymbolTable(
                 num = num.subtract(BigDecimal(args[i].toString()))
             }
             return num.toToken()
-        }, listOf(UNKNOWN), true)).toToken(),
+        }, listOf(NUM), true)).toToken(),
         "*" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
             var num = BigDecimal.ONE
             for (parameter in args) {
                 assert(parameter.isNum())
                 num = num.multiply(BigDecimal(parameter.toString()))
             }
             return num.toToken()
-        }, listOf(UNKNOWN), true)).toToken(),
+        }, listOf(NUM), true)).toToken(),
         "/" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].isNum())
             var num = BigDecimal(args[0].toString())
             for (i in 1 until args.size) {
                 assert(args[i].isNum())
                 num = num.divide(BigDecimal(args[i].toString()), MathContext.DECIMAL64)
             }
             return num.toToken()
-        }, listOf(UNKNOWN), true)).toToken(),
+        }, listOf(NUM), true)).toToken(),
         "and" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.isNotEmpty())
             for (arg in args) {
@@ -683,7 +676,7 @@ val core = SymbolTable(
             returnInteger =
                 if (returnInteger > end) end else returnInteger
             return returnInteger.toToken()
-        }, listOf(UNKNOWN), true)).toToken(),
+        }, listOf(INT), true)).toToken(),
         "cons" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return ArrayList(args).toToken()
         }, 2)).toToken(),
@@ -736,47 +729,47 @@ val core = SymbolTable(
         }, listOf(LIST, UNKNOWN), false)).toToken(),
         "list-remove" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = ArrayList(cast<List<Token>>(args[0].value))
-            tokens.removeAt(cast<Int>(args[1].value))
+            tokens.removeAt(args[1].value.toString().toInt())
             return tokens.toToken()
-        }, listOf(LIST, NUM), false)).toToken(),
+        }, listOf(LIST, INT), false)).toToken(),
         "list-set" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            val index = cast<Int>(args[1].value)
+            val index = args[1].value.toString().toInt()
             val tokens = ArrayList(cast<List<Token>>(args[0].value))
             assert(index < tokens.size)
             tokens[index] = args[2]
             return tokens.toToken()
-        }, listOf(LIST, NUM, UNKNOWN), false)).toToken(),
+        }, listOf(LIST, INT, UNKNOWN), false)).toToken(),
         "list-add" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = ArrayList(cast<List<Token>>(args[0].value))
             if (args.size > 2) {
-                assert(args[1].type == NUM)
-                tokens.add(cast<Int>(args[1].value), args[2])
+                assert(args[1].type == INT)
+                tokens.add(args[1].value.toString().toInt(), args[2])
             } else
                 tokens.add(args[1])
             return tokens.toToken()
         }, listOf(LIST, UNKNOWN), true)).toToken(),
         "list-remove!" to (HimeFunction(
             BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                cast<MutableList<Token>>(args[0].value).removeAt(cast<Int>(args[1].value))
+                cast<MutableList<Token>>(args[0].value).removeAt(args[1].value.toString().toInt().toString().toInt())
                 return args[0].toToken()
             },
-            listOf(LIST, NUM),
+            listOf(LIST, INT),
             false
         )).toToken(),
         "list-set!" to (HimeFunction(
             BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                cast<MutableList<Token>>(args[0].value)[cast<Int>(args[1].value)] = args[2]
+                cast<MutableList<Token>>(args[0].value)[args[1].value.toString().toInt().toString().toInt()] = args[2]
                 return args[0].toToken()
             },
-            listOf(LIST, NUM, UNKNOWN),
+            listOf(LIST, INT, UNKNOWN),
             false
         )).toToken(),
         "list-add!" to (HimeFunction(
             BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val tokens = cast<MutableList<Token>>(args[0].value)
                 if (args.size > 2) {
-                    assert(args[1].type == NUM)
-                    tokens.add(cast<Int>(args[1].value), args[2])
+                    assert(args[1].type == INT)
+                    tokens.add(args[1].value.toString().toInt(), args[2])
                 } else
                     tokens.add(args[1])
                 return args[0].toToken()
@@ -785,11 +778,11 @@ val core = SymbolTable(
             true
         )).toToken(),
         "list-ref" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            val index = cast<Int>(args[1].value)
+            val index = args[1].value.toString().toInt().toString().toInt()
             val tokens = cast<List<Token>>(args[0].value)
             assert(index < tokens.size)
             return tokens[index]
-        }, listOf(LIST, NUM), false)).toToken(),
+        }, listOf(LIST, INT), false)).toToken(),
         "++" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             var flag = false
             // 判断是否是List，还是string
@@ -900,8 +893,8 @@ val core = SymbolTable(
                     return rsc(func, n - 1, parameters)
                 }, 1)).toToken()
             }
-            return rsc(args[0], cast<Int>(args[1].value), ArrayList<Token>())
-        }, listOf(FUNCTION, NUM), false)).toToken(),
+            return rsc(args[0], args[1].value.toString().toInt().toString().toInt(), ArrayList<Token>())
+        }, listOf(FUNCTION, INT), false)).toToken(),
         "maybe" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val parameters = ArrayList<Token>()
             for (i in 1 until args.size) {
@@ -992,96 +985,73 @@ val core = SymbolTable(
             return result.toToken()
         }, listOf(FUNCTION, LIST), false)).toToken(),
         "sqrt" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.sqrt(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "sin" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.sin(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "sinh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.sinh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "asin" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.asin(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "asinh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.asinh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "cos" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.cos(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "cosh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.cosh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "acos" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.acos(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "acosh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.acosh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "tan" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.tan(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "tanh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.tanh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "atan" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.atan(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "atanh" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.atanh(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "atan2" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
-            assert(args[1].isNum())
             return BigDecimalMath.atan2(
                 BigDecimal(args[0].toString()),
                 BigDecimal(args[1].toString()),
                 MathContext.DECIMAL64
             ).toToken()
-        }, 2)).toToken(),
+        }, listOf(NUM, NUM), false)).toToken(),
         "log" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.log(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "log10" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.log10(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "log2" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.log2(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "exp" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
             return BigDecimalMath.exp(BigDecimal(args[0].toString()), MathContext.DECIMAL64).toToken()
-        }, 1)).toToken(),
+        }, listOf(NUM), false)).toToken(),
         "pow" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
-            assert(args[1].isNum())
             return BigDecimalMath.pow(
                 BigDecimal(args[0].toString()),
                 BigDecimal(args[1].toString()),
                 MathContext.DECIMAL64
             ).toToken()
-        }, 2)).toToken(),
+        }, listOf(NUM, NUM), false)).toToken(),
         "mod" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].isNum())
-            assert(args[1].isNum())
             return BigInteger(args[0].toString()).mod(BigInteger(args[1].toString())).toToken()
-        }, 2)).toToken(),
+        }, listOf(INT, INT), false)).toToken(),
         "max" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             var max = BigDecimal(args[0].toString())
             for (i in 1 until args.size) {
@@ -1089,7 +1059,7 @@ val core = SymbolTable(
                 max = max.max(BigDecimal(args[i].toString()))
             }
             return max.toToken()
-        }, listOf(UNKNOWN), true)).toToken(),
+        }, listOf(NUM), true)).toToken(),
         "min" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             var min = BigDecimal(args[0].toString())
             for (i in 1 until args.size) {
@@ -1097,7 +1067,7 @@ val core = SymbolTable(
                 min = min.min(BigDecimal(args[i].toString()))
             }
             return min.toToken()
-        }, listOf(UNKNOWN), true)).toToken(),
+        }, listOf(NUM), true)).toToken(),
         "abs" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return BigDecimal(args[0].toString()).abs().toToken()
         }, 1)).toToken(),
@@ -1109,7 +1079,7 @@ val core = SymbolTable(
                 num = num.add(BigDecimal(parameter.value.toString()))
             }
             return num.divide(args.size.toBigDecimal()).toToken()
-        }, listOf(UNKNOWN), true)).toToken(),
+        }, listOf(NUM), true)).toToken(),
         "floor" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return BigInteger(
                 BigDecimal(args[0].toString()).setScale(0, RoundingMode.FLOOR).toPlainString()
@@ -1122,12 +1092,12 @@ val core = SymbolTable(
         }, 1)).toToken(),
         "gcd" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (parameter in args)
-                assert(parameter.type == NUM || parameter.type == BIG_NUM)
+                assert(parameter.type == INT)
             var temp = BigInteger(args[0].toString()).gcd(BigInteger(args[1].toString()))
             for (i in 2 until args.size)
                 temp = temp.gcd(BigInteger(args[i].toString()))
             return temp.toToken()
-        }, listOf(UNKNOWN, UNKNOWN), true)).toToken(),
+        }, listOf(INT, INT), true)).toToken(),
         // (lcm a b) = (/ (* a b) (gcd a b))
         "lcm" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             fun BigInteger.lcm(n: BigInteger): BigInteger = (this.multiply(n).abs()).divide(this.gcd(n))
@@ -1137,7 +1107,7 @@ val core = SymbolTable(
             for (i in 2 until args.size)
                 temp = temp.lcm(BigInteger(args[i].toString()))
             return temp.toToken()
-        }, listOf(UNKNOWN, UNKNOWN), true)).toToken(),
+        }, listOf(INT, INT), true)).toToken(),
         "->bool" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return if (args[0].toString() == "true") TRUE else FALSE
         }, 1)).toToken(),
@@ -1155,25 +1125,25 @@ val core = SymbolTable(
         }, 3)).toToken(),
         "string-substring" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].toString()
-                .substring(cast<Int>(args[1].value), cast<Int>(args[2].value))
+                .substring(args[1].value.toString().toInt(), args[2].value.toString().toInt())
                 .toToken()
-        }, listOf(UNKNOWN, NUM, NUM), false)).toToken(),
+        }, listOf(STR, INT, INT), false)).toToken(),
         "string-split" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].toString().split(args[1].toString()).toList().toToken()
-        }, 2)).toToken(),
+        }, listOf(STR, STR), false)).toToken(),
         "string-index" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].toString().indexOf(args[1].toString()).toToken()
-        }, 2)).toToken(),
+        }, listOf(STR, STR), false)).toToken(),
         "string-last-index" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             assert(args.size > 1)
             return args[0].toString().lastIndexOf(args[1].toString()).toToken()
-        }, 2)).toToken(),
+        }, listOf(STR, STR), false)).toToken(),
         "string-format" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val newArgs = arrayOfNulls<Any>(args.size - 1)
             for (i in 1 until args.size)
                 newArgs[i - 1] = args[i].value
             return String.format(args[0].toString(), *newArgs).toToken()
-        }, listOf(UNKNOWN), true)).toToken(),
+        }, listOf(STR), true)).toToken(),
         "string->list" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val chars = args[0].toString().toCharArray()
             val list = ArrayList<Token>()
@@ -1182,7 +1152,7 @@ val core = SymbolTable(
                 list.add(c.toString().toToken())
             }
             return list.toToken()
-        }, listOf(UNKNOWN), false)).toToken(),
+        }, listOf(STR), false)).toToken(),
         "list->string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val builder = StringBuilder()
             val list = cast<List<Token>>(args[0].value)
@@ -1199,7 +1169,7 @@ val core = SymbolTable(
             for (byte in bytes)
                 list.add(byte.toToken())
             return list.toToken()
-        })).toToken(),
+        }, listOf(STR), false)).toToken(),
         "bytes->string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val list = cast<List<Token>>(args[0].value)
             val bytes = ByteArray(list.size)
@@ -1215,13 +1185,13 @@ val core = SymbolTable(
             for (c in s)
                 result.add(c.code.toToken())
             return result.toToken()
-        }, 1)).toToken(),
+        }, listOf(STR), false)).toToken(),
         "bits->string" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val result = StringBuilder()
             val tokens = cast<List<Token>>(args[0].value)
             for (t in tokens) {
-                assert(t.type == NUM)
-                result.append(cast<Int>(t.value).toChar())
+                assert(t.type == INT)
+                result.append(t.value.toString().toInt().toChar())
             }
             return result.toToken()
         }, listOf(LIST), false)).toToken(),
@@ -1239,13 +1209,19 @@ val core = SymbolTable(
         }, listOf(UNKNOWN), true)).toToken(),
         "num?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args)
-                if (arg.type != NUM && arg.type != BIG_NUM)
+                if (arg.type != INT && arg.type != REAL)
+                    return FALSE
+            return TRUE
+        }, listOf(UNKNOWN), true)).toToken(),
+        "int?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            for (arg in args)
+                if (arg.type != INT)
                     return FALSE
             return TRUE
         }, listOf(UNKNOWN), true)).toToken(),
         "real?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             for (arg in args)
-                if (arg.type != REAL && arg.type != BIG_REAL)
+                if (arg.type != REAL)
                     return FALSE
             return TRUE
         }, listOf(UNKNOWN), true)).toToken(),
@@ -1268,65 +1244,30 @@ val core = SymbolTable(
             return TRUE
         }, listOf(UNKNOWN), true)).toToken(),
         "exit" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            exitProcess(cast<Int>(args[0].value))
-        }, listOf(NUM), false)).toToken(),
-        // (extern "class" "function name")
-        "extern" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbolTable: SymbolTable): Token {
-            val clazz = args[0].toString()
-            val name = args[1].toString()
-            val method = Class.forName(clazz).declaredMethods
-                .firstOrNull { Modifier.isStatic(it.modifiers) && it.name == name }
-                ?: throw UnsatisfiedLinkError("Method $name not found for class $clazz.")
-            symbolTable.put(name, (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                val newArgs = arrayOfNulls<Any>(args.size)
-                for (i in args.indices)
-                    newArgs[i] = args[i].value
-                return method.invoke(null, *newArgs).toToken()
-            })).toToken())
-            return NIL
-        }, listOf(UNKNOWN, UNKNOWN), false)).toToken(),
+            exitProcess(args[0].value.toString().toInt())
+        }, listOf(INT), false)).toToken(),
         "eval" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val newSymbol = symbol.createChild()
             var result = NIL
             for (node in args)
                 result = call(node.toString(), newSymbol)
             return result
-        }, listOf(UNKNOWN), true)).toToken(),
+        }, listOf(STR), true)).toToken(),
         "bit-and" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].type == NUM || args[0].type == BIG_NUM)
-            assert(args[1].type == NUM || args[1].type == BIG_NUM)
-            val m = BigInteger(args[0].toString())
-            val n = BigInteger(args[1].toString())
-            return m.and(n).toToken()
-        }, 2)).toToken(),
+            return BigInteger(args[0].toString()).and(BigInteger(args[1].toString())).toToken()
+        }, listOf(INT, INT), false)).toToken(),
         "bit-or" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].type == NUM || args[0].type == BIG_NUM)
-            assert(args[1].type == NUM || args[1].type == BIG_NUM)
-            val m = BigInteger(args[0].toString())
-            val n = BigInteger(args[1].toString())
-            return m.or(n).toToken()
-        }, 2)).toToken(),
+            return BigInteger(args[0].toString()).or(BigInteger(args[1].toString())).toToken()
+        }, listOf(INT, INT), false)).toToken(),
         "bit-xor" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].type == NUM || args[0].type == BIG_NUM)
-            assert(args[1].type == NUM || args[1].type == BIG_NUM)
-            val m = BigInteger(args[0].toString())
-            val n = BigInteger(args[1].toString())
-            return m.xor(n).toToken()
-        }, 2)).toToken(),
+            return BigInteger(args[0].toString()).xor(BigInteger(args[1].toString())).toToken()
+        }, listOf(INT, INT), false)).toToken(),
         "bit-left" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].type == NUM || args[0].type == BIG_NUM)
-            assert(args[1].type == NUM)
-            val m = BigInteger(args[0].toString())
-            val n = cast<Int>(args[1].value)
-            return m.shiftLeft(n).toToken()
-        }, 2)).toToken(),
+            return BigInteger(args[0].toString()).shiftLeft(BigInteger(args[1].toString()).toInt()).toToken()
+        }, listOf(INT, INT), false)).toToken(),
         "bit-right" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[0].type == NUM || args[0].type == BIG_NUM)
-            assert(args[1].type == NUM)
-            val m = BigInteger(args[0].toString())
-            val n = cast<Int>(args[1].value)
-            return m.shiftRight(n).toToken()
-        }, 2)).toToken()
+            return BigInteger(args[0].toString()).shiftRight(BigInteger(args[1].toString()).toInt()).toToken()
+        }, listOf(INT, INT), false)).toToken(),
     ), null
 )
 
@@ -1419,7 +1360,7 @@ val time = SymbolTable(
             return Date().time.toToken()
         }, 0)).toToken(),
         "time-format" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args[1].type == NUM || args[1].type == BIG_NUM)
+            assert(args[1].type == INT)
             return SimpleDateFormat(args[0].toString()).format(args[1].toString().toLong())
                 .toToken()
         }, 2)).toToken(),
@@ -1480,11 +1421,9 @@ val table = SymbolTable(
 val thread = SymbolTable(
     mutableMapOf(
         "sleep" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            assert(args.isNotEmpty())
-            assert(args[0].isNum())
             Thread.sleep(args[0].toString().toLong())
             return NIL
-        })).toToken(),
+        }, listOf(INT), false)).toToken(),
         "thread" to (HimeFunction(
             BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                 // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
@@ -1533,11 +1472,7 @@ val thread = SymbolTable(
         )).toToken(),
         "thread-join" to (HimeFunction(
             BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                if (args.size > 1) {
-                    assert(args[1].isNum())
-                    cast<Thread>(args[0].value).join(args[1].toString().toLong())
-                } else
-                    cast<Thread>(args[0].value).join()
+                cast<Thread>(args[0].value).join()
                 return NIL
             }, listOf(THREAD), false
         )).toToken(),

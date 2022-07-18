@@ -43,7 +43,9 @@ class HimeFunction(
         for (i in paramTypes.indices)
             assert(
                 paramTypes[i] == Type.UNKNOWN ||
-                        args[i].type == paramTypes[i]
+                        args[i].type == paramTypes[i] ||
+                        (paramTypes[i] == Type.NUM &&
+                                (args[i].type == Type.INT || args[i].type == Type.REAL))
             ) { "${paramTypes[i]} expected but ${args[i].type} at position $i" }
         if (!variadic)
             assert(args.size == paramTypes.size) { "too many arguments." }
