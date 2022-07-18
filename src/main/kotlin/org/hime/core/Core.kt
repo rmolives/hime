@@ -733,7 +733,7 @@ val core = SymbolTable(
         }, listOf(LIST), false)).toToken(),
         "list-contains" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return cast<List<Token>>(args[0].value).contains(args[1]).toToken()
-        }, listOf(LIST, NUM), false)).toToken(),
+        }, listOf(LIST, UNKNOWN), false)).toToken(),
         "list-remove" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val tokens = ArrayList(cast<List<Token>>(args[0].value))
             tokens.removeAt(cast<Int>(args[1].value))
