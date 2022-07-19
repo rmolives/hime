@@ -193,7 +193,7 @@ val core = SymbolTable(
             assert(args[0].type == LIST)
             assert(args[1].type == INT)
             var temp = cast<List<Token>>(args[0].value)
-            var index = args[1].value.toString().toInt().toString().toInt()
+            var index = args[1].value.toString().toInt()
             while ((index--) != 0) {
                 assert(temp[1].type == FUNCTION)
                 temp = cast<List<Token>>(cast<HimeFunction>(temp[1].value).call(arrayListOf()).value)
@@ -750,7 +750,7 @@ val core = SymbolTable(
         }, listOf(LIST, UNKNOWN), true)).toToken(),
         "list-remove!" to (HimeFunction(
             BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                cast<MutableList<Token>>(args[0].value).removeAt(args[1].value.toString().toInt().toString().toInt())
+                cast<MutableList<Token>>(args[0].value).removeAt(args[1].value.toString().toInt())
                 return args[0].toToken()
             },
             listOf(LIST, INT),
@@ -758,7 +758,7 @@ val core = SymbolTable(
         )).toToken(),
         "list-set!" to (HimeFunction(
             BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                cast<MutableList<Token>>(args[0].value)[args[1].value.toString().toInt().toString().toInt()] = args[2]
+                cast<MutableList<Token>>(args[0].value)[args[1].value.toString().toInt()] = args[2]
                 return args[0].toToken()
             },
             listOf(LIST, INT, UNKNOWN),
@@ -778,7 +778,7 @@ val core = SymbolTable(
             true
         )).toToken(),
         "list-ref" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-            val index = args[1].value.toString().toInt().toString().toInt()
+            val index = args[1].value.toString().toInt()
             val tokens = cast<List<Token>>(args[0].value)
             assert(index < tokens.size)
             return tokens[index]
@@ -893,7 +893,7 @@ val core = SymbolTable(
                     return rsc(func, n - 1, parameters)
                 }, 1)).toToken()
             }
-            return rsc(args[0], args[1].value.toString().toInt().toString().toInt(), ArrayList<Token>())
+            return rsc(args[0], args[1].value.toString().toInt(), ArrayList<Token>())
         }, listOf(FUNCTION, INT), false)).toToken(),
         "maybe" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val parameters = ArrayList<Token>()
