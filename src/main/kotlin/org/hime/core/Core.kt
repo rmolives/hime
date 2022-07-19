@@ -18,6 +18,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.system.exitProcess
 
 val core = SymbolTable(
@@ -1414,6 +1415,30 @@ val table = SymbolTable(
 
 val thread = SymbolTable(
     mutableMapOf(
+        "make-lock" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+            return ReentrantLock().toToken()
+        }, 0)).toToken(),
+        "lock" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                for (arg in args)
+                    cast<ReentrantLock>(arg.value).lock()
+                return NIL
+            }, listOf(LOCK), true
+        )).toToken(),
+        "unlock" to (HimeFunction(
+            BUILT_IN,
+            @Synchronized
+            fun(args: List<Token>, _: SymbolTable): Token {
+                for (arg in args)
+                    cast<ReentrantLock>(arg.value).unlock()
+                return NIL
+            }, listOf(LOCK), true
+        )).toToken(),
+        "get-lock" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            return cast<ReentrantLock>(args[0].value).isLocked.toToken()
+        }, listOf(LOCK), false)).toToken(),
         "sleep" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             Thread.sleep(args[0].toString().toLong())
             return NIL

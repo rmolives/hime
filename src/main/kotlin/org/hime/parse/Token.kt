@@ -98,5 +98,5 @@ enum class Type {
     ID, BOOL, STR, LIST, BYTE, TABLE,
     NUM, INT, REAL, AST, EMPTY_STREAM,
     FUNCTION,
-    THREAD;
+    THREAD, LOCK;
 }

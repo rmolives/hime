@@ -7,6 +7,7 @@ import org.hime.parse.Token
 import org.hime.parse.Type
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.concurrent.locks.ReentrantLock
 
 fun Token.isNum(): Boolean = this.type == Type.INT || this.type == Type.REAL
 
@@ -42,6 +43,7 @@ fun Any.toToken(): Token {
         is Boolean -> Token(Type.BOOL, this)
         is Byte -> Token(Type.BYTE, this)
         is HimeFunction -> Token(Type.FUNCTION, this)
+        is ReentrantLock -> Token(Type.LOCK, this)
         else -> Token(Type.UNKNOWN, this)
     }
 }
