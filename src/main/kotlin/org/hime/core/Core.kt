@@ -337,7 +337,7 @@ val core = SymbolTable(
             return NIL
         })).toToken(),
         // 更改绑定
-        "set" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "set!" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
             himeAssertRuntime(symbol.contains(ast[0].tok.toString())) { "environment does not contain ${ast[0].tok} binding." }
             // 如果是(set key value)
@@ -359,7 +359,7 @@ val core = SymbolTable(
             }
             return NIL
         })).toToken(),
-        "set-variable" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "set-variable!" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
             himeAssertRuntime(symbol.contains(ast[0].tok.toString())) { "environment does not contain ${ast[0].tok} binding." }
             himeAssertRuntime(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION) { "format error." }
