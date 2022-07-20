@@ -1,6 +1,7 @@
 package org.hime.core
 
 import org.hime.cast
+import org.hime.lang.himeAssertRuntime
 import org.hime.parse.ASTNode
 import org.hime.parse.Token
 import org.hime.parse.Type
@@ -38,17 +39,17 @@ class HimeFunction(
     }
 
     fun call(args: List<Token>, symbol: SymbolTable): Token {
-        assert(funcType != FuncType.STATIC)
-        assert(args.size >= paramTypes.size) { "not enough arguments." }
+        himeAssertRuntime(funcType != FuncType.STATIC) { "static function definition." }
+        himeAssertRuntime(args.size >= paramTypes.size) { "not enough arguments." }
         for (i in paramTypes.indices)
-            assert(
+            himeAssertRuntime(
                 paramTypes[i] == Type.UNKNOWN ||
                         args[i].type == paramTypes[i] ||
                         (paramTypes[i] == Type.NUM &&
                                 (args[i].type == Type.INT || args[i].type == Type.REAL))
             ) { "${paramTypes[i]} expected but ${args[i].type} at position $i" }
         if (!variadic)
-            assert(args.size == paramTypes.size) { "too many arguments." }
+            himeAssertRuntime(args.size == paramTypes.size) { "too many arguments." }
         val result = when (this.funcType) {
             FuncType.USER_DEFINED -> cast<Hime_HimeFunction>(func)(args)
             FuncType.BUILT_IN -> cast<Hime_Function>(func)(args, symbol)
@@ -58,7 +59,7 @@ class HimeFunction(
     }
 
     fun call(args: List<Token>): Token {
-        assert(funcType == FuncType.USER_DEFINED)
+        himeAssertRuntime(funcType == FuncType.USER_DEFINED) { "call non user defined function." }
         return call(args, SymbolTable(HashMap(), null))
     }
 

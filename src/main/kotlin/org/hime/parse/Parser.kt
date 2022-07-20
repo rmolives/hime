@@ -1,5 +1,6 @@
 package org.hime.parse
 
+import org.hime.lang.himeAssertParser
 import java.util.*
 
 /**
@@ -22,7 +23,7 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                 if (tokens[index].type == Type.RB) {
                     temp = ASTNode.EMPTY
                     // 如果peek失败，则会导致运行时错误
-                    assert(stack.peek() != null)
+                    himeAssertParser(stack.peek() != null) { "peek eq null." }
                     stack.push(temp)
                     state = -1
                     ++index
@@ -41,7 +42,7 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                 if (tokens[index].type == Type.RB) {
                     temp = ASTNode.EMPTY
                     // 如果peek失败，则会导致运行时错误
-                    assert(stack.peek() != null)
+                    himeAssertParser(stack.peek() != null) { "peek eq null." }
                     stack.peek().add(temp)
                     state = -1
                     ++index
@@ -51,7 +52,7 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                 if (tokens[index].type == Type.LB)
                     tokens.add(index, Token(Type.ID, "apply"))
                 temp = ASTNode(tokens[index])
-                assert(stack.peek() != null)
+                himeAssertParser(stack.peek() != null) { "peek eq null." }
                 stack.peek().add(temp)
                 stack.push(temp)
                 state = -1
@@ -61,13 +62,13 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
             else if (tokens[index].type == Type.RB) {
                 // 考虑类似类似(def (<function-name>) <body*>)一类的情况
                 if (index >= 2 && tokens[index - 2].type == Type.LB) {
-                    assert(stack.peek() != null)
+                    himeAssertParser(stack.peek() != null) { "peek eq null." }
                     stack.peek().type = AstType.FUNCTION
                 }
-                assert(stack.isNotEmpty())
+                himeAssertParser(stack.isNotEmpty()) { "stack is empty." }
                 stack.pop()
             } else {
-                assert(stack.isNotEmpty())
+                himeAssertParser(stack.isNotEmpty()) { "stack is empty." }
                 stack.peek().add(ASTNode(tokens[index]))
             }
             ++index
