@@ -5,14 +5,6 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 
-// 关键字
-val WORDS: Map<String, Token> = mapOf(
-    "true" to TRUE,
-    "false" to FALSE,
-    "nil" to NIL,
-    "empty-stream" to EMPTY_STREAM
-)
-
 /**
  * 词法分析器
  * @param code  代码
@@ -189,9 +181,7 @@ fun lexer(code: String): List<List<Token>> {
                     builder.append(expression[index])
                     ++index
                 }
-                val s = builder.toString()
-                // 如果ID为关键字，则添加相应的Token（考虑null条件），否则将其添加为普通ID
-                tokens.add(if (WORDS.containsKey(s)) WORDS[s]!! else Token(Type.ID, builder.toString()))
+                tokens.add(Token(Type.ID, builder.toString()))
                 continue
             }
         }

@@ -23,6 +23,10 @@ import kotlin.system.exitProcess
 
 val core = SymbolTable(
     mutableMapOf(
+        "true" to TRUE,
+        "false" to FALSE,
+        "nil" to NIL,
+        "empty-stream" to EMPTY_STREAM,
         "def-symbol" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             assert(ast.size() > 1)
             assert(ast[0].isNotEmpty())
