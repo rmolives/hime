@@ -1,4 +1,4 @@
-package ink.hime
+package org.hime
 
 import java.nio.file.Files
 import java.nio.file.Path

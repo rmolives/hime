@@ -1,10 +1,10 @@
-package ink.hime
+package org.hime
 
-import ink.hime.core.HimeFunction
-import ink.hime.parse.ASTNode
-import ink.hime.parse.NIL
-import ink.hime.parse.Token
-import ink.hime.parse.Type
+import org.hime.core.HimeFunction
+import org.hime.parse.ASTNode
+import org.hime.parse.NIL
+import org.hime.parse.Token
+import org.hime.parse.Type
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.concurrent.locks.ReentrantLock

@@ -1,4 +1,4 @@
-package ink.hime.parse
+package org.hime.parse
 
 import java.util.*
 

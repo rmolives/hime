@@ -1,11 +1,11 @@
-package ink.hime.core
+package org.hime.core
 
-import ink.hime.cast
-import ink.hime.lang.himeAssertRuntime
-import ink.hime.parse.ASTNode
-import ink.hime.parse.Token
-import ink.hime.parse.Type
-import ink.hime.toToken
+import org.hime.cast
+import org.hime.lang.himeAssertRuntime
+import org.hime.parse.ASTNode
+import org.hime.parse.Token
+import org.hime.parse.Type
+import org.hime.toToken
 
 typealias Hime_HimeFunction = (List<Token>) -> Token                        // 自举函数
 typealias Hime_Function = (List<Token>, SymbolTable) -> Token

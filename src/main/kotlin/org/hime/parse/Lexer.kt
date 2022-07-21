@@ -1,6 +1,6 @@
-package ink.hime.parse
+package org.hime.parse
 
-import ink.hime.toToken
+import org.hime.toToken
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext

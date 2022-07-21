@@ -1,12 +1,12 @@
-package ink.hime.parse
+package org.hime.parse
 
-import ink.hime.cast
-import ink.hime.core.FuncType
-import ink.hime.core.HimeFunction
-import ink.hime.core.SymbolTable
-import ink.hime.core.eval
-import ink.hime.parse.Type.*
-import ink.hime.toToken
+import org.hime.cast
+import org.hime.core.FuncType
+import org.hime.core.HimeFunction
+import org.hime.core.SymbolTable
+import org.hime.core.eval
+import org.hime.parse.Type.*
+import org.hime.toToken
 import java.math.BigDecimal
 import java.util.*
 

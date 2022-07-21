@@ -1,3 +1,3 @@
-package ink.hime.lang
+package org.hime.lang
 
 class HimeParserException(error: String) : HimeException(error)

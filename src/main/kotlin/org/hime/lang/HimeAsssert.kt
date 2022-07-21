@@ -1,4 +1,4 @@
-package ink.hime.lang
+package org.hime.lang
 
 fun himeAssertRuntime(value: Boolean, lazyMessage: () -> String) {
     if (!value)

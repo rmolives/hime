@@ -1,16 +1,16 @@
-package ink.hime.core
+package org.hime.core
 
 import ch.obermuhlner.math.big.BigDecimalMath
-import ink.hime.call
-import ink.hime.cast
-import ink.hime.core.FuncType.BUILT_IN
-import ink.hime.core.FuncType.STATIC
-import ink.hime.isNum
-import ink.hime.lang.HimeRuntimeException
-import ink.hime.lang.himeAssertRuntime
-import ink.hime.parse.*
-import ink.hime.parse.Type.*
-import ink.hime.toToken
+import org.hime.call
+import org.hime.cast
+import org.hime.core.FuncType.BUILT_IN
+import org.hime.core.FuncType.STATIC
+import org.hime.isNum
+import org.hime.lang.HimeRuntimeException
+import org.hime.lang.himeAssertRuntime
+import org.hime.parse.Type.*
+import org.hime.parse.*
+import org.hime.toToken
 import java.io.File
 import java.math.BigDecimal
 import java.math.BigInteger

@@ -1,8 +1,8 @@
-package ink.hime
+package org.hime
 
-import ink.hime.core.SymbolTable
-import ink.hime.core.core
-import ink.hime.parse.Type
+import org.hime.core.SymbolTable
+import org.hime.core.core
+import org.hime.parse.Type
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.file.Files
