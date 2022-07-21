@@ -1,6 +1,6 @@
-package org.hime.core
+package ink.hime.core
 
-import org.hime.parse.Token
+import ink.hime.parse.Token
 
 /**
  * @param table  一系列绑定

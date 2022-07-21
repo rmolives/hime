@@ -1,9 +1,9 @@
-package org.hime
+package ink.hime
 
-import org.hime.core.SymbolTable
-import org.hime.core.core
-import org.hime.core.eval
-import org.hime.parse.*
+import ink.hime.core.SymbolTable
+import ink.hime.core.core
+import ink.hime.core.eval
+import ink.hime.parse.*
 
 val defaultSymbolTable = SymbolTable(HashMap(), core)
 

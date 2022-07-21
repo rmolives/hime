@@ -1,7 +1,10 @@
-package org.hime.core
+package ink.hime.core
 
-import org.hime.cast
-import org.hime.parse.*
+import ink.hime.cast
+import ink.hime.parse.ASTNode
+import ink.hime.parse.AstType
+import ink.hime.parse.Token
+import ink.hime.parse.Type
 
 /**
  * 求值器

@@ -1,4 +1,4 @@
-package org.hime.parse
+package ink.hime.parse
 
 /**
  * 预处理器（主要是把多于的空格、回车之类的删除掉）

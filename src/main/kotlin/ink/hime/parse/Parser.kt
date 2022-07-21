@@ -1,6 +1,6 @@
-package org.hime.parse
+package ink.hime.parse
 
-import org.hime.lang.himeAssertParser
+import ink.hime.lang.himeAssertParser
 import java.util.*
 
 /**
