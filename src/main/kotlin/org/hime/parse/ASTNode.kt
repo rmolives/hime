@@ -11,7 +11,7 @@ import java.util.*
 class ASTNode {
     var tok: Token                      // 运算符
     var type = AstType.BASIC            // 抽象语法树类型
-    var child: MutableList<ASTNode>     // 运算对象
+    var children: MutableList<ASTNode>     // 运算对象
 
     /**
      * 建立新的抽象语法树
@@ -19,7 +19,7 @@ class ASTNode {
      */
     constructor(tok: Token) {
         this.tok = tok
-        child = LinkedList()
+        children = LinkedList()
     }
 
     /**
@@ -29,7 +29,7 @@ class ASTNode {
      */
     constructor(tok: Token, child: MutableList<ASTNode>) {
         this.tok = tok
-        this.child = child
+        this.children = child
     }
 
     /**
@@ -40,7 +40,7 @@ class ASTNode {
     constructor(tok: Token, type: AstType) {
         this.tok = tok
         this.type = type
-        this.child = LinkedList()
+        this.children = LinkedList()
     }
 
     /**
@@ -49,7 +49,7 @@ class ASTNode {
      */
     fun copy(): ASTNode {
         val list: MutableList<ASTNode> = LinkedList()
-        for (ast in child)
+        for (ast in children)
             list.add(ast.copy())
         val newAst = ASTNode(tok, list)
         newAst.type = type
@@ -61,7 +61,7 @@ class ASTNode {
      * @param node 运算的抽象语法树
      */
     fun add(node: ASTNode) {
-        child.add(node)
+        children.add(node)
     }
 
     /**
@@ -70,21 +70,21 @@ class ASTNode {
      * @return 运算对象
      */
     operator fun get(i: Int): ASTNode {
-        return child[i]
+        return children[i]
     }
 
     /**
      * 清空运算对象
      */
     fun clear() {
-        child.clear()
+        children.clear()
     }
 
     /**
      * 获取运算对象的数量
      */
     fun size(): Int {
-        return child.size
+        return children.size
     }
 
     /**
@@ -114,7 +114,7 @@ class ASTNode {
         else {
             builder.append("(")
             builder.append(tok.toString())
-            for (ast in child)
+            for (ast in children)
                 builder.append(" ").append(ast.toString())
             builder.append(")")
         }

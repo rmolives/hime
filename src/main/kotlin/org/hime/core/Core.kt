@@ -45,7 +45,7 @@ val core = SymbolTable(
                     if (ast.type == AstType.FUNCTION) {
                         var result = NIL
                         val newSymbol = symbol.createChild()
-                        for (node in ast.child)
+                        for (node in ast.children)
                             result = eval(ASTNode(eval(node, newSymbol)), newSymbol)
                         return result
                     }
@@ -57,9 +57,9 @@ val core = SymbolTable(
                         fun rsc(ast: ASTNode, id: String, value: ASTNode) {
                             if (ast.tok.type == ID && ast.tok.toString() == id) {
                                 ast.tok = value.tok
-                                ast.child = value.child
+                                ast.children = value.children
                             }
-                            for (child in ast.child)
+                            for (child in ast.children)
                                 rsc(child, id, value)
                         }
                         himeAssertRuntime(ast.size() >= parameters.size) { "" }
@@ -231,7 +231,7 @@ val core = SymbolTable(
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
             var result = NIL
-            for (node in ast[0].child) {
+            for (node in ast[0].children) {
                 if (node.tok.toString() == "apply") {
                     val parameters = ArrayList<String>()
                     for (i in 0 until node[0].size()) {
@@ -245,7 +245,7 @@ val core = SymbolTable(
                     newSymbol.put(node[0].tok.toString(), structureHimeFunction(parameters, asts, symbol.createChild()))
                 } else {
                     var value = NIL
-                    for (e in node.child)
+                    for (e in node.children)
                         value = eval(e.copy(), symbol.createChild())
                     newSymbol.put(node.tok.toString(), value)
                 }
@@ -259,7 +259,7 @@ val core = SymbolTable(
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
             var result = NIL
-            for (node in ast[0].child) {
+            for (node in ast[0].children) {
                 if (node.tok.toString() == "apply") {
                     val parameters = ArrayList<String>()
                     for (i in 0 until node[0].size())
@@ -274,7 +274,7 @@ val core = SymbolTable(
                     )
                 } else {
                     var value = NIL
-                    for (e in node.child)
+                    for (e in node.children)
                         value = eval(e.copy(), newSymbol.createChild())
                     newSymbol.put(node.tok.toString(), value)
                 }
@@ -408,7 +408,7 @@ val core = SymbolTable(
         "cond" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             // 新建执行的新环境（继承）
             val newSymbol = symbol.createChild()
-            for (node in ast.child) {
+            for (node in ast.children) {
                 // 如果碰到else，就直接执行返回
                 if (node.tok.type == ID && node.tok.toString() == "else")
                     return eval(node[0].copy(), newSymbol)
