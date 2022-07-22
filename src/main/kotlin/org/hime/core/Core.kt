@@ -311,7 +311,7 @@ val core = SymbolTable(
             return NIL
         })).toToken(),
         // 建立新绑定(变长)
-        "def-variable" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "def-variadic" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
             himeAssertRuntime(!symbol.table.containsKey(ast[0].tok.toString())) { "repeat binding ${ast[0].tok}." }
             himeAssertRuntime(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION) { "format error." }
@@ -359,7 +359,7 @@ val core = SymbolTable(
             }
             return NIL
         })).toToken(),
-        "set-variable!" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
+        "set-variadic!" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
             himeAssertRuntime(symbol.contains(ast[0].tok.toString())) { "environment does not contain ${ast[0].tok} binding." }
             himeAssertRuntime(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION) { "format error." }
