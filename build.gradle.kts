@@ -27,5 +27,7 @@ tasks.withType<KotlinCompile> {
 tasks.jar.configure {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     manifest.attributes["Main-Class"] = "org.hime.MainKt"
+    manifest.attributes["Implementation-Version"] = 0.1
+    manifest.attributes["Implementation-Title"] = "Hime v0.1"
     from(configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) })
 }
