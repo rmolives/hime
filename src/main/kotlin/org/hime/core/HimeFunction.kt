@@ -1,6 +1,7 @@
 package org.hime.core
 
 import org.hime.cast
+import org.hime.defaultSymbolTable
 import org.hime.lang.himeAssertRuntime
 import org.hime.parse.ASTNode
 import org.hime.parse.Token
@@ -60,7 +61,7 @@ class HimeFunction(
 
     fun call(args: List<Token>): Token {
         himeAssertRuntime(funcType == FuncType.USER_DEFINED) { "call non user defined function." }
-        return call(args, SymbolTable(HashMap(), null))
+        return call(args, defaultSymbolTable.createChild())
     }
 
     override fun toString(): String {

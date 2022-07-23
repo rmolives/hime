@@ -1,7 +1,5 @@
 package org.hime
 
-import org.hime.core.SymbolTable
-import org.hime.core.core
 import org.hime.parse.Type
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -14,7 +12,7 @@ import java.nio.file.Path
 fun repl() {
     val reader = BufferedReader(InputStreamReader(System.`in`))
     var codeBuilder = StringBuilder()
-    var symbolTable = SymbolTable(HashMap(), core)
+    var symbolTable = defaultSymbolTable.createChild()
     var size = 0
     while (true) {
         print("[Hime] >>> ")
@@ -26,7 +24,7 @@ fun repl() {
         var flag = 0
         val read = reader.readLine()
         if (read.startsWith(":clear"))
-            symbolTable = SymbolTable(HashMap(), core)
+            symbolTable = defaultSymbolTable.createChild()
         else if (read.startsWith(":load"))
             codeBuilder.append(Files.readString(Path.of(read.substring(6))))
         else {

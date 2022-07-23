@@ -1,5 +1,6 @@
 package org.hime.core
 
+import org.hime.lang.IOConfig
 import org.hime.parse.Token
 
 /**
@@ -8,7 +9,8 @@ import org.hime.parse.Token
  */
 class SymbolTable(
     var table: MutableMap<String, Token>,
-    private var father: SymbolTable?
+    private var father: SymbolTable?,
+    var io: IOConfig?
 ) {
     /**
      * 删除绑定
@@ -70,6 +72,6 @@ class SymbolTable(
      * @return child
      */
     fun createChild(): SymbolTable {
-        return SymbolTable(HashMap(), this)
+        return SymbolTable(HashMap(), this, io)
     }
 }

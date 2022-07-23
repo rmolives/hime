@@ -501,40 +501,58 @@ val core = SymbolTable(
                     eval(node, symbol)
             return NIL
         }, 1)).toToken(),
-        "read-bit" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-            return System.`in`.read().toToken()
+        "read-bit" to (HimeFunction(BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
+            return (symbol.io?.`in`?: System.`in`).read().toToken()
         }, 0)).toToken(),
-        "read-line" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-            return Scanner(System.`in`).nextLine().toToken()
+        "read-line" to (HimeFunction(BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
+            return Scanner(symbol.io?.`in`?: System.`in`).nextLine().toToken()
         }, 0)).toToken(),
-        "read" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-            return Scanner(System.`in`).next().toToken()
+        "read" to (HimeFunction(BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
+            return Scanner(symbol.io?.`in`?: System.`in`).next().toToken()
         }, 0)).toToken(),
-        "read-num" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-            return Scanner(System.`in`).nextBigInteger().toToken()
+        "read-num" to (HimeFunction(BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
+            return Scanner(symbol.io?.`in`?: System.`in`).nextBigInteger().toToken()
         }, 0)).toToken(),
-        "read-real" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-            return Scanner(System.`in`).nextBigDecimal().toToken()
+        "read-real" to (HimeFunction(BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
+            return Scanner(symbol.io?.`in`?: System.`in`).nextBigDecimal().toToken()
         }, 0)).toToken(),
-        "read-bool" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-            return Scanner(System.`in`).nextBoolean().toToken()
+        "read-bool" to (HimeFunction(BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
+            return Scanner(symbol.io?.`in`?: System.`in`).nextBoolean().toToken()
         }, 0)).toToken(),
-        "println" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+        "println" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val builder = StringBuilder()
             for (token in args)
                 builder.append(token.toString())
-            println(builder.toString())
+            (symbol.io?.out?: System.out).println(builder.toString())
             return NIL
         })).toToken(),
-        "print" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+        "print" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val builder = StringBuilder()
             for (token in args)
                 builder.append(token.toString())
-            print(builder.toString())
+            (symbol.io?.out?: System.out).print(builder.toString())
             return NIL
         })).toToken(),
-        "newline" to (HimeFunction(BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-            println()
+        "newline" to (HimeFunction(BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
+            (symbol.io?.out?: System.out).println()
+            return NIL
+        }, 0)).toToken(),
+        "println-error" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
+            val builder = StringBuilder()
+            for (token in args)
+                builder.append(token.toString())
+            (symbol.io?.err?: System.err).println(builder.toString())
+            return NIL
+        })).toToken(),
+        "print-error" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
+            val builder = StringBuilder()
+            for (token in args)
+                builder.append(token.toString())
+            (symbol.io?.err?: System.err).print(builder.toString())
+            return NIL
+        })).toToken(),
+        "newline-error" to (HimeFunction(BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
+            (symbol.io?.err?: System.err).println()
             return NIL
         }, 0)).toToken(),
         "+" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
@@ -1277,7 +1295,7 @@ val core = SymbolTable(
         "error" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             throw HimeRuntimeException(args[0].toString())
         }, listOf(UNKNOWN), false)).toToken(),
-    ), null
+    ), null, null
 )
 
 val file = SymbolTable(
@@ -1360,7 +1378,7 @@ val file = SymbolTable(
             listOf(UNKNOWN, LIST),
             false
         )).toToken()
-    ), null
+    ), null, null
 )
 
 val time = SymbolTable(
@@ -1376,7 +1394,7 @@ val time = SymbolTable(
         "time-parse" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return SimpleDateFormat(args[0].toString()).parse(args[1].value.toString()).time.toToken()
         }, 2)).toToken()
-    ), null
+    ), null, null
 )
 
 val table = SymbolTable(
@@ -1423,7 +1441,7 @@ val table = SymbolTable(
             listOf(TABLE, UNKNOWN),
             false
         )).toToken()
-    ), null
+    ), null, null
 )
 
 val thread = SymbolTable(
@@ -1514,7 +1532,7 @@ val thread = SymbolTable(
         "thread-interrupted" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return cast<Thread>(args[0].value).isInterrupted.toToken()
         }, listOf(THREAD), false)).toToken()
-    ), null
+    ), null, null
 )
 
 val regex = SymbolTable(
@@ -1522,7 +1540,7 @@ val regex = SymbolTable(
         "match" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].toString().matches(Regex(args[1].toString())).toToken()
         }, 2)).toToken()
-    ), null
+    ), null, null
 )
 
 val module = mutableMapOf(

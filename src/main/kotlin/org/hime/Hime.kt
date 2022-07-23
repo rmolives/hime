@@ -3,9 +3,11 @@ package org.hime
 import org.hime.core.SymbolTable
 import org.hime.core.core
 import org.hime.core.eval
+import org.hime.lang.IOConfig
 import org.hime.parse.*
 
-val defaultSymbolTable = SymbolTable(HashMap(), core)
+val defaultIO = IOConfig(System.out, System.err, System.`in`)
+val defaultSymbolTable = SymbolTable(HashMap(), core, defaultIO)
 
 /**
  * 执行代码
