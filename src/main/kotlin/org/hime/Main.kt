@@ -8,7 +8,7 @@ fun main(args: Array<String>) {
     if (args.isEmpty())
         repl()
     else if (args[0] == "--version" || args[0] == "-v")
-        println("Hime V0.1\nhttps://www.wumoe.org.cn/\nWuMoe Inc.")
+        println("Hime V0.1\nhttps://www.wumoe.org.cn/\nWuMoe Community.")
     else
         call(Files.readString(Path.of(args[0])))
 }
