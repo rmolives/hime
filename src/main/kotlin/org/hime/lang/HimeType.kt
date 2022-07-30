@@ -6,39 +6,53 @@ import org.hime.toToken
 import java.math.BigDecimal
 import java.math.MathContext
 
-val types: MutableMap<String, HimeType> =
+val types: MutableMap<String, () -> HimeType> =
     mutableMapOf(
-        "int" to HimeTypeInt(),
-        "real" to HimeTypeReal(),
-        "num" to HimeTypeNum(),
-        "eq" to HimeTypeEq(),
-        "ord" to HimeTypeOrd(),
-        "string" to HimeTypeString(),
-        "list" to HimeTypeList(),
-        "id" to HimeTypeId(),
-        "bool" to HimeTypeBool(),
-        "table" to HimeTypeTable(),
-        "byte" to HimeTypeByte(),
-        "word" to HimeTypeWord(),
-        "thread" to HimeTypeThread(),
-        "lock" to HimeTypeLock(),
-        "function" to HimeTypeFunction(),
-        "any" to HimeTypeAny()
+        "int" to HimeTypeInt::make,
+        "real" to HimeTypeReal::make,
+        "num" to HimeTypeNum::make,
+        "eq" to HimeTypeEq::make,
+        "ord" to HimeTypeOrd::make,
+        "string" to HimeTypeString::make,
+        "list" to HimeTypeList::make,
+        "id" to HimeTypeId::make,
+        "bool" to HimeTypeBool::make,
+        "table" to HimeTypeTable::make,
+        "byte" to HimeTypeByte::make,
+        "word" to HimeTypeWord::make,
+        "thread" to HimeTypeThread::make,
+        "lock" to HimeTypeLock::make,
+        "function" to HimeTypeFunction::make,
+        "type" to HimeTypeType::make,
+        "any" to HimeTypeAny::make
     )
 
 fun isType(token: Token, type: HimeType) = type::class.java.isAssignableFrom(token.type::class.java)
 
-fun getType(name: String) = types[name] ?: throw HimeRuntimeException("$name type does not exist.")
+fun getType(name: String) = types[name]?.let { it() } ?: throw HimeRuntimeException("$name type does not exist.")
+open class HimeType(open val name: String) {
+    override fun toString(): String {
+        return name
+    }
+}
 
-open class HimeType(open val name: String)
-
-open class HimeTypeAny(override val name: String = "any") : HimeType(name)
+open class HimeTypeAny(override val name: String = "any") : HimeType(name) {
+    companion object {
+        fun make() = HimeTypeAny()
+    }
+}
 
 open class HimeTypeEq(override val name: String = "eq") : HimeTypeAny(name) {
+    companion object {
+        fun make() = HimeTypeEq()
+    }
     open fun eq(t1: Token, t2: Token) = (t1 == t2).toToken()
 }
 
 open class HimeTypeOrd(override val name: String = "ord") : HimeTypeEq(name) {
+    companion object {
+        fun make() = HimeTypeOrd()
+    }
     open fun greater(t1: Token, t2: Token) = FALSE
     open fun less(t1: Token, t2: Token) = FALSE
     open fun greaterOrEq(t1: Token, t2: Token) = FALSE
@@ -46,6 +60,9 @@ open class HimeTypeOrd(override val name: String = "ord") : HimeTypeEq(name) {
 }
 
 open class HimeTypeNum(override val name: String = "num") : HimeTypeOrd(name) {
+    companion object {
+        fun make() = HimeTypeNum()
+    }
     override fun greater(t1: Token, t2: Token) =
         (BigDecimal(t1.value.toString()) > BigDecimal(t2.value.toString())).toToken()
 
@@ -71,26 +88,80 @@ open class HimeTypeNum(override val name: String = "num") : HimeTypeOrd(name) {
         (BigDecimal(t1.toString()).divide(BigDecimal(t2.toString()), MathContext.DECIMAL64)).toToken()
 }
 
-open class HimeTypeInt(override val name: String = "int") : HimeTypeNum(name)
+open class HimeTypeInt(override val name: String = "int") : HimeTypeNum(name) {
+    companion object {
+        fun make() = HimeTypeInt()
+    }
+}
 
-open class HimeTypeReal(override val name: String = "real") : HimeTypeNum(name)
+open class HimeTypeReal(override val name: String = "real") : HimeTypeNum(name) {
+    companion object {
+        fun make() = HimeTypeReal()
+    }
+}
 
-open class HimeTypeString(override val name: String = "string") : HimeTypeEq(name)
+open class HimeTypeString(override val name: String = "string") : HimeTypeEq(name) {
+    companion object {
+        fun make() = HimeTypeString()
+    }
+}
 
-open class HimeTypeList(override val name: String = "list") : HimeTypeEq(name)
+open class HimeTypeList(override val name: String = "list") : HimeTypeEq(name) {
+    companion object {
+        fun make() = HimeTypeList()
+    }
+}
 
-open class HimeTypeId : HimeTypeEq("id")
+open class HimeTypeId(var type: HimeType = getType("any")) : HimeTypeEq("id") {
+    companion object {
+        fun make() = HimeTypeId()
+    }
+}
 
-open class HimeTypeTable : HimeTypeAny("table")
+open class HimeTypeTable : HimeTypeAny("table") {
+    companion object {
+        fun make() = HimeTypeTable()
+    }
+}
 
-open class HimeTypeByte : HimeTypeEq("byte")
+open class HimeTypeType : HimeTypeAny("type") {
+    companion object {
+        fun make() = HimeTypeType()
+    }
+}
 
-open class HimeTypeWord : HimeTypeEq("word")
+open class HimeTypeByte : HimeTypeEq("byte") {
+    companion object {
+        fun make() = HimeTypeByte()
+    }
+}
 
-open class HimeTypeBool : HimeTypeEq("bool")
+open class HimeTypeWord : HimeTypeEq("word") {
+    companion object {
+        fun make() = HimeTypeWord()
+    }
+}
 
-open class HimeTypeThread : HimeTypeAny("thread")
+open class HimeTypeBool : HimeTypeEq("bool") {
+    companion object {
+        fun make() = HimeTypeBool()
+    }
+}
 
-open class HimeTypeLock : HimeTypeAny("lock")
+open class HimeTypeThread : HimeTypeAny("thread") {
+    companion object {
+        fun make() = HimeTypeThread()
+    }
+}
 
-open class HimeTypeFunction : HimeTypeAny("function")
+open class HimeTypeLock : HimeTypeAny("lock") {
+    companion object {
+        fun make() = HimeTypeLock()
+    }
+}
+
+open class HimeTypeFunction : HimeTypeAny("function") {
+    companion object {
+        fun make() = HimeTypeFunction()
+    }
+}
