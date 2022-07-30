@@ -1,10 +1,11 @@
 package org.hime.core
 
 import org.hime.cast
+import org.hime.lang.type.getType
+import org.hime.lang.type.isType
 import org.hime.parse.ASTNode
 import org.hime.parse.AstType
 import org.hime.parse.Token
-import org.hime.parse.Type
 
 /**
  * 求值器
@@ -15,7 +16,7 @@ import org.hime.parse.Type
 fun eval(ast: ASTNode, symbol: SymbolTable): Token {
     var temp = ast.tok
     while (true)
-        temp = if (temp.type == Type.ID && symbol.contains(cast<String>(temp.value)))
+        temp = if (isType(temp, getType("id")) && symbol.contains(cast<String>(temp.value)))
             symbol.get(cast<String>(temp.value))
         else
             break
@@ -23,7 +24,7 @@ fun eval(ast: ASTNode, symbol: SymbolTable): Token {
     if (ast.isEmpty() && ast.type != AstType.FUNCTION)
         return ast.tok
     // 如果为函数
-    if (ast.tok.type == Type.FUNCTION) {
+    if (isType(ast.tok, getType("function"))) {
         ast.tok = cast<HimeFunction>(ast.tok.value).call(ast, symbol)
         ast.clear()
     }

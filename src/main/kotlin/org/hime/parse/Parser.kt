@@ -1,6 +1,7 @@
 package org.hime.parse
 
 import org.hime.lang.himeAssertParser
+import org.hime.lang.type.getType
 import java.util.*
 
 /**
@@ -20,8 +21,8 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
             // State 1: 考虑开头
             if (state == 1) {
                 // 如果组合式为()
-                if (tokens[index].type == Type.RB) {
-                    temp = ASTNode.EMPTY
+                if (tokens[index] == RB) {
+                    temp = ASTNode.AST_EMPTY
                     // 如果peek失败，则会导致运行时错误
                     himeAssertParser(stack.peek() != null) { "peek eq null." }
                     stack.push(temp)
@@ -30,8 +31,8 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     continue
                 }
                 // 如果运算符为组合式，则使用apply进行替换
-                if (tokens[index].type == Type.LB)
-                    tokens.add(index, Token(Type.ID, "apply"))
+                if (tokens[index] == LB)
+                    tokens.add(index, Token(getType("id"), "apply"))
                 temp = ASTNode(tokens[index])
                 stack.push(temp)
                 asts.add(temp)
@@ -39,8 +40,8 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                 // State 2: 非开头
             } else if (state == 2) {
                 // 如果组合式为()
-                if (tokens[index].type == Type.RB) {
-                    temp = ASTNode.EMPTY
+                if (tokens[index] == RB) {
+                    temp = ASTNode.AST_EMPTY
                     // 如果peek失败，则会导致运行时错误
                     himeAssertParser(stack.peek() != null) { "peek eq null." }
                     stack.peek().add(temp)
@@ -49,19 +50,19 @@ fun parser(lexer: List<List<Token>>): List<ASTNode> {
                     continue
                 }
                 // 如果运算符为组合式，则使用apply进行替换
-                if (tokens[index].type == Type.LB)
-                    tokens.add(index, Token(Type.ID, "apply"))
+                if (tokens[index] == LB)
+                    tokens.add(index, Token(getType("id"), "apply"))
                 temp = ASTNode(tokens[index])
                 himeAssertParser(stack.peek() != null) { "peek eq null." }
                 stack.peek().add(temp)
                 stack.push(temp)
                 state = -1
-            } else if (tokens[index].type == Type.LB)
+            } else if (tokens[index] == LB)
             // 根据堆栈是否为空切换状态
                 state = if (stack.isEmpty()) 1 else 2
-            else if (tokens[index].type == Type.RB) {
+            else if (tokens[index] == RB) {
                 // 考虑类似类似(def (<function-name>) <body*>)一类的情况
-                if (index >= 2 && tokens[index - 2].type == Type.LB) {
+                if (index >= 2 && tokens[index - 2] == LB) {
                     himeAssertParser(stack.peek() != null) { "peek eq null." }
                     stack.peek().type = AstType.FUNCTION
                 }

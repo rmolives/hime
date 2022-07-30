@@ -1,5 +1,6 @@
 package org.hime.parse
 
+import org.hime.lang.type.getType
 import org.hime.toToken
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -181,7 +182,7 @@ fun lexer(code: String): List<List<Token>> {
                     builder.append(expression[index])
                     ++index
                 }
-                tokens.add(Token(Type.ID, builder.toString()))
+                tokens.add(Token(getType("id"), builder.toString()))
                 continue
             }
         }

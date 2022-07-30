@@ -123,7 +123,7 @@ class ASTNode {
 
     // It resembles static variable.
     companion object {
-        val EMPTY = ASTNode(Token(Type.EMPTY, "empty"), AstType.FUNCTION)     // 空的抽象语法树
+        val AST_EMPTY = ASTNode(EMPTY, AstType.FUNCTION)     // 空的抽象语法树
     }
 }
 

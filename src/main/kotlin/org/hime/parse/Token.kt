@@ -5,25 +5,28 @@ import org.hime.core.FuncType
 import org.hime.core.HimeFunction
 import org.hime.core.SymbolTable
 import org.hime.core.eval
-import org.hime.parse.Type.*
+import org.hime.lang.type.HimeType
+import org.hime.lang.type.getType
 import org.hime.toToken
 import java.math.BigDecimal
 import java.util.*
 
-val TRUE = Token(BOOL, true)
-val FALSE = Token(BOOL, false)
-val NIL = Token(Type.NIL, "nil")
+val TRUE = Token(getType("bool"), true)
+val FALSE = Token(getType("bool"), false)
+val NIL = Token(getType("word"), "nil")
 
-val EMPTY_STREAM = Token(Type.EMPTY_STREAM, "empty-stream")
 
-val LB = Token(Type.LB, "(")
-val RB = Token(Type.RB, ")")
+val EMPTY = Token(getType("word"), "empty")
+val EMPTY_STREAM = Token(getType("word"), "empty-stream")
+
+val LB = Token(getType("id"), "(")
+val RB = Token(getType("id"), ")")
 
 /**
  * @param type  类型
  * @param value 内容
  */
-class Token(val type: Type, val value: Any) {
+class Token(val type: HimeType, val value: Any) {
     override fun equals(other: Any?): Boolean {
         return other.hashCode() == this.hashCode()
     }
@@ -34,7 +37,7 @@ class Token(val type: Type, val value: Any) {
 
     override fun toString(): String {
         return when (this.type) {
-            REAL -> cast<BigDecimal>(this.value).toPlainString()
+            getType("real") -> cast<BigDecimal>(this.value).toPlainString()
             else -> this.value.toString()
         }
     }
@@ -49,7 +52,7 @@ class Token(val type: Type, val value: Any) {
  */
 fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: SymbolTable): Token {
     return Token(
-        FUNCTION,
+        getType("function"),
         HimeFunction(FuncType.USER_DEFINED, fun(args: List<Token>): Token {
             // 判断参数的数量
             assert(args.size >= parameters.size)
@@ -73,7 +76,7 @@ fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol:
  */
 fun variableHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: SymbolTable): Token {
     return Token(
-        FUNCTION,
+        getType("function"),
         HimeFunction(FuncType.USER_DEFINED, fun(args: List<Token>): Token {
             // 判断参数的数量
             assert(args.size >= parameters.size - 1)
@@ -90,13 +93,4 @@ fun variableHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: 
                 result = eval(astNode.copy(), newSymbol)
             return result
         }, listOf(), true))
-}
-
-enum class Type {
-    UNKNOWN,
-    LB, RB, EMPTY, NIL,
-    ID, BOOL, STR, LIST, BYTE, TABLE,
-    NUM, INT, REAL, AST, EMPTY_STREAM,
-    FUNCTION,
-    THREAD, LOCK;
 }

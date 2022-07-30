@@ -1,6 +1,6 @@
 package org.hime
 
-import org.hime.parse.Type
+import org.hime.parse.NIL
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.file.Files
@@ -64,7 +64,7 @@ fun repl() {
         if (flag == 0) {
             val result = call(codeBuilder.toString(), symbolTable)
             codeBuilder = StringBuilder()
-            if (result.type != Type.NIL)
+            if (result != NIL)
                 println(result.toString())
         }
         size = flag
