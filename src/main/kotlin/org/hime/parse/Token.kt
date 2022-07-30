@@ -15,7 +15,6 @@ val TRUE = Token(getType("bool"), true)
 val FALSE = Token(getType("bool"), false)
 val NIL = Token(getType("word"), "nil")
 
-
 val EMPTY = Token(getType("word"), "empty")
 val EMPTY_STREAM = Token(getType("word"), "empty-stream")
 
