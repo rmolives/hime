@@ -1,6 +1,7 @@
 package org.hime
 
 import org.hime.core.HimeFunction
+import org.hime.lang.HimeType
 import org.hime.lang.getType
 import org.hime.parse.NIL
 import org.hime.parse.Token
@@ -15,6 +16,7 @@ import java.util.concurrent.locks.ReentrantLock
 fun Any.toToken(): Token {
     return when (this) {
         is Token -> this
+        is HimeType -> Token(getType("type"), this)
         is Float -> this.toDouble().toToken()
         is BigInteger -> Token(getType("int"), this)
         is BigDecimal -> if (this.signum() == 0 || this.scale() <= 0 || this.stripTrailingZeros().scale() <= 0)
