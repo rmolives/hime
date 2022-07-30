@@ -112,7 +112,7 @@ open class HimeTypeList(override val name: String = "list") : HimeTypeEq(name) {
     }
 }
 
-open class HimeTypeId(var type: HimeType = getType("any")) : HimeTypeEq("id") {
+open class HimeTypeId : HimeTypeEq("id") {
     companion object {
         fun make() = HimeTypeId()
     }
