@@ -1,8 +1,8 @@
 package org.hime.core
 
 import org.hime.cast
-import org.hime.lang.type.getType
-import org.hime.lang.type.isType
+import org.hime.lang.getType
+import org.hime.lang.isType
 import org.hime.parse.ASTNode
 import org.hime.parse.AstType
 import org.hime.parse.Token

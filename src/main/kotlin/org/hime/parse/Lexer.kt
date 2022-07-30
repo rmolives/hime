@@ -1,6 +1,6 @@
 package org.hime.parse
 
-import org.hime.lang.type.getType
+import org.hime.lang.getType
 import org.hime.toToken
 import java.math.BigDecimal
 import java.math.BigInteger

@@ -1,7 +1,7 @@
 package org.hime
 
 import org.hime.core.HimeFunction
-import org.hime.lang.type.getType
+import org.hime.lang.getType
 import org.hime.parse.NIL
 import org.hime.parse.Token
 import java.math.BigDecimal

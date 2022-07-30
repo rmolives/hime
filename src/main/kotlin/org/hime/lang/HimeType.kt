@@ -1,6 +1,5 @@
-package org.hime.lang.type
+package org.hime.lang
 
-import org.hime.lang.HimeRuntimeException
 import org.hime.parse.FALSE
 import org.hime.parse.Token
 import org.hime.toToken

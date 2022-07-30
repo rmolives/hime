@@ -1,7 +1,7 @@
 package org.hime.parse
 
 import org.hime.lang.himeAssertParser
-import org.hime.lang.type.getType
+import org.hime.lang.getType
 import java.util.*
 
 /**

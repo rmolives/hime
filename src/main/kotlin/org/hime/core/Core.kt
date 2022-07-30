@@ -7,7 +7,7 @@ import org.hime.core.FuncType.BUILT_IN
 import org.hime.core.FuncType.STATIC
 import org.hime.lang.HimeRuntimeException
 import org.hime.lang.himeAssertRuntime
-import org.hime.lang.type.*
+import org.hime.lang.*
 import org.hime.parse.*
 import org.hime.toToken
 import java.io.File

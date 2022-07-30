@@ -5,8 +5,8 @@ import org.hime.core.FuncType
 import org.hime.core.HimeFunction
 import org.hime.core.SymbolTable
 import org.hime.core.eval
-import org.hime.lang.type.HimeType
-import org.hime.lang.type.getType
+import org.hime.lang.HimeType
+import org.hime.lang.getType
 import org.hime.toToken
 import java.math.BigDecimal
 import java.util.*
