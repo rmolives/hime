@@ -226,7 +226,7 @@ val core = SymbolTable(
         }, listOf(getType("any")), true)).toToken(),
         "type" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].type.toToken()
-        }, listOf(getType("any")), true)).toToken(),
+        }, listOf(getType("any")), false)).toToken(),
         // 局部变量绑定
         "let" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             himeAssertRuntime(ast.isNotEmpty()) { "not enough arguments." }
