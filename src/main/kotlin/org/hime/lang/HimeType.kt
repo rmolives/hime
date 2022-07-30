@@ -124,7 +124,7 @@ open class HimeTypeTable : HimeTypeAny("table") {
     }
 }
 
-open class HimeTypeType : HimeTypeAny("type") {
+open class HimeTypeType : HimeTypeEq("type") {
     companion object {
         fun make() = HimeTypeType()
     }
