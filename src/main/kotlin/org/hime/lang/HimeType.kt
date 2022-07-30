@@ -69,7 +69,7 @@ open class HimeTypeNum(override val name: String = "num") : HimeTypeOrd(name) {
         (BigDecimal(t1.toString()).multiply(BigDecimal(t2.toString()))).toToken()
 
     open fun divide(t1: Token, t2: Token) =
-        (BigDecimal(t1.toString()).divide(BigDecimal(t2.toString(), MathContext.DECIMAL64))).toToken()
+        (BigDecimal(t1.toString()).divide(BigDecimal(t2.toString()), MathContext.DECIMAL64)).toToken()
 }
 
 open class HimeTypeInt(override val name: String = "int") : HimeTypeNum(name)
