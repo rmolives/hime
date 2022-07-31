@@ -706,7 +706,7 @@ val core = SymbolTable(
             var token = args[0]
             for (index in 1 until args.size) {
                 himeAssertRuntime(isType(args[index], getType("ord"))) { "${args[1]} is not ord." }
-                if (cast<Boolean>(cast<HimeTypeOrd>(token.type).lessOrEq(token, args[index]).value))
+                if (cast<HimeTypeOrd>(token.type).lessOrEq(token, args[index]))
                     return FALSE
                 token = args[index]
             }
@@ -717,7 +717,7 @@ val core = SymbolTable(
             var token = args[0]
             for (index in 1 until args.size) {
                 himeAssertRuntime(isType(args[index], getType("ord"))) { "${args[1]} is not ord." }
-                if (cast<Boolean>(cast<HimeTypeOrd>(token.type).greaterOrEq(token, args[index]).value))
+                if (cast<HimeTypeOrd>(token.type).greaterOrEq(token, args[index]))
                     return FALSE
                 token = args[index]
             }
@@ -728,7 +728,7 @@ val core = SymbolTable(
             var token = args[0]
             for (index in 1 until args.size) {
                 himeAssertRuntime(isType(args[index], getType("ord"))) { "${args[1]} is not ord." }
-                if (cast<Boolean>(cast<HimeTypeOrd>(token.type).less(token, args[index]).value))
+                if (cast<HimeTypeOrd>(token.type).less(token, args[index]))
                     return FALSE
                 token = args[index]
             }
@@ -739,7 +739,7 @@ val core = SymbolTable(
             var token = args[0]
             for (index in 1 until args.size) {
                 himeAssertRuntime(isType(args[index], getType("ord"))) { "${args[1]} is not ord." }
-                if (cast<Boolean>(cast<HimeTypeOrd>(token.type).greater(token, args[index]).value))
+                if (cast<HimeTypeOrd>(token.type).greater(token, args[index]))
                     return FALSE
                 token = args[index]
             }
