@@ -76,6 +76,7 @@ fun structureHimeFunction(
 /**
  * 建立变长
  * @param parameters 形式参数
+ * @param paramTypes 类型
  * @param asts      一系列组合式
  * @param symbol    符号表
  * @return          返回Hime_HimeFunction
