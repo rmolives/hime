@@ -103,7 +103,7 @@ open class HimeTypeInt(override val name: String = "int") : HimeTypeNum(name) {
     }
 }
 
-open class HimeTypeReal(override val name: String = "real") : HimeTypeNum(name) {
+open class HimeTypeReal(override val name: String = "real") : HimeTypeInt(name) {
     companion object {
         fun make() = HimeTypeReal()
     }
