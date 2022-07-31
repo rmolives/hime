@@ -5,6 +5,7 @@ import org.hime.parse.FALSE
 import org.hime.parse.Token
 import org.hime.toToken
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.MathContext
 
 val types: MutableMap<String, () -> HimeType> =
@@ -55,6 +56,7 @@ open class HimeTypeEq(override val name: String = "eq") : HimeTypeAny(name) {
     companion object {
         fun make() = HimeTypeEq()
     }
+
     open fun eq(t1: Token, t2: Token) = (t1 == t2).toToken()
 }
 
@@ -62,6 +64,7 @@ open class HimeTypeOrd(override val name: String = "ord") : HimeTypeEq(name) {
     companion object {
         fun make() = HimeTypeOrd()
     }
+
     open fun greater(t1: Token, t2: Token) = FALSE
     open fun less(t1: Token, t2: Token) = FALSE
     open fun greaterOrEq(t1: Token, t2: Token) = FALSE
@@ -72,6 +75,7 @@ open class HimeTypeNum(override val name: String = "num") : HimeTypeOrd(name) {
     companion object {
         fun make() = HimeTypeNum()
     }
+
     override fun greater(t1: Token, t2: Token) =
         (BigDecimal(t1.value.toString()) > BigDecimal(t2.value.toString())).toToken()
 
@@ -84,29 +88,46 @@ open class HimeTypeNum(override val name: String = "num") : HimeTypeOrd(name) {
     override fun lessOrEq(t1: Token, t2: Token) =
         (BigDecimal(t1.value.toString()) <= BigDecimal(t2.value.toString())).toToken()
 
-    open fun add(t1: Token, t2: Token) =
-        (BigDecimal(t1.toString()).add(BigDecimal(t2.toString()))).toToken()
-
-    open fun subtract(t1: Token, t2: Token) =
-        (BigDecimal(t1.toString()).subtract(BigDecimal(t2.toString()))).toToken()
-
-    open fun multiply(t1: Token, t2: Token) =
-        (BigDecimal(t1.toString()).multiply(BigDecimal(t2.toString()))).toToken()
-
-    open fun divide(t1: Token, t2: Token) =
-        (BigDecimal(t1.toString()).divide(BigDecimal(t2.toString()), MathContext.DECIMAL64)).toToken()
+    open fun add(t1: Token, t2: Token) = BigInteger.ZERO.toToken()
+    open fun subtract(t1: Token, t2: Token) = BigInteger.ZERO.toToken()
+    open fun multiply(t1: Token, t2: Token) = BigInteger.ZERO.toToken()
+    open fun divide(t1: Token, t2: Token) = BigInteger.ZERO.toToken()
 }
 
 open class HimeTypeReal(override val name: String = "real") : HimeTypeNum(name) {
     companion object {
         fun make() = HimeTypeReal()
     }
+
+    override fun add(t1: Token, t2: Token) =
+        (BigDecimal(t1.toString()).add(BigDecimal(t2.toString()))).toToken()
+
+    override fun subtract(t1: Token, t2: Token) =
+        (BigDecimal(t1.toString()).subtract(BigDecimal(t2.toString()))).toToken()
+
+    override fun multiply(t1: Token, t2: Token) =
+        (BigDecimal(t1.toString()).multiply(BigDecimal(t2.toString()))).toToken()
+
+    override fun divide(t1: Token, t2: Token) =
+        (BigDecimal(t1.toString()).divide(BigDecimal(t2.toString()), MathContext.DECIMAL64)).toToken()
 }
 
 open class HimeTypeInt(override val name: String = "int") : HimeTypeReal(name) {
     companion object {
         fun make() = HimeTypeInt()
     }
+
+    override fun add(t1: Token, t2: Token) =
+        (BigInteger(t1.toString()).add(BigInteger(t2.toString()))).toToken()
+
+    override fun subtract(t1: Token, t2: Token) =
+        (BigInteger(t1.toString()).subtract(BigInteger(t2.toString()))).toToken()
+
+    override fun multiply(t1: Token, t2: Token) =
+        (BigInteger(t1.toString()).multiply(BigInteger(t2.toString()))).toToken()
+
+    override fun divide(t1: Token, t2: Token) =
+        (BigDecimal(t1.toString()).divide(BigDecimal(t2.toString()), MathContext.DECIMAL64)).toToken()
 }
 
 open class HimeTypeString(override val name: String = "string") : HimeTypeEq(name) {
