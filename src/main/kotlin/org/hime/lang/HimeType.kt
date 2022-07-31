@@ -97,15 +97,15 @@ open class HimeTypeNum(override val name: String = "num") : HimeTypeOrd(name) {
         (BigDecimal(t1.toString()).divide(BigDecimal(t2.toString()), MathContext.DECIMAL64)).toToken()
 }
 
-open class HimeTypeInt(override val name: String = "int") : HimeTypeNum(name) {
+open class HimeTypeReal(override val name: String = "real") : HimeTypeNum(name) {
     companion object {
-        fun make() = HimeTypeInt()
+        fun make() = HimeTypeReal()
     }
 }
 
-open class HimeTypeReal(override val name: String = "real") : HimeTypeInt(name) {
+open class HimeTypeInt(override val name: String = "int") : HimeTypeReal(name) {
     companion object {
-        fun make() = HimeTypeReal()
+        fun make() = HimeTypeInt()
     }
 }
 
