@@ -187,9 +187,9 @@ fun lexer(code: String): List<List<Token>> {
                 val type = getType("id")
                 val s = builder.toString()
                 if (s.contains("::")) {
-                    val sp = s.split("::")
-                    cast<HimeTypeId>(type).type = getType(sp[1])
-                    tokens.add(Token(type, sp[0]))
+                    val inOf = s.indexOf("::")
+                    cast<HimeTypeId>(type).type = getType(s.substring(inOf + 1))
+                    tokens.add(Token(type, s.substring(0, inOf)))
                 } else
                     tokens.add(Token(type, builder.toString()))
                 continue
