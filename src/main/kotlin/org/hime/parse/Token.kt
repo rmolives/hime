@@ -45,11 +45,17 @@ class Token(val type: HimeType, val value: Any) {
 /**
  * 建立过程
  * @param parameters 形式参数
+ * @param paramTypes 类型
  * @param asts      一系列组合式
  * @param symbol    符号表
  * @return          返回Hime_HimeFunction
  */
-fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: SymbolTable): Token {
+fun structureHimeFunction(
+    parameters: List<String>,
+    paramTypes: List<HimeType>,
+    asts: List<ASTNode>,
+    symbol: SymbolTable
+): Token {
     return Token(
         getType("function"),
         HimeFunction(FuncType.USER_DEFINED, fun(args: List<Token>): Token {
@@ -63,7 +69,8 @@ fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol:
             for (astNode in asts)
                 result = eval(astNode.copy(), newSymbol)
             return result
-        }, parameters.size))
+        }, paramTypes, false)
+    )
 }
 
 /**
@@ -73,7 +80,12 @@ fun structureHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol:
  * @param symbol    符号表
  * @return          返回Hime_HimeFunction
  */
-fun variableHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: SymbolTable): Token {
+fun variableHimeFunction(
+    parameters: List<String>,
+    paramTypes: List<HimeType>,
+    asts: List<ASTNode>,
+    symbol: SymbolTable
+): Token {
     return Token(
         getType("function"),
         HimeFunction(FuncType.USER_DEFINED, fun(args: List<Token>): Token {
@@ -91,5 +103,6 @@ fun variableHimeFunction(parameters: List<String>, asts: List<ASTNode>, symbol: 
             for (astNode in asts)
                 result = eval(astNode.copy(), newSymbol)
             return result
-        }, listOf(), true))
+        }, paramTypes, true)
+    )
 }

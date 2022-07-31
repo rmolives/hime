@@ -20,6 +20,7 @@ import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.collections.ArrayList
 import kotlin.system.exitProcess
 
 val core = SymbolTable(
@@ -84,7 +85,10 @@ val core = SymbolTable(
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
             // 建立过程，类似(delay t2*)
-            return arrayListOf(t1, structureHimeFunction(arrayListOf(), asts, symbol.createChild())).toToken()
+            return arrayListOf(
+                t1,
+                structureHimeFunction(arrayListOf(), arrayListOf(), asts, symbol.createChild())
+            ).toToken()
         })).toToken(),
         "stream-car" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             // 因为(cons-stream t1 t2)的t1已经被求值，所以就直接返回
@@ -213,7 +217,7 @@ val core = SymbolTable(
             val asts = ArrayList<ASTNode>()
             for (i in 0 until ast.size())
                 asts.add(ast[i].copy())
-            return structureHimeFunction(arrayListOf(), asts, symbol.createChild())
+            return structureHimeFunction(arrayListOf(), arrayListOf(), asts, symbol.createChild())
         })).toToken(),
         // (force d) => (d)
         "force" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
@@ -236,19 +240,26 @@ val core = SymbolTable(
             for (node in ast[0].children) {
                 if (node.tok.toString() == "apply") {
                     val parameters = ArrayList<String>()
-                    for (i in 0 until node[0].size()) {
-                        himeAssertRuntime(isType(node[0][i].tok, getType("id"))) { "${node[0][i].tok} is not id." }
-                        parameters.add(node[0][i].tok.toString())
+                    val paramTypes = ArrayList<HimeType>()
+                    for (i in 0 until ast[0].size()) {
+                        himeAssertRuntime(isType(ast[0][i].tok, getType("id"))) { "${ast[0][i].tok} is not id." }
+                        parameters.add(ast[0][i].tok.toString())
+                        paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                     }
                     val asts = ArrayList<ASTNode>()
                     for (i in 1 until node.size())
                         asts.add(node[i].copy())
                     // 这里采用原环境的继承，因为let不可互相访问
-                    newSymbol.put(node[0].tok.toString(), structureHimeFunction(parameters, asts, symbol.createChild()))
+                    newSymbol.put(
+                        node[0].tok.toString(),
+                        structureHimeFunction(parameters, paramTypes, asts, symbol.createChild())
+                    )
                 } else {
                     var value = NIL
                     for (e in node.children)
                         value = eval(e.copy(), symbol.createChild())
+                    val type = cast<HimeTypeId>(node.tok.type).type
+                    himeAssertRuntime(isType(value, type)) { "$value is not ${type.name}." }
                     newSymbol.put(node.tok.toString(), value)
                 }
             }
@@ -264,20 +275,26 @@ val core = SymbolTable(
             for (node in ast[0].children) {
                 if (node.tok.toString() == "apply") {
                     val parameters = ArrayList<String>()
-                    for (i in 0 until node[0].size())
-                        parameters.add(node[0][i].tok.toString())
+                    val paramTypes = ArrayList<HimeType>()
+                    for (i in 0 until ast[0].size()) {
+                        himeAssertRuntime(isType(ast[0][i].tok, getType("id"))) { "${ast[0][i].tok} is not id." }
+                        parameters.add(ast[0][i].tok.toString())
+                        paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
+                    }
                     val asts = ArrayList<ASTNode>()
                     for (i in 1 until node.size())
                         asts.add(node[i].copy())
                     // 这里采用新环境的继承，因为let*可互相访问
                     newSymbol.put(
                         node[0].tok.toString(),
-                        structureHimeFunction(parameters, asts, newSymbol.createChild())
+                        structureHimeFunction(parameters, paramTypes, asts, newSymbol.createChild())
                     )
                 } else {
                     var value = NIL
                     for (e in node.children)
                         value = eval(e.copy(), newSymbol.createChild())
+                    val type = cast<HimeTypeId>(node.tok.type).type
+                    himeAssertRuntime(isType(value, type)) { "$value is not ${type.name}." }
                     newSymbol.put(node.tok.toString(), value)
                 }
             }
@@ -294,20 +311,26 @@ val core = SymbolTable(
                 var result = NIL
                 for (i in 1 until ast.size())
                     result = eval(ast[i], symbol.createChild())
+                val type = cast<HimeTypeId>(ast[0].tok.type).type
+                himeAssertRuntime(isType(result, type)) { "$result is not ${type.name}." }
                 symbol.put(ast[0].tok.toString(), result)
             }
             // 如果是(def (function-name p*) e)
             else {
                 val parameters = ArrayList<String>()
-                for (i in 0 until ast[0].size())
+                val paramTypes = ArrayList<HimeType>()
+                for (i in 0 until ast[0].size()) {
+                    himeAssertRuntime(isType(ast[0][i].tok, getType("id"))) { "${ast[0][i].tok} is not id." }
                     parameters.add(ast[0][i].tok.toString())
+                    paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
+                }
                 val asts = ArrayList<ASTNode>()
                 // 将ast都复制一遍并存到asts中
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
                 symbol.put(
                     ast[0].tok.toString(),
-                    structureHimeFunction(parameters, asts, symbol.createChild())
+                    structureHimeFunction(parameters, paramTypes, asts, symbol.createChild())
                 )
             }
             return NIL
@@ -318,15 +341,20 @@ val core = SymbolTable(
             himeAssertRuntime(!symbol.table.containsKey(ast[0].tok.toString())) { "repeat binding ${ast[0].tok}." }
             himeAssertRuntime(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION) { "format error." }
             val parameters = ArrayList<String>()
-            for (i in 0 until ast[0].size())
+            val paramTypes = ArrayList<HimeType>()
+            for (i in 0 until ast[0].size()) {
+                himeAssertRuntime(isType(ast[0][i].tok, getType("id"))) { "${ast[0][i].tok} is not id." }
                 parameters.add(ast[0][i].tok.toString())
+                if (i != ast[0].size() - 1)
+                    paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
+            }
             val asts = ArrayList<ASTNode>()
             // 将ast都复制一遍并存到asts中
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
             symbol.put(
                 ast[0].tok.toString(),
-                variableHimeFunction(parameters, asts, symbol.createChild())
+                variableHimeFunction(parameters, paramTypes, asts, symbol.createChild())
             )
             return NIL
         })).toToken(),
@@ -350,14 +378,18 @@ val core = SymbolTable(
                 symbol.set(ast[0].tok.toString(), result)
             } else {
                 // 如果是(set (function-name p*) e)
-                val args = ArrayList<String>()
-                for (i in 0 until ast[0].size())
-                    args.add(ast[0][i].tok.toString())
+                val parameters = ArrayList<String>()
+                val paramTypes = ArrayList<HimeType>()
+                for (i in 0 until ast[0].size()) {
+                    himeAssertRuntime(isType(ast[0][i].tok, getType("id"))) { "${ast[0][i].tok} is not id." }
+                    parameters.add(ast[0][i].tok.toString())
+                    paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
+                }
                 val asts = ArrayList<ASTNode>()
                 // 将ast都复制一遍并存到asts中
                 for (i in 1 until ast.size())
                     asts.add(ast[i].copy())
-                symbol.set(ast[0].tok.toString(), structureHimeFunction(args, asts, symbol))
+                symbol.set(ast[0].tok.toString(), structureHimeFunction(parameters, paramTypes, asts, symbol))
             }
             return NIL
         })).toToken(),
@@ -366,32 +398,43 @@ val core = SymbolTable(
             himeAssertRuntime(symbol.contains(ast[0].tok.toString())) { "environment does not contain ${ast[0].tok} binding." }
             himeAssertRuntime(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION) { "format error." }
             val parameters = ArrayList<String>()
-            for (i in 0 until ast[0].size())
+            val paramTypes = ArrayList<HimeType>()
+            for (i in 0 until ast[0].size()) {
+                himeAssertRuntime(isType(ast[0][i].tok, getType("id"))) { "${ast[0][i].tok} is not id." }
                 parameters.add(ast[0][i].tok.toString())
+                if (i != ast[0].size() - 1)
+                    paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
+            }
             val asts = ArrayList<ASTNode>()
             // 将ast都复制一遍并存到asts中
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
             symbol.set(
                 ast[0].tok.toString(),
-                variableHimeFunction(parameters, asts, symbol.createChild())
+                variableHimeFunction(parameters, paramTypes, asts, symbol.createChild())
             )
             return NIL
         })).toToken(),
         "lambda" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
             val parameters = ArrayList<String>()
+            val paramTypes = ArrayList<HimeType>()
             // 判断非(lambda () e)
             if (ast[0].tok != EMPTY) {
+                himeAssertRuntime(isType(ast[0].tok, getType("id"))) { "${ast[0].tok} is not id." }
                 parameters.add(ast[0].tok.toString())
-                for (i in 0 until ast[0].size())
+                paramTypes.add(cast<HimeTypeId>(ast[0].tok.type).type)
+                for (i in 0 until ast[0].size()) {
+                    himeAssertRuntime(isType(ast[0][i].tok, getType("id"))) { "${ast[0][i].tok} is not id." }
                     parameters.add(ast[0][i].tok.toString())
+                    paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
+                }
             }
             val asts = ArrayList<ASTNode>()
             // 将ast都复制一遍并存到asts中
             for (i in 1 until ast.size())
                 asts.add(ast[i].copy())
-            return structureHimeFunction(parameters, asts, symbol.createChild())
+            return structureHimeFunction(parameters, paramTypes, asts, symbol.createChild())
         })).toToken(),
         "if" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
@@ -948,7 +991,7 @@ val core = SymbolTable(
                     return rsc(func, n - 1, parameters)
                 }, 1)).toToken()
             }
-            return rsc(args[0], args[1].value.toString().toInt(), ArrayList<Token>())
+            return rsc(args[0], args[1].value.toString().toInt(), ArrayList())
         }, listOf(getType("function"), getType("int")), false)).toToken(),
         "maybe" to (HimeFunction(BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
             val parameters = ArrayList<Token>()

@@ -1,5 +1,7 @@
 package org.hime.parse
 
+import org.hime.cast
+import org.hime.lang.HimeTypeId
 import org.hime.lang.getType
 import org.hime.toToken
 import java.math.BigDecimal
@@ -182,7 +184,14 @@ fun lexer(code: String): List<List<Token>> {
                     builder.append(expression[index])
                     ++index
                 }
-                tokens.add(Token(getType("id"), builder.toString()))
+                val type = getType("id")
+                val s = builder.toString()
+                if (s.contains("::")) {
+                    val sp = s.split("::")
+                    cast<HimeTypeId>(type).type = getType(sp[1])
+                    tokens.add(Token(type, sp[0]))
+                } else
+                    tokens.add(Token(type, builder.toString()))
                 continue
             }
         }
