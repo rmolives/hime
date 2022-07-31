@@ -375,6 +375,8 @@ val core = SymbolTable(
                 var result = NIL
                 for (i in 1 until ast.size())
                     result = eval(ast[i], symbol.createChild())
+                val type = cast<HimeTypeId>(ast[0].tok.type).type
+                himeAssertRuntime(isType(result, type)) { "$result is not ${type.name}." }
                 symbol.set(ast[0].tok.toString(), result)
             } else {
                 // 如果是(set (function-name p*) e)
