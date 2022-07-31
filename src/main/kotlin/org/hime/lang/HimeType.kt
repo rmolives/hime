@@ -30,6 +30,7 @@ val types: MutableMap<String, () -> HimeType> =
 fun isType(token: Token, type: HimeType) = type::class.java.isAssignableFrom(token.type::class.java)
 
 fun getType(name: String) = types[name]?.let { it() } ?: throw HimeRuntimeException("$name type does not exist.")
+
 open class HimeType(open val name: String) {
     override fun toString(): String {
         return name
