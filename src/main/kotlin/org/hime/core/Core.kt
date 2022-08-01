@@ -677,7 +677,7 @@ val core = SymbolTable(
             for (i in args.indices) {
                 himeAssertRuntime(isType(args[i], getType("eq"))) { "${args[i]} is not eq." }
                 for (j in args.indices) {
-                    himeAssertRuntime(isType(args[i], getType("eq"))) { "${args[j]} is not eq." }
+                    himeAssertRuntime(isType(args[j], getType("eq"))) { "${args[j]} is not eq." }
                     if (i != j && !cast<Boolean>(cast<HimeTypeEq>(args[i].type).eq(args[i], args[j])))
                         return FALSE
                 }
@@ -689,7 +689,7 @@ val core = SymbolTable(
             for (i in args.indices) {
                 himeAssertRuntime(isType(args[i], getType("ord"))) { "${args[i]} is not eq." }
                 for (j in args.indices) {
-                    himeAssertRuntime(isType(args[i], getType("ord"))) { "${args[j]} is not eq." }
+                    himeAssertRuntime(isType(args[j], getType("ord"))) { "${args[j]} is not eq." }
                     if (i != j && cast<Boolean>(cast<HimeTypeEq>(args[i].type).eq(args[i], args[j])))
                         return FALSE
                 }
