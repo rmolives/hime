@@ -82,7 +82,7 @@ class Env {
         return findOrdFunc(t1, "lessOrEq")(t1, t2)
     }
 
-    fun findOrdFunc(t1: Token, funcName: String, type: HimeType = getType("ord")): (Token, Token) -> Boolean {
+    private fun findOrdFunc(t1: Token, funcName: String, type: HimeType = getType("ord")): (Token, Token) -> Boolean {
         for (child in type.children) {
             if (isType(t1, child) && ords.containsKey(child))
                 return findOrdFunc(t1, funcName, child)
