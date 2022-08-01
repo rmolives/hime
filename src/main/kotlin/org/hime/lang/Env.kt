@@ -46,8 +46,16 @@ class Env {
     }
 
     private fun findOpFunc(t1: Token, funcName: String, type: HimeType = getType("op")): (Token, Token) -> Token {
+        fun findOpChild(type: HimeType): Boolean {
+            if (ops.containsKey(type))
+                return true
+            for (child in type.children)
+                if (findOpChild(child))
+                    return true
+            return false
+        }
         for (child in type.children) {
-            if (isType(t1, child) && ops.containsKey(child))
+            if (isType(t1, child) && findOpChild(child))
                 return findOpFunc(t1, funcName, child)
         }
         return if (ops[type] != null) ops[type]?.get(funcName) ?: fun(_: Token, _: Token) =
@@ -59,8 +67,16 @@ class Env {
     }
 
     private fun findEqFunc(t1: Token, type: HimeType = getType("eq")): (Token, Token) -> Boolean {
+        fun findEqChild(type: HimeType): Boolean {
+            if (eqs.containsKey(type))
+                return true
+            for (child in type.children)
+                if (findEqChild(child))
+                    return true
+            return false
+        }
         for (child in type.children) {
-            if (isType(t1, child) && eqs.containsKey(child))
+            if (isType(t1, child) && findEqChild(child))
                 return findEqFunc(t1, child)
         }
         return eqs[type] ?: fun(t1: Token, t2: Token) = t1 == t2
@@ -83,8 +99,16 @@ class Env {
     }
 
     private fun findOrdFunc(t1: Token, funcName: String, type: HimeType = getType("ord")): (Token, Token) -> Boolean {
+        fun findOrdChild(type: HimeType): Boolean {
+            if (ords.containsKey(type))
+                return true
+            for (child in type.children)
+                if (findOrdChild(child))
+                    return true
+            return false
+        }
         for (child in type.children) {
-            if (isType(t1, child) && ords.containsKey(child))
+            if (isType(t1, child) && findOrdChild(child))
                 return findOrdFunc(t1, funcName, child)
         }
         return if (ords[type] != null) ords[type]?.get(funcName) ?: fun(_: Token, _: Token) =
