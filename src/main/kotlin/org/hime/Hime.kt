@@ -1,13 +1,9 @@
 package org.hime
 
 import org.hime.core.SymbolTable
-import org.hime.core.core
 import org.hime.core.eval
-import org.hime.lang.IOConfig
+import org.hime.lang.Env
 import org.hime.parse.*
-
-val defaultIO = IOConfig(System.out, System.err, System.`in`)
-val defaultSymbolTable = SymbolTable(HashMap(), core, defaultIO)
 
 /**
  * 执行代码
@@ -15,10 +11,10 @@ val defaultSymbolTable = SymbolTable(HashMap(), core, defaultIO)
  * @param symbol 符号表
  * @return       结果
  */
-fun call(code: String, symbol: SymbolTable = defaultSymbolTable): Token {
-    val asts = parser(lexer(preprocessor(code)))
-    var result = NIL
+fun call(env: Env, code: String, symbol: SymbolTable = env.symbols): Token {
+    val asts = parser(env, lexer(env, preprocessor(code)))
+    var result = env.himeNil
     for (ast in asts)
-        result = eval(ast, symbol)
+        result = eval(env, ast, symbol)
     return result
 }

@@ -1,6 +1,6 @@
 package org.hime
 
-import org.hime.parse.NIL
+import org.hime.lang.Env
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.file.Files
@@ -9,10 +9,10 @@ import java.nio.file.Path
 /**
  * REPL
  */
-fun repl() {
+fun repl(env: Env) {
     val reader = BufferedReader(InputStreamReader(System.`in`))
     var codeBuilder = StringBuilder()
-    var symbolTable = defaultSymbolTable.createChild()
+    var symbolTable = env.symbols.createChild()
     var size = 0
     while (true) {
         print("[Hime] >>> ")
@@ -24,7 +24,7 @@ fun repl() {
         var flag = 0
         val read = reader.readLine()
         if (read.startsWith(":clear"))
-            symbolTable = defaultSymbolTable.createChild()
+            symbolTable = env.symbols.createChild()
         else if (read.startsWith(":load"))
             codeBuilder.append(Files.readString(Path.of(read.substring(6))))
         else {
@@ -62,9 +62,9 @@ fun repl() {
             } while (index < code.length)
         }
         if (flag == 0) {
-            val result = call(codeBuilder.toString(), symbolTable)
+            val result = call(env, codeBuilder.toString(), symbolTable)
             codeBuilder = StringBuilder()
-            if (result != NIL)
+            if (result != env.himeNil)
                 println(result.toString())
         }
         size = flag

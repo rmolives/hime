@@ -1,8 +1,8 @@
 package org.hime.parse
 
 import org.hime.cast
+import org.hime.lang.Env
 import org.hime.lang.HimeTypeId
-import org.hime.lang.getType
 import org.hime.toToken
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -13,7 +13,7 @@ import java.math.MathContext
  * @param code  代码
  * @return      一系列Token List
  */
-fun lexer(code: String): List<List<Token>> {
+fun lexer(env: Env, code: String): List<List<Token>> {
     // 返回的内容
     val result = ArrayList<List<Token>>()
     // 当前计算的内容
@@ -82,11 +82,11 @@ fun lexer(code: String): List<List<Token>> {
         while (++index < expression.length) {
             when (expression[index]) {
                 '(' -> {
-                    tokens.add(LB)
+                    tokens.add(env.himeLb)
                     continue
                 }
                 ')' -> {
-                    tokens.add(RB)
+                    tokens.add(env.himeRb)
                     continue
                 }
                 // 跳过空格
@@ -112,7 +112,7 @@ fun lexer(code: String): List<List<Token>> {
                 }
                 // 处理浮点数
                 if (expression[index + 1] != '.') {
-                    tokens.add((if (negative) v.subtract(v.multiply(BigInteger.TWO)) else v).toToken())
+                    tokens.add((if (negative) v.subtract(v.multiply(BigInteger.TWO)) else v).toToken(env))
                     continue
                 }
                 var x = BigDecimal(v.toString())
@@ -130,7 +130,7 @@ fun lexer(code: String): List<List<Token>> {
                     )
                     d = d.multiply(BigDecimal.valueOf(10))
                 }
-                tokens.add((if (negative) x.subtract(x.multiply(BigDecimal.valueOf(2))) else x).toToken())
+                tokens.add((if (negative) x.subtract(x.multiply(BigDecimal.valueOf(2))) else x).toToken(env))
                 continue
             }
             // 处理字符串
@@ -169,7 +169,7 @@ fun lexer(code: String): List<List<Token>> {
                     } else
                         builder.append(expression[index])
                 }
-                tokens.add(builder.toString().toToken())
+                tokens.add(builder.toString().toToken(env))
                 continue
             }
             // 处理其他字符
@@ -184,11 +184,11 @@ fun lexer(code: String): List<List<Token>> {
                     builder.append(expression[index])
                     ++index
                 }
-                val type = getType("id")
+                val type = env.getType("id")
                 val s = builder.toString()
                 if (s.contains(":")) {
                     val inOf = s.indexOf(":")
-                    cast<HimeTypeId>(type).type = getType(s.substring(inOf + 1))
+                    cast<HimeTypeId>(type).type = env.getType(s.substring(inOf + 1))
                     tokens.add(Token(type, s.substring(0, inOf)))
                 } else
                     tokens.add(Token(type, builder.toString()))
