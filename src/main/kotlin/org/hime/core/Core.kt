@@ -641,7 +641,7 @@ fun initCore(env: Env) {
                     num = env.himeAdd(num, args[i])
                 }
                 return num
-            }, listOf(env.getType("num")), true)).toToken(env),
+            }, listOf(env.getType("op")), true)).toToken(env),
             "-" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 var num = args[0]
                 if (args.size == 1)
@@ -654,7 +654,7 @@ fun initCore(env: Env) {
                     num = env.himeSub(num, args[i])
                 }
                 return num.toToken(env)
-            }, listOf(env.getType("num")), true)).toToken(env),
+            }, listOf(env.getType("op")), true)).toToken(env),
             "*" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 var num = args[0]
                 for (i in 1 until args.size) {
@@ -662,7 +662,7 @@ fun initCore(env: Env) {
                     num = env.himeMult(num, args[i])
                 }
                 return num
-            }, listOf(env.getType("num")), true)).toToken(env),
+            }, listOf(env.getType("op")), true)).toToken(env),
             "/" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 var num = args[0]
                 for (i in 1 until args.size) {
@@ -670,7 +670,7 @@ fun initCore(env: Env) {
                     num = env.himeDiv(num, args[i])
                 }
                 return num
-            }, listOf(env.getType("num")), true)).toToken(env),
+            }, listOf(env.getType("op")), true)).toToken(env),
             "and" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 himeAssertRuntime(args.isNotEmpty()) { "not enough arguments." }
                 for (arg in args) {
