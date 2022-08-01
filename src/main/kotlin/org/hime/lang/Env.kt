@@ -13,6 +13,7 @@ import java.math.MathContext
 class Env {
     private lateinit var types: MutableMap<String, HimeType>
     private lateinit var typeAny: HimeType
+
     lateinit var himeTrue: Token
     lateinit var himeFalse: Token
     lateinit var himeNil: Token
@@ -20,9 +21,7 @@ class Env {
     lateinit var himeEmptyStream: Token
     lateinit var himeLb: Token
     lateinit var himeRb: Token
-
     lateinit var symbols: SymbolTable
-
     lateinit var himeAstEmpty: ASTNode
 
     private lateinit var eqs: MutableMap<HimeType, (Token, Token) -> Boolean>
