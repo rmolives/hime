@@ -30,110 +30,65 @@ class Env {
     private lateinit var ops: MutableMap<HimeType, MutableMap<String, (Token, Token) -> Token>>
 
     fun himeAdd(t1: Token, t2: Token): Token {
-        fun himeEqTy(type: HimeType): (Token, Token) -> Token {
-            for (child in type.children) {
-                if (isType(t1, child) && ops.containsKey(child))
-                    return himeEqTy(child)
-            }
-            return if (ops[type] != null) ops[type]?.get("add") ?: fun(_: Token, _: Token) =
-                BigInteger.ZERO.toToken(this) else fun(_: Token, _: Token) = BigInteger.ZERO.toToken(this)
-        }
-        return himeEqTy(getType("op"))(t1, t2)
+        return findOpFunc(t1, "add")(t1, t2)
     }
 
     fun himeSub(t1: Token, t2: Token): Token {
-        fun himeEqTy(type: HimeType): (Token, Token) -> Token {
-            for (child in type.children) {
-                if (isType(t1, child) && ops.containsKey(child))
-                    return himeEqTy(child)
-            }
-            return if (ops[type] != null) ops[type]?.get("sub") ?: fun(_: Token, _: Token) =
-                BigInteger.ZERO.toToken(this) else fun(_: Token, _: Token) = BigInteger.ZERO.toToken(this)
-        }
-        return himeEqTy(getType("op"))(t1, t2)
+        return findOpFunc(t1, "sub")(t1, t2)
     }
 
     fun himeMult(t1: Token, t2: Token): Token {
-        fun himeEqTy(type: HimeType): (Token, Token) -> Token {
-            for (child in type.children) {
-                if (isType(t1, child) && ops.containsKey(child))
-                    return himeEqTy(child)
-            }
-            return if (ops[type] != null) ops[type]?.get("mult") ?: fun(_: Token, _: Token) =
-                BigInteger.ZERO.toToken(this) else fun(_: Token, _: Token) = BigInteger.ZERO.toToken(this)
-        }
-        return himeEqTy(getType("op"))(t1, t2)
+        return findOpFunc(t1, "mult")(t1, t2)
     }
 
     fun himeDiv(t1: Token, t2: Token): Token {
-        fun himeEqTy(type: HimeType): (Token, Token) -> Token {
-            for (child in type.children) {
-                if (isType(t1, child) && ops.containsKey(child))
-                    return himeEqTy(child)
-            }
-            return if (ops[type] != null) ops[type]?.get("div") ?: fun(_: Token, _: Token) =
-                BigInteger.ZERO.toToken(this) else fun(_: Token, _: Token) = BigInteger.ZERO.toToken(this)
+        return findOpFunc(t1, "div")(t1, t2)
+    }
+
+    private fun findOpFunc(t1: Token, funcName: String, type: HimeType = getType("op")): (Token, Token) -> Token {
+        for (child in type.children) {
+            if (isType(t1, child) && ops.containsKey(child))
+                return findOpFunc(t1, funcName, child)
         }
-        return himeEqTy(getType("op"))(t1, t2)
+        return if (ops[type] != null) ops[type]?.get(funcName) ?: fun(_: Token, _: Token) =
+            BigInteger.ZERO.toToken(this) else fun(_: Token, _: Token) = BigInteger.ZERO.toToken(this)
     }
 
     fun himeEq(t1: Token, t2: Token): Boolean {
-        fun himeEqTy(type: HimeType): (Token, Token) -> Boolean {
-            for (child in type.children) {
-                if (isType(t1, child) && eqs.containsKey(child))
-                    return himeEqTy(child)
-            }
-            return eqs[type] ?: fun(t1: Token, t2: Token) = t1 == t2
+        return findEqFunc(t1)(t1, t2)
+    }
+
+    private fun findEqFunc(t1: Token, type: HimeType = getType("eq")): (Token, Token) -> Boolean {
+        for (child in type.children) {
+            if (isType(t1, child) && eqs.containsKey(child))
+                return findEqFunc(t1, child)
         }
-        return himeEqTy(getType("eq"))(t1, t2)
+        return eqs[type] ?: fun(t1: Token, t2: Token) = t1 == t2
     }
 
     fun himeGreater(t1: Token, t2: Token): Boolean {
-        fun himeEqTy(type: HimeType): (Token, Token) -> Boolean {
-            for (child in type.children) {
-                if (isType(t1, child) && ords.containsKey(child))
-                    return himeEqTy(child)
-            }
-            return if (ords[type] != null) ords[type]?.get("greater") ?: fun(_: Token, _: Token) =
-                false else fun(_: Token, _: Token) = false
-        }
-        return himeEqTy(getType("ord"))(t1, t2)
+        return findOrdFunc(t1, "greater")(t1, t2)
     }
 
     fun himeGreaterOrEq(t1: Token, t2: Token): Boolean {
-        fun himeEqTy(type: HimeType): (Token, Token) -> Boolean {
-            for (child in type.children) {
-                if (isType(t1, child) && ords.containsKey(child))
-                    return himeEqTy(child)
-            }
-            return if (ords[type] != null) ords[type]?.get("greaterOrEq") ?: fun(_: Token, _: Token) =
-                false else fun(_: Token, _: Token) = false
-        }
-        return himeEqTy(getType("ord"))(t1, t2)
+        return findOrdFunc(t1, "greaterOrEq")(t1, t2)
     }
 
     fun himeLess(t1: Token, t2: Token): Boolean {
-        fun himeEqTy(type: HimeType): (Token, Token) -> Boolean {
-            for (child in type.children) {
-                if (isType(t1, child) && ords.containsKey(child))
-                    return himeEqTy(child)
-            }
-            return if (ords[type] != null) ords[type]?.get("less") ?: fun(_: Token, _: Token) =
-                false else fun(_: Token, _: Token) = false
-        }
-        return himeEqTy(getType("ord"))(t1, t2)
+        return findOrdFunc(t1, "less")(t1, t2)
     }
 
     fun himeLessOrEq(t1: Token, t2: Token): Boolean {
-        fun himeEqTy(type: HimeType): (Token, Token) -> Boolean {
-            for (child in type.children) {
-                if (isType(t1, child) && ords.containsKey(child))
-                    return himeEqTy(child)
-            }
-            return if (ords[type] != null) ords[type]?.get("lessOrEq") ?: fun(_: Token, _: Token) =
-                false else fun(_: Token, _: Token) = false
+        return findOrdFunc(t1, "lessOrEq")(t1, t2)
+    }
+
+    fun findOrdFunc(t1: Token, funcName: String, type: HimeType = getType("ord")): (Token, Token) -> Boolean {
+        for (child in type.children) {
+            if (isType(t1, child) && ords.containsKey(child))
+                return findOrdFunc(t1, funcName, child)
         }
-        return himeEqTy(getType("ord"))(t1, t2)
+        return if (ords[type] != null) ords[type]?.get(funcName) ?: fun(_: Token, _: Token) =
+            false else fun(_: Token, _: Token) = false
     }
 
     init {
