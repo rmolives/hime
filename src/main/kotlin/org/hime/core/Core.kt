@@ -228,7 +228,7 @@ val core = SymbolTable(
             }
             return result
         }, listOf(getType("any")), true)).toToken(),
-        "def-type" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+        "add-type" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             val name = args[0].toString()
             addType(name, HimeTypeCustom.make(name))
             return NIL
