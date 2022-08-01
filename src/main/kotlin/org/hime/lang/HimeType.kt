@@ -329,6 +329,4 @@ open class HimeTypeCustomNum(
     override fun multiply(t1: Token, t2: Token) = multFunction.call(arrayListOf(t1, t2))
 
     override fun divide(t1: Token, t2: Token) = divFunction.call(arrayListOf(t1, t2))
-
-
 }
