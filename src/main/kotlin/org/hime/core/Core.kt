@@ -556,8 +556,8 @@ fun initCore(env: Env) {
                 return env.himeNil
             }, listOf(env.getType("string")), true)).toToken(env),
             "cast" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return Token(cast<HimeType>(args[1].value), args[0].value)
-            }, listOf(env.getType("any"), env.getType("type")), true)).toToken(env),
+                return Token(cast<HimeType>(args[0].value), args[1].value)
+            }, listOf(env.getType("type"), env.getType("any")), true)).toToken(env),
             "->type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return env.getType(args[0].toString()).toToken(env)
             }, listOf(env.getType("string")), false)).toToken(env),
