@@ -239,7 +239,7 @@ val core = SymbolTable(
         "->type" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return getType(args[0].toString()).toToken()
         }, listOf(getType("string")), false)).toToken(),
-        "assert" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+        "cast" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return Token(cast<HimeType>(args[1].value), args[0].value)
         }, listOf(getType("any"), getType("type")), false)).toToken(),
         "type?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
