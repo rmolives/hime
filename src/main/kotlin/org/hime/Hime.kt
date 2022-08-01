@@ -7,6 +7,7 @@ import org.hime.parse.*
 
 /**
  * 执行代码
+ * @param env    环境
  * @param code   代码
  * @param symbol 符号表
  * @return       结果

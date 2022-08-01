@@ -8,6 +8,7 @@ import org.hime.parse.Token
 
 /**
  * 求值器
+ * @param env    环境
  * @param ast    抽象语法树
  * @param symbol 符号表
  * @return       求值返回的值
