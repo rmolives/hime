@@ -228,9 +228,88 @@ val core = SymbolTable(
             }
             return result
         }, listOf(getType("any")), true)).toToken(),
+        "def-type-any" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            return addType(args[0].toString(), HimeTypeCustomAny.make(args[0].toString())).toToken()
+        }, listOf(getType("string")), false)).toToken(),
+        // (def-type-eq name [=])
+        "def-type-eq" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            val name = args[0].toString()
+            return addType(name, HimeTypeCustomEq.make(name, cast<HimeFunction>(args[1].value))).toToken()
+        }, listOf(getType("string"), getType("function")), false)).toToken(),
+        // (def-type-ord name [=] [>] [<] [>=] [<=])
+        "def-type-ord" to (HimeFunction(
+            BUILT_IN,
+            fun(args: List<Token>, _: SymbolTable): Token {
+                val name = args[0].toString()
+                return addType(
+                    name,
+                    HimeTypeCustomOrd.make(
+                        name,
+                        cast<HimeFunction>(args[1].value),
+                        cast<HimeFunction>(args[2].value),
+                        cast<HimeFunction>(args[3].value),
+                        cast<HimeFunction>(args[4].value),
+                        cast<HimeFunction>(args[5].value)
+                    )
+                ).toToken()
+            },
+            listOf(
+                getType("string"),
+                getType("function"),
+                getType("function"),
+                getType("function"),
+                getType("function"),
+                getType("function")
+            ),
+            false
+        )).toToken(),
+        // (def-type-num name [=] [>] [<] [>=] [<=] [+] [-] [*] [/])
+        "def-type-num" to (HimeFunction(
+            BUILT_IN,
+            fun(args: List<Token>, _: SymbolTable): Token {
+                val name = args[0].toString()
+                return addType(
+                    name,
+                    HimeTypeCustomNum.make(
+                        name,
+                        cast<HimeFunction>(args[1].value),
+                        cast<HimeFunction>(args[2].value),
+                        cast<HimeFunction>(args[3].value),
+                        cast<HimeFunction>(args[4].value),
+                        cast<HimeFunction>(args[5].value),
+                        cast<HimeFunction>(args[6].value),
+                        cast<HimeFunction>(args[7].value),
+                        cast<HimeFunction>(args[8].value),
+                        cast<HimeFunction>(args[9].value)
+                    )
+                ).toToken()
+            },
+            listOf(
+                getType("string"),
+                getType("function"),
+                getType("function"),
+                getType("function"),
+                getType("function"),
+                getType("function"),
+                getType("function"),
+                getType("function"),
+                getType("function"),
+                getType("function")
+            ),
+            false
+        )).toToken(),
         "type" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
             return args[0].type.toToken()
         }, listOf(getType("any")), false)).toToken(),
+        "->type" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            return getType(args[0].toString()).toToken()
+        }, listOf(getType("string")), false)).toToken(),
+        "assert" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            return Token(cast<HimeType>(args[1].value), args[0].value)
+        }, listOf(getType("any"), getType("type")), false)).toToken(),
+        "type?" to (HimeFunction(BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            return isType(args[0], getType(args[1].toString())).toToken()
+        }, listOf(getType("any"), getType("string")), false)).toToken(),
         // 局部变量绑定
         "let" to (HimeFunction(STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
             himeAssertRuntime(ast.isNotEmpty()) { "not enough arguments." }
@@ -667,15 +746,7 @@ val core = SymbolTable(
                 himeAssertRuntime(isType(args[i], getType("eq"))) { "${args[i]} is not eq." }
                 for (j in args.indices) {
                     himeAssertRuntime(isType(args[i], getType("eq"))) { "${args[j]} is not eq." }
-                    if (i != j && !cast<Boolean>(
-                            cast<Boolean>(
-                                cast<HimeTypeEq>(args[i].type).eq(
-                                    args[i],
-                                    args[j]
-                                ).value
-                            )
-                        )
-                    )
+                    if (i != j && !cast<Boolean>(cast<HimeTypeEq>(args[i].type).eq(args[i], args[j])))
                         return FALSE
                 }
             }
@@ -687,15 +758,7 @@ val core = SymbolTable(
                 himeAssertRuntime(isType(args[i], getType("ord"))) { "${args[i]} is not eq." }
                 for (j in args.indices) {
                     himeAssertRuntime(isType(args[i], getType("ord"))) { "${args[j]} is not eq." }
-                    if (i != j && cast<Boolean>(
-                            cast<Boolean>(
-                                cast<HimeTypeEq>(args[i].type).eq(
-                                    args[i],
-                                    args[j]
-                                ).value
-                            )
-                        )
-                    )
+                    if (i != j && cast<Boolean>(cast<HimeTypeEq>(args[i].type).eq(args[i], args[j])))
                         return FALSE
                 }
             }

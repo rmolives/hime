@@ -1,6 +1,7 @@
 package org.hime.lang
 
 import org.hime.cast
+import org.hime.core.HimeFunction
 import org.hime.parse.Token
 import org.hime.toToken
 import java.math.BigDecimal
@@ -26,6 +27,11 @@ val types: MutableMap<String, () -> HimeType> =
         "type" to HimeTypeType::make,
         "any" to HimeTypeAny::make
     )
+
+fun addType(name: String, type: () -> HimeType): HimeType {
+    types[name] = type
+    return getType(name)
+}
 
 fun isType(token: Token, type: HimeType) = type::class.java.isAssignableFrom(token.type::class.java)
 
@@ -55,13 +61,15 @@ open class HimeTypeEq(override val name: String = "eq") : HimeTypeAny(name) {
     companion object {
         fun make() = HimeTypeEq()
     }
-    open fun eq(t1: Token, t2: Token) = (t1 == t2).toToken()
+
+    open fun eq(t1: Token, t2: Token) = t1 == t2
 }
 
 open class HimeTypeOrd(override val name: String = "ord") : HimeTypeEq(name) {
     companion object {
         fun make() = HimeTypeOrd()
     }
+
     open fun greater(t1: Token, t2: Token) = false
     open fun less(t1: Token, t2: Token) = false
     open fun greaterOrEq(t1: Token, t2: Token) = false
@@ -72,6 +80,7 @@ open class HimeTypeNum(override val name: String = "num") : HimeTypeOrd(name) {
     companion object {
         fun make() = HimeTypeNum()
     }
+
     override fun greater(t1: Token, t2: Token) =
         BigDecimal(t1.value.toString()) > BigDecimal(t2.value.toString())
 
@@ -173,4 +182,153 @@ open class HimeTypeFunction : HimeTypeAny("function") {
     companion object {
         fun make() = HimeTypeFunction()
     }
+}
+
+open class HimeTypeCustomAny(name: String) : HimeTypeAny(name) {
+    companion object {
+        fun make(name: String) = fun() = HimeTypeCustomAny(name)
+    }
+}
+
+open class HimeTypeCustomEq(name: String, private val eqFunction: HimeFunction) : HimeTypeEq(name) {
+    companion object {
+        fun make(name: String, eqFunction: HimeFunction) = fun() = HimeTypeCustomEq(name, eqFunction)
+    }
+
+    override fun eq(t1: Token, t2: Token): Boolean {
+        val result = eqFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+}
+
+open class HimeTypeCustomOrd(
+    name: String,
+    private val eqFunction: HimeFunction,
+    private val greaterFunction: HimeFunction,
+    private val lessFunction: HimeFunction,
+    private val greaterOrEqFunction: HimeFunction,
+    private val lessOrEqFunction: HimeFunction
+) : HimeTypeOrd(name) {
+    companion object {
+        fun make(
+            name: String,
+            eqFunction: HimeFunction,
+            greaterFunction: HimeFunction,
+            lessFunction: HimeFunction,
+            greaterOrEqFunction: HimeFunction,
+            lessOrEqFunction: HimeFunction
+        ) = fun() =
+            HimeTypeCustomOrd(name, eqFunction, greaterFunction, lessFunction, greaterOrEqFunction, lessOrEqFunction)
+    }
+
+    override fun eq(t1: Token, t2: Token): Boolean {
+        val result = eqFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+
+    override fun greater(t1: Token, t2: Token): Boolean {
+        val result = greaterFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+
+    override fun less(t1: Token, t2: Token): Boolean {
+        val result = lessFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+
+    override fun greaterOrEq(t1: Token, t2: Token): Boolean {
+        val result = greaterOrEqFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+
+    override fun lessOrEq(t1: Token, t2: Token): Boolean {
+        val result = lessOrEqFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+}
+
+open class HimeTypeCustomNum(
+    name: String,
+    private val eqFunction: HimeFunction,
+    private val greaterFunction: HimeFunction,
+    private val lessFunction: HimeFunction,
+    private val greaterOrEqFunction: HimeFunction,
+    private val lessOrEqFunction: HimeFunction,
+    private val addFunction: HimeFunction,
+    private val subFunction: HimeFunction,
+    private val multFunction: HimeFunction,
+    private val divFunction: HimeFunction
+) : HimeTypeNum(name) {
+    companion object {
+        fun make(
+            name: String,
+            eqFunction: HimeFunction,
+            greaterFunction: HimeFunction,
+            lessFunction: HimeFunction,
+            greaterOrEqFunction: HimeFunction,
+            lessOrEqFunction: HimeFunction,
+            addFunction: HimeFunction,
+            subFunction: HimeFunction,
+            multFunction: HimeFunction,
+            divFunction: HimeFunction
+        ) = fun() =
+            HimeTypeCustomNum(
+                name,
+                eqFunction,
+                greaterFunction,
+                lessFunction,
+                greaterOrEqFunction,
+                lessOrEqFunction,
+                addFunction,
+                subFunction,
+                multFunction,
+                divFunction
+            )
+    }
+
+    override fun eq(t1: Token, t2: Token): Boolean {
+        val result = eqFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+
+    override fun greater(t1: Token, t2: Token): Boolean {
+        val result = greaterFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+
+    override fun less(t1: Token, t2: Token): Boolean {
+        val result = lessFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+
+    override fun greaterOrEq(t1: Token, t2: Token): Boolean {
+        val result = greaterOrEqFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+
+    override fun lessOrEq(t1: Token, t2: Token): Boolean {
+        val result = lessOrEqFunction.call(arrayListOf(t1, t2))
+        himeAssertRuntime(isType(result, getType("bool"))) { "$result is not bool" }
+        return cast<Boolean>(result.value)
+    }
+
+    override fun add(t1: Token, t2: Token) = addFunction.call(arrayListOf(t1, t2))
+
+    override fun subtract(t1: Token, t2: Token) = subFunction.call(arrayListOf(t1, t2))
+
+    override fun multiply(t1: Token, t2: Token) = multFunction.call(arrayListOf(t1, t2))
+
+    override fun divide(t1: Token, t2: Token) = divFunction.call(arrayListOf(t1, t2))
+
+
 }
