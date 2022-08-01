@@ -548,6 +548,19 @@ fun initCore(env: Env) {
                 }
                 return result
             })).toToken(env),
+            "def-type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                env.addType(HimeType(args[0].toString()), args.subList(1, args.size).map {
+                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not num." }
+                    env.getType(it.toString())
+                })
+                return env.himeNil
+            }, listOf(env.getType("string"), env.getType("type")), true)).toToken(env),
+            "cast" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                return Token(cast<HimeType>(args[1].value), args[0].value)
+            }, listOf(env.getType("any"), env.getType("type")), true)).toToken(env),
+            "->type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                return env.getType(args[0].toString()).toToken(env)
+            }, listOf(env.getType("string")), false)).toToken(env),
             "apply" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                 val parameters = ArrayList<Token>()
                 for (i in 1 until args.size)

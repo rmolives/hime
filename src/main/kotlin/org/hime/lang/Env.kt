@@ -205,6 +205,12 @@ class Env {
         initCore(this)
     }
 
+    fun addType(type: HimeType, father: List<HimeType>) {
+        types[type.name] = type
+        for (f in father)
+            f.children.add(type)
+    }
+
     fun isType(token: Token, type: HimeType): Boolean {
         if (type.name == "id")
             return token.type is HimeTypeId
