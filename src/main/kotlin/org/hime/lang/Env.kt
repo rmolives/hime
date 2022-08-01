@@ -10,7 +10,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 
-class Env {
+class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     private lateinit var types: MutableMap<String, HimeType>
     private lateinit var typeAny: HimeType
 
@@ -120,7 +120,7 @@ class Env {
         initEqs()
         initOrds()
         initOps()
-        initSymbols()
+        initSymbols(io)
     }
 
     private fun initType() {
@@ -200,8 +200,8 @@ class Env {
         himeAstEmpty = ASTNode(himeEmpty, AstType.FUNCTION)
     }
 
-    private fun initSymbols() {
-        symbols = SymbolTable(HashMap(), null, IOConfig(System.out, System.err, System.`in`))
+    private fun initSymbols(io: IOConfig) {
+        symbols = SymbolTable(HashMap(), null, io)
         initCore(this)
     }
 
