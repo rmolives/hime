@@ -232,11 +232,9 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                 return false
             }
             HimeType.HimeTypeMode.COMPLEMENTARY -> {
-                var t = type.column[0]
                 for (i in 1 until type.column.size) {
-                    if (!(isType(token, t) && !isType(token, type.column[i])))
+                    if (!(isType(token, type.column[0]) && !isType(token, type.column[i])))
                         return false
-                    t = type.column[i]
                 }
                 return true
             }
