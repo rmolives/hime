@@ -552,25 +552,25 @@ fun initCore(env: Env) {
                 return HimeType().toToken(env)
             }, 0)).toToken(env),
             "type-intersection" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return HimeType(mode = HimeType.HimeTypeMode.INTERSECTION, column = args.subList(0, args.size).map {
+                return HimeType(mode = HimeType.HimeTypeMode.INTERSECTION, column = args.map {
                     himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
                     env.getType(it.toString())
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
             "type-union" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return HimeType(mode = HimeType.HimeTypeMode.UNION, column = args.subList(0, args.size).map {
+                return HimeType(mode = HimeType.HimeTypeMode.UNION, column = args.map {
                     himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
                     env.getType(it.toString())
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
             "type-complementary" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return HimeType(mode = HimeType.HimeTypeMode.COMPLEMENTARY, column = args.subList(0, args.size).map {
+                return HimeType(mode = HimeType.HimeTypeMode.COMPLEMENTARY, column = args.map {
                     himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
                     env.getType(it.toString())
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
             "type-weong" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return HimeType(mode = HimeType.HimeTypeMode.WEONG, column = args.subList(0, args.size).map {
+                return HimeType(mode = HimeType.HimeTypeMode.WEONG, column = args.map {
                     himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
                     env.getType(it.toString())
                 }).toToken(env)
