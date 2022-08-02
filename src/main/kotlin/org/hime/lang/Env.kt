@@ -247,7 +247,7 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                         return false
                 return true
             }
-            else -> return true
+            else -> return false
         }
     }
 
