@@ -211,7 +211,7 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     }
 
     fun isType(token: Token, type: HimeType): Boolean {
-        if (type.name == "id")
+        if (type is HimeTypeId)
             return token.type is HimeTypeId
         if (type == typeAny || token.type == type)
             return true
