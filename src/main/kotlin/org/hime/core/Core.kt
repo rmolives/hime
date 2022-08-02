@@ -548,7 +548,7 @@ fun initCore(env: Env) {
                 }
                 return result
             })).toToken(env),
-            "new-type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "new-type" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
                 return HimeType().toToken(env)
             }, 0)).toToken(env),
             "type-intersection" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
