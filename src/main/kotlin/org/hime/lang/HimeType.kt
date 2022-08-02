@@ -8,7 +8,6 @@ open class HimeType(
     open val mode: HimeTypeMode = HimeTypeMode.BASIC,
     open val column: List<HimeType> = arrayListOf()
 ) {
-
     override fun toString(): String {
         return name
     }
