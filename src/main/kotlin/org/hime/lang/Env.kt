@@ -219,7 +219,36 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         for (child in type.children)
             if (isType(token, child))
                 return true
-        return false
+        when (type.mode) {
+            HimeType.HimeTypeMode.INTERSECTION -> {
+                for (t in type.column)
+                    if (!isType(token, t))
+                        return false
+                return true
+            }
+            HimeType.HimeTypeMode.UNION -> {
+                for (t in type.column)
+                    if (isType(token, t))
+                        return true
+                return false
+            }
+            HimeType.HimeTypeMode.COMPLEMENTARY -> {
+                var t = type.column[0]
+                for (i in 1 until type.column.size) {
+                    if (!(isType(token, t) && !isType(token, type.column[i])))
+                        return false
+                    t = type.column[i]
+                }
+                return true
+            }
+            HimeType.HimeTypeMode.WEONG -> {
+                for (t in type.column)
+                    if (isType(token, t))
+                        return false
+                return true
+            }
+            else -> return true
+        }
     }
 
     fun getType(name: String) =

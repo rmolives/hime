@@ -548,19 +548,57 @@ fun initCore(env: Env) {
                 }
                 return result
             })).toToken(env),
+            "new-type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                return HimeType().toToken(env)
+            }, 0)).toToken(env),
+            "type-intersection" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                return HimeType(mode = HimeType.HimeTypeMode.INTERSECTION, column = args.subList(0, args.size).map {
+                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
+                    env.getType(it.toString())
+                }).toToken(env)
+            }, listOf(env.getType("type")), true)).toToken(env),
+            "type-union" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                return HimeType(mode = HimeType.HimeTypeMode.UNION, column = args.subList(0, args.size).map {
+                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
+                    env.getType(it.toString())
+                }).toToken(env)
+            }, listOf(env.getType("type")), true)).toToken(env),
+            "type-complementary" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                return HimeType(mode = HimeType.HimeTypeMode.COMPLEMENTARY, column = args.subList(0, args.size).map {
+                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
+                    env.getType(it.toString())
+                }).toToken(env)
+            }, listOf(env.getType("type")), true)).toToken(env),
+            "type-weong" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                return HimeType(mode = HimeType.HimeTypeMode.WEONG, column = args.subList(0, args.size).map {
+                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
+                    env.getType(it.toString())
+                }).toToken(env)
+            }, listOf(env.getType("type")), true)).toToken(env),
             "def-type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                env.addType(HimeType(args[0].toString()), args.subList(1, args.size).map {
-                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not num." }
+                val type = cast<HimeType>(args[1].value)
+                type.name = args[0].toString()
+                env.addType(type, args.subList(2, args.size).map {
+                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
                     env.getType(it.toString())
                 })
                 return env.himeNil
-            }, listOf(env.getType("string")), true)).toToken(env),
+            }, listOf(env.getType("any"), env.getType("type")), true)).toToken(env),
             "cast" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return Token(cast<HimeType>(args[0].value), args[1].value)
             }, listOf(env.getType("type"), env.getType("any")), true)).toToken(env),
             "->type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return env.getType(args[0].toString()).toToken(env)
-            }, listOf(env.getType("string")), false)).toToken(env),
+            }, listOf(env.getType("any")), false)).toToken(env),
+            "type?" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                for (arg in args)
+                    if (!env.isType(arg, env.getType("type")))
+                        return env.himeFalse
+                return env.himeTrue
+            }, listOf(env.getType("any")), false)).toToken(env),
+            "is-type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+               return env.isType(args[0], cast<HimeType>(args[1].value)).toToken(env)
+            }, listOf(env.getType("any"), env.getType("type")), true)).toToken(env),
             "apply" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                 val parameters = ArrayList<Token>()
                 for (i in 1 until args.size)
