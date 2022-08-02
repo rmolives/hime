@@ -577,7 +577,7 @@ fun initCore(env: Env) {
             }, listOf(env.getType("type")), true)).toToken(env),
             "def-type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val type = cast<HimeType>(args[1].value)
-                env.addType(HimeType(type.name, type.children, type.mode, type.column), args.subList(2, args.size).map {
+                env.addType(HimeType(args[0].toString(), type.children, type.mode, type.column), args.subList(2, args.size).map {
                     himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
                     env.getType(it.toString())
                 })
