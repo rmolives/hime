@@ -13,7 +13,7 @@ open class HimeType(
     }
 
     enum class HimeTypeMode {
-        BASIC, INTERSECTION, UNION, COMPLEMENTARY, WEONG
+        BASIC, INTERSECTION, UNION, COMPLEMENTARY, WRONG
     }
 }
 

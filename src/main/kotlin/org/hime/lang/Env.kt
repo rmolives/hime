@@ -238,7 +238,7 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                 }
                 return true
             }
-            HimeType.HimeTypeMode.WEONG -> {
+            HimeType.HimeTypeMode.WRONG -> {
                 for (t in type.column)
                     if (isType(token, t))
                         return false

@@ -569,8 +569,8 @@ fun initCore(env: Env) {
                     env.getType(it.toString())
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
-            "type-weong" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return HimeType(mode = HimeType.HimeTypeMode.WEONG, column = args.map {
+            "type-wrong" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                return HimeType(mode = HimeType.HimeTypeMode.WRONG, column = args.map {
                     himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
                     env.getType(it.toString())
                 }).toToken(env)
