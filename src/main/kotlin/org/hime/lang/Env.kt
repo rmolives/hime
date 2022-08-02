@@ -144,8 +144,7 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                 getType("string"),
                 getType("list"),
                 getType("bool"),
-                getType("word"),
-                getType("type")
+                getType("word")
             )
         )
         types["ord"] = HimeType("ord", arrayListOf(getType("num")))
