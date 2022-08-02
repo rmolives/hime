@@ -1,5 +1,6 @@
 package org.hime.lang
 
+import org.hime.cast
 import org.hime.generateRandomString
 
 open class HimeType(
@@ -8,8 +9,17 @@ open class HimeType(
     open val mode: HimeTypeMode = HimeTypeMode.BASIC,
     open val column: List<HimeType> = arrayListOf()
 ) {
+
     override fun toString(): String {
         return name
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is HimeType && cast<HimeType>(other).name == this.name
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
     }
 
     enum class HimeTypeMode {
@@ -17,4 +27,4 @@ open class HimeType(
     }
 }
 
-open class HimeTypeId(val env: Env, var type: HimeType = env.getType("any")) : HimeType("id")
+open class HimeTypeId(val env: Env, val type: HimeType = env.getType("any")) : HimeType("id")

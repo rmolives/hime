@@ -1,6 +1,5 @@
 package org.hime.parse
 
-import org.hime.cast
 import org.hime.lang.Env
 import org.hime.lang.HimeTypeId
 import org.hime.toToken
@@ -185,14 +184,12 @@ fun lexer(env: Env, code: String): List<List<Token>> {
                     builder.append(expression[index])
                     ++index
                 }
-                val type = env.getType("id")
                 val s = builder.toString()
                 if (s.contains(":")) {
                     val inOf = s.indexOf(":")
-                    cast<HimeTypeId>(type).type = env.getType(s.substring(inOf + 1))
-                    tokens.add(Token(type, s.substring(0, inOf)))
+                    tokens.add(Token(HimeTypeId(env, env.getType(s.substring(inOf + 1))), s.substring(0, inOf)))
                 } else
-                    tokens.add(Token(type, builder.toString()))
+                    tokens.add(Token(HimeTypeId(env), builder.toString()))
                 continue
             }
         }
