@@ -554,25 +554,25 @@ fun initCore(env: Env) {
             "type-intersection" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return HimeType(mode = HimeType.HimeTypeMode.INTERSECTION, column = args.map {
                     himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
-                    env.getType(it.toString())
+                    cast<HimeType>(it.value)
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
             "type-union" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return HimeType(mode = HimeType.HimeTypeMode.UNION, column = args.map {
                     himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
-                    env.getType(it.toString())
+                    cast<HimeType>(it.value)
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
             "type-complementary" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return HimeType(mode = HimeType.HimeTypeMode.COMPLEMENTARY, column = args.map {
                     himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
-                    env.getType(it.toString())
+                    cast<HimeType>(it.value)
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
             "type-wrong" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return HimeType(mode = HimeType.HimeTypeMode.WRONG, column = args.map {
                     himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
-                    env.getType(it.toString())
+                    cast<HimeType>(it.value)
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
             "def-type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
@@ -581,10 +581,23 @@ fun initCore(env: Env) {
                     HimeType(args[0].toString(), type.children, type.mode, type.column, type.identifier),
                     args.subList(2, args.size).map {
                         himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
-                        env.getType(it.toString())
+                        cast<HimeType>(it.value)
                     })
                 return env.himeNil
             }, listOf(env.getType("any"), env.getType("type")), true)).toToken(env),
+            "type-judge" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                return (HimeFunction(env, BUILT_IN, fun(embeddedArgs: List<Token>, _: SymbolTable): Token {
+                    return env.judge(embeddedArgs[0], cast<HimeType>(args[0].value)).toToken(env)
+                }, 1)).toToken(env)
+            }, listOf(env.getType("type")), false)).toToken(env),
+            "set-type-judge" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                env.setJudge(cast<HimeType>(args[0].value), fun(token: Token): Boolean {
+                    val result = cast<HimeFunction>(args[1].value).call(arrayListOf(token))
+                    himeAssertRuntime(env.isType(result, env.getType("bool"))) { "Judge returns a non bool type" }
+                    return cast<Boolean>(result.value)
+                })
+                return env.himeNil
+            }, listOf(env.getType("type"), env.getType("function")), false)).toToken(env),
             "type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return args[0].type.toToken(env)
             }, listOf(env.getType("any")), false)).toToken(env),

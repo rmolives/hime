@@ -27,6 +27,7 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     private lateinit var eqs: MutableMap<HimeType, (Token, Token) -> Boolean>
     private lateinit var ords: MutableMap<HimeType, MutableMap<String, (Token, Token) -> Boolean>>
     private lateinit var ops: MutableMap<HimeType, MutableMap<String, (Token, Token) -> Token>>
+    private lateinit var judges: MutableMap<HimeType, (Token) -> Boolean>
 
     fun himeAdd(t1: Token, t2: Token): Token {
         return findOpFunc(t1, "add")(t1, t2)
@@ -120,6 +121,7 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         initEqs()
         initOrds()
         initOps()
+        initJudges()
         initSymbols(io)
     }
 
@@ -151,14 +153,13 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         typeAny = HimeType("any")
     }
 
+    private fun initJudges() {
+        judges = HashMap()
+    }
+
     private fun initEqs() {
         eqs = HashMap()
-        eqs[getType("bool")] = fun(t1: Token, t2: Token) = t1 == t2
         eqs[getType("num")] = fun(t1: Token, t2: Token) = BigDecimal(t1.toString()) == BigDecimal(t2.toString())
-        eqs[getType("string")] = fun(t1: Token, t2: Token) = t1 == t2
-        eqs[getType("list")] = fun(t1: Token, t2: Token) = t1 == t2
-        eqs[getType("word")] = fun(t1: Token, t2: Token) = t1 == t2
-        eqs[getType("type")] = fun(t1: Token, t2: Token) = t1 == t2
     }
 
     private fun initOrds() {
@@ -210,8 +211,17 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
             f.children.add(type)
     }
 
+    fun setJudge(type: HimeType, judge: (Token) -> Boolean) {
+        judges[type] = judge
+    }
+
+    fun judge(token: Token, type: HimeType): Boolean {
+        return if (judges.containsKey(type)) judges[type]?.let { it(token) }
+            ?: throw HimeRuntimeException("Judge of $type does not exist.") else token.type == type
+    }
+
     fun isType(token: Token, type: HimeType): Boolean {
-        if (type == typeAny || token.type == type)
+        if (type == typeAny || judge(token, type))
             return true
         for (child in type.children)
             if (isType(token, child))
@@ -223,12 +233,14 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                         return false
                 return true
             }
+
             HimeType.HimeTypeMode.UNION -> {
                 for (t in type.column)
                     if (isType(token, t))
                         return true
                 return false
             }
+
             HimeType.HimeTypeMode.COMPLEMENTARY -> {
                 for (i in 1 until type.column.size) {
                     if (!(isType(token, type.column[0]) && !isType(token, type.column[i])))
@@ -236,16 +248,23 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                 }
                 return true
             }
+
             HimeType.HimeTypeMode.WRONG -> {
                 for (t in type.column)
                     if (isType(token, t))
                         return false
                 return true
             }
+
             else -> return false
         }
     }
 
     fun getType(name: String) =
-        if (name == "id") HimeTypeId(this) else if (name == "any") typeAny else types[name] ?: throw HimeRuntimeException("$name type does not exist.")
+        when (name) {
+            "id" -> HimeTypeId(this)
+            "any" -> typeAny
+            else -> types[name]
+                ?: throw HimeRuntimeException("$name type does not exist.")
+        }
 }
