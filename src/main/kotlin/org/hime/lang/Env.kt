@@ -27,7 +27,6 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     private lateinit var eqs: MutableMap<HimeType, (Token, Token) -> Boolean>
     private lateinit var ords: MutableMap<HimeType, MutableMap<String, (Token, Token) -> Boolean>>
     private lateinit var ops: MutableMap<HimeType, MutableMap<String, (Token, Token) -> Token>>
-    private lateinit var judges: MutableMap<HimeType, (Token) -> Boolean>
 
     fun himeAdd(t1: Token, t2: Token): Token {
         return findOpFunc(t1, "add")(t1, t2)
@@ -98,7 +97,7 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         return findOrdFunc(t1, "lessOrEq")(t1, t2)
     }
 
-    private fun findOrdFunc(t1: Token, funcName: String, type: HimeType = getType("ord")): (Token, Token) -> Boolean {
+    private fun findOrdFunc(t: Token, funcName: String, type: HimeType = getType("ord")): (Token, Token) -> Boolean {
         fun findOrdChild(type: HimeType): Boolean {
             if (ords.containsKey(type))
                 return true
@@ -108,8 +107,8 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
             return false
         }
         for (child in type.children) {
-            if (isType(t1, child) && findOrdChild(child))
-                return findOrdFunc(t1, funcName, child)
+            if (isType(t, child) && findOrdChild(child))
+                return findOrdFunc(t, funcName, child)
         }
         return if (ords[type] != null) ords[type]?.get(funcName) ?: fun(_: Token, _: Token) =
             false else fun(_: Token, _: Token) = false
@@ -121,14 +120,12 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         initEqs()
         initOrds()
         initOps()
-        initJudges()
         initSymbols(io)
     }
 
     private fun initType() {
         types = HashMap()
         types["int"] = HimeType("int")
-        types["real"] = HimeType("real")
         types["string"] = HimeType("string")
         types["list"] = HimeType("list")
         types["bool"] = HimeType("bool")
@@ -137,7 +134,8 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         types["lock"] = HimeType("lock")
         types["function"] = HimeType("function")
         types["type"] = HimeType("type")
-        types["num"] = HimeType("num", arrayListOf(getType("int"), getType("real")))
+        types["real"] = HimeType("real", arrayListOf(getType("int")))
+        types["num"] = HimeType("num", arrayListOf(getType("real")))
         types["op"] = HimeType("op", arrayListOf(getType("num")))
         types["eq"] = HimeType(
             "eq",
@@ -151,10 +149,6 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         )
         types["ord"] = HimeType("ord", arrayListOf(getType("num")))
         typeAny = HimeType("any")
-    }
-
-    private fun initJudges() {
-        judges = HashMap()
     }
 
     private fun initEqs() {
@@ -211,17 +205,8 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
             f.children.add(type)
     }
 
-    fun setJudge(type: HimeType, judge: (Token) -> Boolean) {
-        judges[type] = judge
-    }
-
-    fun judge(token: Token, type: HimeType): Boolean {
-        return if (judges.containsKey(type)) judges[type]?.let { it(token) }
-            ?: throw HimeRuntimeException("Judge of $type does not exist.") else token.type == type
-    }
-
     fun isType(token: Token, type: HimeType): Boolean {
-        if (type == typeAny || judge(token, type))
+        if (type == typeAny || token.type == type)
             return true
         for (child in type.children)
             if (isType(token, child))

@@ -585,19 +585,6 @@ fun initCore(env: Env) {
                     })
                 return env.himeNil
             }, listOf(env.getType("any"), env.getType("type")), true)).toToken(env),
-            "type-judge" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return (HimeFunction(env, BUILT_IN, fun(embeddedArgs: List<Token>, _: SymbolTable): Token {
-                    return env.judge(embeddedArgs[0], cast<HimeType>(args[0].value)).toToken(env)
-                }, 1)).toToken(env)
-            }, listOf(env.getType("type")), false)).toToken(env),
-            "set-type-judge" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                env.setJudge(cast<HimeType>(args[0].value), fun(token: Token): Boolean {
-                    val result = cast<HimeFunction>(args[1].value).call(arrayListOf(token))
-                    himeAssertRuntime(env.isType(result, env.getType("bool"))) { "Judge returns a non bool type" }
-                    return cast<Boolean>(result.value)
-                })
-                return env.himeNil
-            }, listOf(env.getType("type"), env.getType("function")), false)).toToken(env),
             "type" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return args[0].type.toToken(env)
             }, listOf(env.getType("any")), false)).toToken(env),
