@@ -138,18 +138,18 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         types["real"] = HimeType("real", arrayListOf(getType("int")))
         types["num"] = HimeType("num", arrayListOf(getType("real")))
         types["op"] = HimeType("op", arrayListOf(getType("num")))
+        types["ord"] = HimeType("ord", arrayListOf(getType("num")))
         types["eq"] = HimeType(
             "eq",
             arrayListOf(
-                getType("num"),
                 getType("string"),
                 getType("list"),
                 getType("bool"),
                 getType("word"),
-                getType("byte")
+                getType("byte"),
+                getType("ord")
             )
         )
-        types["ord"] = HimeType("ord", arrayListOf(getType("num")))
         typeAny = HimeType("any")
     }
 
