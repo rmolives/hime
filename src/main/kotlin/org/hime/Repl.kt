@@ -13,7 +13,7 @@ import java.nio.file.Path
 fun repl(env: Env) {
     val reader = BufferedReader(InputStreamReader(System.`in`))
     var codeBuilder = StringBuilder()
-    var symbolTable = env.symbols.createChild()
+    var symbol = env.symbols.createChild()
     var size = 0
     while (true) {
         print("[Hime] >>> ")
@@ -25,7 +25,7 @@ fun repl(env: Env) {
         var flag = 0
         val read = reader.readLine()
         if (read.startsWith(":clear"))
-            symbolTable = env.symbols.createChild()
+            symbol = env.symbols.createChild()
         else if (read.startsWith(":load"))
             codeBuilder.append(Files.readString(Path.of(read.substring(6))))
         else {
@@ -63,7 +63,7 @@ fun repl(env: Env) {
             } while (index < code.length)
         }
         if (flag == 0) {
-            val result = call(env, codeBuilder.toString(), symbolTable)
+            val result = call(env, codeBuilder.toString(), symbol)
             codeBuilder = StringBuilder()
             if (result != env.himeNil)
                 println(result.toString())
