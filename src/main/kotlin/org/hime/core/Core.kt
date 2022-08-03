@@ -635,58 +635,58 @@ fun initCore(env: Env) {
                         eval(env, node, symbol)
                 return env.himeNil
             }, 1)).toToken(env),
-            "read-bit" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
-                return (symbol.io?.`in` ?: System.`in`).read().toToken(env)
+            "read-bit" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+                return (env.io.`in`).read().toToken(env)
             }, 0)).toToken(env),
-            "read-line" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
-                return Scanner(symbol.io?.`in` ?: System.`in`).nextLine().toToken(env)
+            "read-line" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+                return Scanner(env.io.`in`).nextLine().toToken(env)
             }, 0)).toToken(env),
-            "read" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
-                return Scanner(symbol.io?.`in` ?: System.`in`).next().toToken(env)
+            "read" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+                return Scanner(env.io.`in`).next().toToken(env)
             }, 0)).toToken(env),
-            "read-num" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
-                return Scanner(symbol.io?.`in` ?: System.`in`).nextBigInteger().toToken(env)
+            "read-num" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+                return Scanner(env.io.`in`).nextBigInteger().toToken(env)
             }, 0)).toToken(env),
-            "read-real" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
-                return Scanner(symbol.io?.`in` ?: System.`in`).nextBigDecimal().toToken(env)
+            "read-real" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+                return Scanner(env.io.`in`).nextBigDecimal().toToken(env)
             }, 0)).toToken(env),
-            "read-bool" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
-                return Scanner(symbol.io?.`in` ?: System.`in`).nextBoolean().toToken(env)
+            "read-bool" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+                return Scanner(env.io.`in`).nextBoolean().toToken(env)
             }, 0)).toToken(env),
-            "println" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
+            "println" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val builder = StringBuilder()
                 for (token in args)
                     builder.append(token.toString())
-                (symbol.io?.out ?: System.out).println(builder.toString())
+                env.io.out.println(builder.toString())
                 return env.himeNil
             })).toToken(env),
-            "print" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
+            "print" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val builder = StringBuilder()
                 for (token in args)
                     builder.append(token.toString())
-                (symbol.io?.out ?: System.out).print(builder.toString())
+                env.io.out.print(builder.toString())
                 return env.himeNil
             })).toToken(env),
-            "newline" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
-                (symbol.io?.out ?: System.out).println()
+            "newline" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+                env.io.out.println()
                 return env.himeNil
             }, 0)).toToken(env),
-            "println-error" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
+            "println-error" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val builder = StringBuilder()
                 for (token in args)
                     builder.append(token.toString())
-                (symbol.io?.err ?: System.err).println(builder.toString())
+                env.io.err.println(builder.toString())
                 return env.himeNil
             })).toToken(env),
-            "print-error" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
+            "print-error" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val builder = StringBuilder()
                 for (token in args)
                     builder.append(token.toString())
-                (symbol.io?.err ?: System.err).print(builder.toString())
+                env.io.err.print(builder.toString())
                 return env.himeNil
             })).toToken(env),
-            "newline-error" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, symbol: SymbolTable): Token {
-                (symbol.io?.err ?: System.err).println()
+            "newline-error" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+                env.io.err.println()
                 return env.himeNil
             }, 0)).toToken(env),
             "+" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
