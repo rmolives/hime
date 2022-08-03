@@ -158,27 +158,27 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
 
     private fun initOrds() {
         ords = HashMap()
-        ords[getType("num")] = HashMap()
-        ords[getType("num")]?.set("greater",
+        ords[getType("real")] = HashMap()
+        ords[getType("real")]?.set("greater",
             fun(t1: Token, t2: Token) = BigDecimal(t1.toString()) > BigDecimal(t2.toString()))
-        ords[getType("num")]?.set("less",
+        ords[getType("real")]?.set("less",
             fun(t1: Token, t2: Token) = BigDecimal(t1.toString()) < BigDecimal(t2.toString()))
-        ords[getType("num")]?.set("greaterOrEq",
+        ords[getType("real")]?.set("greaterOrEq",
             fun(t1: Token, t2: Token) = BigDecimal(t1.toString()) >= BigDecimal(t2.toString()))
-        ords[getType("num")]?.set("lessOrEq",
+        ords[getType("real")]?.set("lessOrEq",
             fun(t1: Token, t2: Token) = BigDecimal(t1.toString()) <= BigDecimal(t2.toString()))
     }
 
     private fun initOps() {
         ops = HashMap()
-        ops[getType("num")] = HashMap()
-        ops[getType("num")]?.set("add",
+        ops[getType("real")] = HashMap()
+        ops[getType("real")]?.set("add",
             fun(t1: Token, t2: Token) = BigDecimal(t1.toString()).add(BigDecimal(t2.toString())).toToken(this))
-        ops[getType("num")]?.set("sub",
+        ops[getType("real")]?.set("sub",
             fun(t1: Token, t2: Token) = BigDecimal(t1.toString()).subtract(BigDecimal(t2.toString())).toToken(this))
-        ops[getType("num")]?.set("mult",
+        ops[getType("real")]?.set("mult",
             fun(t1: Token, t2: Token) = BigDecimal(t1.toString()).multiply(BigDecimal(t2.toString())).toToken(this))
-        ops[getType("num")]?.set("div",
+        ops[getType("real")]?.set("div",
             fun(t1: Token, t2: Token) =
                 BigDecimal(t1.toString()).divide(BigDecimal(t2.toString()), MathContext.DECIMAL64).toToken(this))
     }
