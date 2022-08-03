@@ -134,6 +134,7 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         types["lock"] = HimeType("lock")
         types["function"] = HimeType("function")
         types["type"] = HimeType("type")
+        types["byte"] = HimeType("byte")
         types["real"] = HimeType("real", arrayListOf(getType("int")))
         types["num"] = HimeType("num", arrayListOf(getType("real")))
         types["op"] = HimeType("op", arrayListOf(getType("num")))
@@ -144,7 +145,8 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                 getType("string"),
                 getType("list"),
                 getType("bool"),
-                getType("word")
+                getType("word"),
+                getType("byte")
             )
         )
         types["ord"] = HimeType("ord", arrayListOf(getType("num")))
