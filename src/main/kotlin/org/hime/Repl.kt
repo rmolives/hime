@@ -8,12 +8,11 @@ import java.nio.file.Path
 
 /**
  * REPL
- * @param env 环境
  */
-fun repl(env: Env) {
+fun repl() {
     val reader = BufferedReader(InputStreamReader(System.`in`))
     var codeBuilder = StringBuilder()
-    var symbol = env.symbols.createChild()
+    var env = Env()
     var size = 0
     while (true) {
         print("[Hime] >>> ")
@@ -25,7 +24,7 @@ fun repl(env: Env) {
         var flag = 0
         val read = reader.readLine()
         if (read.startsWith(":clear"))
-            symbol = env.symbols.createChild()
+            env = Env()
         else if (read.startsWith(":load"))
             codeBuilder.append(Files.readString(Path.of(read.substring(6))))
         else {
@@ -63,7 +62,7 @@ fun repl(env: Env) {
             } while (index < code.length)
         }
         if (flag == 0) {
-            val result = call(env, codeBuilder.toString(), symbol)
+            val result = call(env, codeBuilder.toString())
             codeBuilder = StringBuilder()
             if (result != env.himeNil)
                 println(result.toString())
