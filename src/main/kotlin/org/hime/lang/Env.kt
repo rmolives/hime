@@ -153,7 +153,7 @@ class Env(io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
 
     private fun initEqs() {
         eqs = HashMap()
-        eqs[getType("num")] = fun(t1: Token, t2: Token) = BigDecimal(t1.toString()) == BigDecimal(t2.toString())
+        eqs[getType("real")] = fun(t1: Token, t2: Token) = BigDecimal(t1.toString()) == BigDecimal(t2.toString())
     }
 
     private fun initOrds() {
