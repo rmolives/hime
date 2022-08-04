@@ -150,7 +150,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                 getType("ord")
             )
         )
-        typeAny = HimeType("any")
+        typeAny = HimeType("any", types.values.toMutableList())
     }
 
     private fun initEqs() {
@@ -205,12 +205,13 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         types[type.name] = type
         for (f in father)
             f.children.add(type)
+        typeAny.children.add(type)
     }
 
     fun isType(token: Token, type: HimeType) = getTypeWeight(token, type).first
 
     fun getTypeWeight(token: Token, type: HimeType): Pair<Boolean, Int> {
-        if (type == typeAny || token.type == type)
+        if (token.type == type)
             return Pair(true, 0)
         var weight = Int.MIN_VALUE
         for (child in type.children) {
@@ -266,7 +267,6 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     fun getType(name: String) =
         when (name) {
             "id" -> HimeTypeId(this)
-            "any" -> typeAny
             else -> types[name]
                 ?: throw HimeRuntimeException("$name type does not exist.")
         }
