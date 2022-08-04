@@ -1,7 +1,11 @@
 package org.hime.parse
 
+import org.hime.call
+import org.hime.cast
 import org.hime.lang.Env
+import org.hime.lang.HimeType
 import org.hime.lang.HimeTypeId
+import org.hime.lang.himeAssertLexer
 import org.hime.toToken
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -85,6 +89,7 @@ fun lexer(env: Env, code: String): List<List<Token>> {
                     tokens.add(env.himeLb)
                     continue
                 }
+
                 ')' -> {
                     tokens.add(env.himeRb)
                     continue
@@ -187,7 +192,18 @@ fun lexer(env: Env, code: String): List<List<Token>> {
                 val s = builder.toString()
                 if (s.contains(":")) {
                     val inOf = s.indexOf(":")
-                    tokens.add(Token(HimeTypeId(env, env.getType(s.substring(inOf + 1))), s.substring(0, inOf)))
+                    val typeS = s.substring(inOf + 1)
+                    tokens.add(Token(HimeTypeId(env, if (typeS.startsWith("(")) {
+                        val resultType = call(env, typeS)
+                        himeAssertLexer(
+                            env.isType(
+                                resultType,
+                                env.getType("type")
+                            )
+                        ) { "$resultType is not type." }
+                        cast<HimeType>(resultType)
+                    } else
+                        env.getType(s.substring(inOf + 1))), s.substring(0, inOf)))
                 } else
                     tokens.add(Token(HimeTypeId(env), builder.toString()))
                 continue
