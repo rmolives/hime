@@ -1,9 +1,9 @@
 package org.hime.parse
 
-import org.hime.core.FuncType
-import org.hime.core.HimeFunction
-import org.hime.core.SymbolTable
-import org.hime.core.eval
+import org.hime.lang.FuncType
+import org.hime.lang.HimeFunction
+import org.hime.lang.SymbolTable
+import org.hime.lang.eval
 import org.hime.lang.Env
 import org.hime.lang.HimeType
 import org.hime.toToken

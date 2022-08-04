@@ -1,7 +1,6 @@
-package org.hime.core
+package org.hime.lang
 
 import org.hime.cast
-import org.hime.lang.Env
 import org.hime.parse.ASTNode
 import org.hime.parse.AstType
 import org.hime.parse.Token

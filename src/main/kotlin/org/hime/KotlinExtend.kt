@@ -1,6 +1,6 @@
 package org.hime
 
-import org.hime.core.HimeFunction
+import org.hime.lang.HimeFunction
 import org.hime.lang.Env
 import org.hime.lang.HimeType
 import org.hime.parse.Token

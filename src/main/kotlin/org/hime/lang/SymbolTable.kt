@@ -1,4 +1,4 @@
-package org.hime.core
+package org.hime.lang
 
 import org.hime.parse.Token
 

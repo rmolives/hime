@@ -3,10 +3,8 @@ package org.hime.core
 import ch.obermuhlner.math.big.BigDecimalMath
 import org.hime.call
 import org.hime.cast
-import org.hime.core.FuncType.BUILT_IN
-import org.hime.core.FuncType.STATIC
-import org.hime.lang.HimeRuntimeException
-import org.hime.lang.himeAssertRuntime
+import org.hime.lang.FuncType.BUILT_IN
+import org.hime.lang.FuncType.STATIC
 import org.hime.lang.*
 import org.hime.parse.*
 import org.hime.toToken
@@ -16,10 +14,7 @@ import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
 import java.nio.file.Files
-import java.nio.file.Paths
-import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 import kotlin.system.exitProcess
 
@@ -257,7 +252,7 @@ fun initCore(env: Env) {
                         for (e in node.children)
                             value = eval(env, e.copy(), symbol.createChild())
                         val type = cast<HimeTypeId>(node.tok.type).type
-                        himeAssertRuntime(env.isType(value, type)) { "$value is not ${type.name}." }
+                        himeAssertType(value, type, env)
                         newSymbol.put(node.tok.toString(), value)
                     }
                 }
@@ -292,7 +287,7 @@ fun initCore(env: Env) {
                         for (e in node.children)
                             value = eval(env, e.copy(), newSymbol.createChild())
                         val type = cast<HimeTypeId>(node.tok.type).type
-                        himeAssertRuntime(env.isType(value, type)) { "$value is not ${type.name}." }
+                        himeAssertType(value, type, env)
                         newSymbol.put(node.tok.toString(), value)
                     }
                 }
@@ -310,7 +305,7 @@ fun initCore(env: Env) {
                     for (i in 1 until ast.size())
                         result = eval(env, ast[i], symbol.createChild())
                     val type = cast<HimeTypeId>(ast[0].tok.type).type
-                    himeAssertRuntime(env.isType(result, type)) { "$result is not ${type.name}." }
+                    himeAssertType(result, type, env)
                     symbol.put(ast[0].tok.toString(), result)
                 }
                 // 如果是(def (function-name p*) e)
@@ -374,7 +369,7 @@ fun initCore(env: Env) {
                     for (i in 1 until ast.size())
                         result = eval(env, ast[i], symbol.createChild())
                     val type = cast<HimeTypeId>(ast[0].tok.type).type
-                    himeAssertRuntime(env.isType(result, type)) { "$result is not ${type.name}." }
+                    himeAssertType(result, type, env)
                     symbol.set(ast[0].tok.toString(), result)
                 } else {
                     // 如果是(set (function-name p*) e)
@@ -1406,282 +1401,3 @@ fun initCore(env: Env) {
         )
     )
 }
-
-fun initFile(env: Env) {
-    env.symbols.table.putAll(
-        mutableMapOf(
-            "file-exists" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return File(args[0].toString()).exists().toToken(env)
-            }, 1)).toToken(env),
-            "file-list" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                val list = ArrayList<Token>()
-                val files = File(args[0].toString()).listFiles()
-                for (file in files!!)
-                    list.add(file.path.toToken(env))
-                return list.toToken(env)
-            }, 1)).toToken(env),
-            "file-mkdirs" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    val file = File(args[0].toString())
-                    if (!file.parentFile.exists())
-                        !file.parentFile.mkdirs()
-                    if (!file.exists())
-                        file.createNewFile()
-                    return env.himeNil
-                },
-                1
-            )).toToken(env),
-            "file-new" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    val file = File(args[0].toString())
-                    if (!file.exists())
-                        file.createNewFile()
-                    return env.himeNil
-                },
-                1
-            )).toToken(env),
-            "file-read-string" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return Files.readString(Paths.get(args[0].toString())).toToken(env)
-            }, 1)).toToken(env),
-            "file-remove" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    File(args[0].toString()).delete()
-                    return env.himeNil
-                },
-                1
-            )).toToken(env),
-            "file-write-string" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    val file = File(args[0].toString())
-                    if (!file.parentFile.exists())
-                        !file.parentFile.mkdirs()
-                    if (!file.exists())
-                        file.createNewFile()
-                    Files.writeString(file.toPath(), args[1].toString())
-                    return env.himeNil
-                },
-                2
-            )).toToken(env),
-            "file-read-bytes" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                val list = ArrayList<Token>()
-                val bytes = Files.readAllBytes(Paths.get(args[0].toString()))
-                for (byte in bytes)
-                    list.add(byte.toToken(env))
-                return list.toToken(env)
-            }, 1)).toToken(env),
-            "file-write-bytes" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    val file = File(args[0].toString())
-                    if (!file.parentFile.exists())
-                        !file.parentFile.mkdirs()
-                    if (!file.exists())
-                        file.createNewFile()
-                    val list = cast<List<Token>>(args[1].value)
-                    val bytes = ByteArray(list.size)
-                    for (index in list.indices) {
-                        himeAssertType(list[index], "byte", env)
-                        bytes[index] = cast<Byte>(list[index].value)
-                    }
-                    Files.write(file.toPath(), bytes)
-                    return env.himeNil
-                },
-                listOf(env.getType("any"), env.getType("list")),
-                false
-            )).toToken(env)
-        )
-    )
-}
-
-fun initTime(env: Env) {
-    env.symbols.table.putAll(
-        mutableMapOf(
-            "time" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-                return Date().time.toToken(env)
-            }, 0)).toToken(env),
-            "time-format" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                himeAssertType(args[1], "int", env)
-                return SimpleDateFormat(args[0].toString()).format(args[1].toString().toLong())
-                    .toToken(env)
-            }, 2)).toToken(env),
-            "time-parse" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return SimpleDateFormat(args[0].toString()).parse(args[1].value.toString()).time.toToken(env)
-            }, 2)).toToken(env)
-        )
-    )
-}
-
-fun initTable(env: Env) {
-    env.symbols.table.putAll(
-        mutableMapOf(
-            "table" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-                return mapOf<Token, Token>().toToken(env)
-            }, 0)).toToken(env),
-            "table-put" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                val table = HashMap(cast<Map<Token, Token>>(args[0].value))
-                table[args[1]] = args[2]
-                return table.toToken(env)
-            }, listOf(env.getType("table"), env.getType("any"), env.getType("any")), false)).toToken(env),
-            "table-get" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                himeAssertRuntime(args.size > 1) { "not enough arguments." }
-                himeAssertType(args[0], "table", env)
-                val table = cast<Map<Token, Token>>(args[0].value)
-                return table[args[1]] ?: env.himeNil
-            }, listOf(env.getType("table"), env.getType("any")), false)).toToken(env),
-            "table-remove" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                val table = HashMap(cast<Map<Token, Token>>(args[0].value))
-                table.remove(args[1])
-                return table.toToken(env)
-            }, listOf(env.getType("table"), env.getType("any")), false)).toToken(env),
-            "table-keys" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    return cast<Map<Token, Token>>(args[0].value).keys.toList().toToken(env)
-                },
-                listOf(env.getType("table")),
-                false
-            )).toToken(env),
-            "table-put!" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    cast<MutableMap<Token, Token>>(args[0].value)[args[1]] = args[2]
-                    return args[0].toToken(env)
-                },
-                listOf(env.getType("table"), env.getType("any"), env.getType("any")),
-                false
-            )).toToken(env),
-            "table-remove!" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    cast<MutableMap<Token, Token>>(args[0].value).remove(args[1])
-                    return args[0].toToken(env)
-                },
-                listOf(env.getType("table"), env.getType("any")),
-                false
-            )).toToken(env)
-        )
-    )
-}
-
-fun initThread(env: Env) {
-    env.symbols.table.putAll(
-        mutableMapOf(
-            "make-lock" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-                return ReentrantLock().toToken(env)
-            }, 0)).toToken(env),
-            "lock" to (HimeFunction(
-                env,
-                BUILT_IN,
-                @Synchronized
-                fun(args: List<Token>, _: SymbolTable): Token {
-                    for (arg in args)
-                        cast<ReentrantLock>(arg.value).lock()
-                    return env.himeNil
-                }, listOf(env.getType("lock")), true
-            )).toToken(env),
-            "unlock" to (HimeFunction(
-                env,
-                BUILT_IN,
-                @Synchronized
-                fun(args: List<Token>, _: SymbolTable): Token {
-                    for (arg in args)
-                        cast<ReentrantLock>(arg.value).unlock()
-                    return env.himeNil
-                }, listOf(env.getType("lock")), true
-            )).toToken(env),
-            "get-lock" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return cast<ReentrantLock>(args[0].value).isLocked.toToken(env)
-            }, listOf(env.getType("lock")), false)).toToken(env),
-            "sleep" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                Thread.sleep(args[0].toString().toLong())
-                return env.himeNil
-            }, listOf(env.getType("int")), false)).toToken(env),
-            "thread" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
-                    // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
-                    val asts = env.himeAstEmpty.copy()
-                    asts.add(ASTNode(Thread.currentThread().toToken(env)))
-                    return if (args.size > 1)
-                        Thread({
-                            cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
-                        }, args[1].toString()).toToken(env)
-                    else
-                        Thread {
-                            cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
-                        }.toToken(env)
-                },
-                listOf(env.getType("function")),
-                true
-            )).toToken(env), //这种类重载函数的参数数量处理还比较棘手
-            "thread-start" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    cast<Thread>(args[0].value).start()
-                    return env.himeNil
-                }, listOf(env.getType("thread")), false
-            )).toToken(env),
-            "thread-current" to (HimeFunction(
-                env,
-                BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
-                    return Thread.currentThread().toToken(env)
-                }, 0
-            )).toToken(env),
-            "thread-name" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return cast<Thread>(args[0].value).name.toToken(env)
-            }, listOf(env.getType("thread")), false)).toToken(env),
-            "thread-set-daemon" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    cast<Thread>(args[0].value).isDaemon = cast<Boolean>(args[1].value)
-                    return env.himeNil
-                }, listOf(env.getType("thread"), env.getType("bool")), false
-            )).toToken(env),
-            "thread-daemon" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return cast<Thread>(args[0].value).isDaemon.toToken(env)
-            }, listOf(env.getType("thread")), false)).toToken(env),
-            "thread-interrupt" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    cast<Thread>(args[0].value).interrupt()
-                    return env.himeNil
-                }, listOf(env.getType("thread")), false
-            )).toToken(env),
-            "thread-join" to (HimeFunction(
-                env,
-                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                    cast<Thread>(args[0].value).join()
-                    return env.himeNil
-                }, listOf(env.getType("thread")), false
-            )).toToken(env),
-            "thread-alive" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return cast<Thread>(args[0].value).isAlive.toToken(env)
-            }, listOf(env.getType("thread")), false)).toToken(env),
-            "thread-interrupted" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return cast<Thread>(args[0].value).isInterrupted.toToken(env)
-            }, listOf(env.getType("thread")), false)).toToken(env)
-        )
-    )
-}
-
-fun initRegex(env: Env) {
-    env.symbols.table.putAll(
-        mutableMapOf(
-            "match" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return args[0].toString().matches(Regex(args[1].toString())).toToken(env)
-            }, 2)).toToken(env)
-        )
-    )
-}
-
-val module = mutableMapOf(
-    "util.file" to ::initFile,
-    "util.time" to ::initTime,
-    "util.table" to ::initTable,
-    "util.thread" to ::initThread,
-    "util.regex" to ::initRegex
-)

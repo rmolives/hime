@@ -1,6 +1,5 @@
 package org.hime.lang
 
-import org.hime.core.SymbolTable
 import org.hime.core.initCore
 import org.hime.parse.ASTNode
 import org.hime.parse.AstType

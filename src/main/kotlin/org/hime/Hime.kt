@@ -1,7 +1,7 @@
 package org.hime
 
-import org.hime.core.SymbolTable
-import org.hime.core.eval
+import org.hime.lang.SymbolTable
+import org.hime.lang.eval
 import org.hime.lang.Env
 import org.hime.parse.*
 
