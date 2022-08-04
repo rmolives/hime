@@ -12,11 +12,6 @@ fun himeAssertParser(value: Boolean, lazyMessage: () -> String) {
         throw HimeParserException(lazyMessage())
 }
 
-fun himeAssertLexer(value: Boolean, lazyMessage: () -> String) {
-    if (!value)
-        throw HimeLexerException(lazyMessage())
-}
-
 fun himeAssertType(tok: Token, type: HimeType, env: Env) {
     himeAssertRuntime(
         env.isType(
