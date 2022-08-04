@@ -54,7 +54,7 @@ class HimeFunction(
 
     fun call(args: List<Token>): Token {
         himeAssertRuntime(funcType == FuncType.USER_DEFINED) { "call non user defined function." }
-        return call(args, env.symbols.createChild())
+        return call(args, env.symbol.createChild())
     }
 
     override fun toString(): String {

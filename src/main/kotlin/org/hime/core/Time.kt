@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 fun initTime(env: Env) {
-    env.symbols.table.putAll(
+    env.symbol.table.putAll(
         mutableMapOf(
             "time" to (HimeFunction(env, FuncType.BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
                 return Date().time.toToken(env)

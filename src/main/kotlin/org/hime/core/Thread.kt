@@ -11,7 +11,7 @@ import org.hime.toToken
 import java.util.concurrent.locks.ReentrantLock
 
 fun initThread(env: Env) {
-    env.symbols.table.putAll(
+    env.symbol.table.putAll(
         mutableMapOf(
             "make-lock" to (HimeFunction(env, FuncType.BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
                 return ReentrantLock().toToken(env)

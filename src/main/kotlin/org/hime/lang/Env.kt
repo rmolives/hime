@@ -20,7 +20,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     lateinit var himeEmptyStream: Token
     lateinit var himeLb: Token
     lateinit var himeRb: Token
-    lateinit var symbols: SymbolTable
+    lateinit var symbol: SymbolTable
     lateinit var himeAstEmpty: ASTNode
 
     private lateinit var eqs: MutableMap<HimeType, (Token, Token) -> Boolean>
@@ -196,7 +196,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     }
 
     private fun initSymbols() {
-        symbols = SymbolTable(HashMap(), null)
+        symbol = SymbolTable(HashMap(), null)
         initCore(this)
     }
 

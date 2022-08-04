@@ -9,7 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 fun initFile(env: Env) {
-    env.symbols.table.putAll(
+    env.symbol.table.putAll(
         mutableMapOf(
             "file-exists" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return File(args[0].toString()).exists().toToken(env)

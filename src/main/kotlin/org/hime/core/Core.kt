@@ -19,7 +19,7 @@ import kotlin.collections.ArrayList
 import kotlin.system.exitProcess
 
 fun initCore(env: Env) {
-    env.symbols.table.putAll(
+    env.symbol.table.putAll(
         mutableMapOf(
             "true" to env.himeTrue,
             "false" to env.himeFalse,

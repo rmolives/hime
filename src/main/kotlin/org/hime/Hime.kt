@@ -12,7 +12,7 @@ import org.hime.parse.*
  * @param symbol 符号表
  * @return       结果
  */
-fun call(env: Env, code: String, symbol: SymbolTable = env.symbols): Token {
+fun call(env: Env, code: String, symbol: SymbolTable = env.symbol): Token {
     val asts = parser(env, lexer(env, preprocessor(code)))
     var result = env.himeNil
     for (ast in asts)

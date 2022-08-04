@@ -7,7 +7,7 @@ import org.hime.toToken
 import java.util.HashMap
 
 fun initTable(env: Env) {
-    env.symbols.table.putAll(
+    env.symbol.table.putAll(
         mutableMapOf(
             "table" to (HimeFunction(env, FuncType.BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
                 return mapOf<Token, Token>().toToken(env)
