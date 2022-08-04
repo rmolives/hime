@@ -100,12 +100,7 @@ fun initCore(env: Env) {
                 val list = ArrayList<Token>()
                 // 将stream-cdr传入的列表，除去第1个外的所有元素都应用force，即便(cons-stream t1 t2)只返回包含2个元素的列表
                 for (i in 1 until tokens.size) {
-                    himeAssertRuntime(
-                        env.isType(
-                            tokens[i],
-                            env.getType("function")
-                        )
-                    ) { "${tokens[i]} is not function." }
+                    himeAssertType(tokens[i], "function", env)
                     list.add(cast<HimeFunction>(tokens[i].value).call(arrayListOf()))
                 }
                 // 如果列表中只存在一个元素，那么就返回这个元素
@@ -117,7 +112,7 @@ fun initCore(env: Env) {
             "stream-map" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                 if (args[1] == env.himeEmptyStream)
                     return env.himeEmptyStream
-                himeAssertRuntime(env.isType(args[1], env.getType("list"))) { "${args[1]} is not list." }
+                himeAssertType(args[1], "list", env)
                 // 每个list只包含2个元素，一个已经求值，一个待求值，这里包含(stream-map function list*)的所有list
                 var lists = ArrayList<List<Token>>()
                 // 将所有list添加到lists中
@@ -152,7 +147,7 @@ fun initCore(env: Env) {
             "stream-for-each" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                 if (args[1] == env.himeEmptyStream)
                     return env.himeEmptyStream
-                himeAssertRuntime(env.isType(args[1], env.getType("list"))) { "${args[1]} is not list." }
+                himeAssertType(args[1], "list", env)
                 // 每个list只包含2个元素，一个已经求值，一个待求值，这里包含(stream-map function list*)的所有list
                 var lists = ArrayList<List<Token>>()
                 // 将所有list添加到lists中
@@ -174,12 +169,7 @@ fun initCore(env: Env) {
                     val temp = ArrayList<List<Token>>()
                     // 重新计算lists，并应用delay
                     for (list in lists) {
-                        himeAssertRuntime(
-                            env.isType(
-                                list[1],
-                                env.getType("function")
-                            )
-                        ) { "${list[1]} is not function." }
+                        himeAssertType(list[1], "function", env)
                         val t = cast<HimeFunction>(list[1].value).call(arrayListOf())
                         if (t == env.himeEmptyStream)
                             break@top
@@ -192,7 +182,7 @@ fun initCore(env: Env) {
             "stream-filter" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                 if (args[1] == env.himeEmptyStream)
                     return arrayListOf<Token>().toToken(env)
-                himeAssertRuntime(env.isType(args[1], env.getType("list"))) { "${args[1]} is not list." }
+                himeAssertType(args[1], "list", env)
                 val result = ArrayList<Token>()
                 var tokens = cast<List<Token>>(args[1].value)
                 while (tokens[0].value != env.himeEmptyStream) {
@@ -200,7 +190,7 @@ fun initCore(env: Env) {
                     val asts = env.himeAstEmpty.copy()
                     asts.add(ASTNode(tokens[0]))
                     val op = cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
-                    himeAssertRuntime(env.isType(op, env.getType("bool"))) { "$op is not bool." }
+                    himeAssertType(op, "bool", env)
                     if (cast<Boolean>(op.value))
                         result.add(tokens[0])
                     val temp = cast<HimeFunction>(tokens[1].value).call(arrayListOf())
@@ -212,12 +202,12 @@ fun initCore(env: Env) {
             }, listOf(env.getType("function")), true)).toToken(env),
             "stream-ref" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 himeAssertRuntime(args.size > 1) { "not enough arguments." }
-                himeAssertRuntime(env.isType(args[0], env.getType("list"))) { "${args[0]} is not list." }
-                himeAssertRuntime(env.isType(args[1], env.getType("int"))) { "${args[1]} is not int." }
+                himeAssertType(args[0], "list", env)
+                himeAssertType(args[1], "int", env)
                 var temp = cast<List<Token>>(args[0].value)
                 var index = args[1].value.toString().toInt()
                 while ((index--) != 0) {
-                    himeAssertRuntime(env.isType(temp[1], env.getType("function"))) { "${temp[1]} is not function." }
+                    himeAssertType(temp[1], "function", env)
                     temp = cast<List<Token>>(cast<HimeFunction>(temp[1].value).call(arrayListOf()).value)
                 }
                 return temp[0]
@@ -234,7 +224,7 @@ fun initCore(env: Env) {
             "force" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 var result = env.himeNil
                 for (token in args) {
-                    himeAssertRuntime(env.isType(token, env.getType("function"))) { "$token is not function." }
+                    himeAssertType(token, "function", env)
                     result = cast<HimeFunction>(token.value).call(arrayListOf())
                 }
                 return result
@@ -250,12 +240,7 @@ fun initCore(env: Env) {
                         val parameters = ArrayList<String>()
                         val paramTypes = ArrayList<HimeType>()
                         for (i in 0 until ast[0].size()) {
-                            himeAssertRuntime(
-                                env.isType(
-                                    ast[0][i].tok,
-                                    env.getType("id")
-                                )
-                            ) { "${ast[0][i].tok} is not id." }
+                            himeAssertType(ast[0][i].tok, "id", env)
                             parameters.add(ast[0][i].tok.toString())
                             paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                         }
@@ -290,12 +275,7 @@ fun initCore(env: Env) {
                         val parameters = ArrayList<String>()
                         val paramTypes = ArrayList<HimeType>()
                         for (i in 0 until ast[0].size()) {
-                            himeAssertRuntime(
-                                env.isType(
-                                    ast[0][i].tok,
-                                    env.getType("id")
-                                )
-                            ) { "${ast[0][i].tok} is not id." }
+                            himeAssertType(ast[0][i].tok, "id", env)
                             parameters.add(ast[0][i].tok.toString())
                             paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                         }
@@ -338,12 +318,7 @@ fun initCore(env: Env) {
                     val parameters = ArrayList<String>()
                     val paramTypes = ArrayList<HimeType>()
                     for (i in 0 until ast[0].size()) {
-                        himeAssertRuntime(
-                            env.isType(
-                                ast[0][i].tok,
-                                env.getType("id")
-                            )
-                        ) { "${ast[0][i].tok} is not id." }
+                        himeAssertType(ast[0][i].tok, "id", env)
                         parameters.add(ast[0][i].tok.toString())
                         paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                     }
@@ -366,7 +341,7 @@ fun initCore(env: Env) {
                 val parameters = ArrayList<String>()
                 val paramTypes = ArrayList<HimeType>()
                 for (i in 0 until ast[0].size()) {
-                    himeAssertRuntime(env.isType(ast[0][i].tok, env.getType("id"))) { "${ast[0][i].tok} is not id." }
+                    himeAssertType(ast[0][i].tok, "id", env)
                     parameters.add(ast[0][i].tok.toString())
                     if (i != ast[0].size() - 1)
                         paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
@@ -406,12 +381,7 @@ fun initCore(env: Env) {
                     val parameters = ArrayList<String>()
                     val paramTypes = ArrayList<HimeType>()
                     for (i in 0 until ast[0].size()) {
-                        himeAssertRuntime(
-                            env.isType(
-                                ast[0][i].tok,
-                                env.getType("id")
-                            )
-                        ) { "${ast[0][i].tok} is not id." }
+                        himeAssertType(ast[0][i].tok, "id", env)
                         parameters.add(ast[0][i].tok.toString())
                         paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                     }
@@ -430,7 +400,7 @@ fun initCore(env: Env) {
                 val parameters = ArrayList<String>()
                 val paramTypes = ArrayList<HimeType>()
                 for (i in 0 until ast[0].size()) {
-                    himeAssertRuntime(env.isType(ast[0][i].tok, env.getType("id"))) { "${ast[0][i].tok} is not id." }
+                    himeAssertType(ast[0][i].tok, "id", env)
                     parameters.add(ast[0][i].tok.toString())
                     if (i != ast[0].size() - 1)
                         paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
@@ -451,16 +421,11 @@ fun initCore(env: Env) {
                 val paramTypes = ArrayList<HimeType>()
                 // 判断非(lambda () e)
                 if (ast[0].tok != env.himeEmptyStream) {
-                    himeAssertRuntime(env.isType(ast[0].tok, env.getType("id"))) { "${ast[0].tok} is not id." }
+                    himeAssertType(ast[0].tok, "id", env)
                     parameters.add(ast[0].tok.toString())
                     paramTypes.add(cast<HimeTypeId>(ast[0].tok.type).type)
                     for (i in 0 until ast[0].size()) {
-                        himeAssertRuntime(
-                            env.isType(
-                                ast[0][i].tok,
-                                env.getType("id")
-                            )
-                        ) { "${ast[0][i].tok} is not id." }
+                        himeAssertType(ast[0][i].tok, "id", env)
                         parameters.add(ast[0][i].tok.toString())
                         paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                     }
@@ -477,7 +442,7 @@ fun initCore(env: Env) {
                 val newSymbol = symbol.createChild()
                 // 执行condition
                 val condition = eval(env, ast[0], newSymbol)
-                himeAssertRuntime(env.isType(condition, env.getType("bool"))) { "$condition is not bool." }
+                himeAssertType(condition, "bool", env)
                 // 分支判断
                 if (cast<Boolean>(condition.value))
                     return eval(env, ast[1].copy(), newSymbol)
@@ -494,7 +459,7 @@ fun initCore(env: Env) {
                         return eval(env, node[0].copy(), newSymbol)
                     else {
                         val result = eval(env, node[0].copy(), newSymbol)
-                        himeAssertRuntime(env.isType(result, env.getType("bool"))) { "$result is not bool." }
+                        himeAssertType(result, "bool", env)
                         if (cast<Boolean>(result.value)) {
                             var r = env.himeNil
                             for (index in 1 until node.size())
@@ -538,13 +503,13 @@ fun initCore(env: Env) {
                 var result = env.himeNil
                 // 执行condition
                 var condition = eval(env, ast[0].copy(), newSymbol)
-                himeAssertRuntime(env.isType(condition, env.getType("bool"))) { "$condition is not bool." }
+                himeAssertType(condition, "bool", env)
                 while (cast<Boolean>(condition.value)) {
                     for (i in 1 until ast.size())
                         result = eval(env, ast[i].copy(), newSymbol)
                     // 重新执行condition
                     condition = eval(env, ast[0].copy(), newSymbol)
-                    himeAssertRuntime(env.isType(condition, env.getType("bool"))) { "$condition is not bool." }
+                    himeAssertType(condition, "bool", env)
                 }
                 return result
             })).toToken(env),
@@ -553,25 +518,25 @@ fun initCore(env: Env) {
             }, 0)).toToken(env),
             "type-intersection" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return HimeType(mode = HimeType.HimeTypeMode.INTERSECTION, column = args.map {
-                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
+                    himeAssertType(it, "type", env)
                     cast<HimeType>(it.value)
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
             "type-union" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return HimeType(mode = HimeType.HimeTypeMode.UNION, column = args.map {
-                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
+                    himeAssertType(it, "type", env)
                     cast<HimeType>(it.value)
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
             "type-complementary" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return HimeType(mode = HimeType.HimeTypeMode.COMPLEMENTARY, column = args.map {
-                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
+                    himeAssertType(it, "type", env)
                     cast<HimeType>(it.value)
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
             "type-wrong" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return HimeType(mode = HimeType.HimeTypeMode.WRONG, column = args.map {
-                    himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
+                    himeAssertType(it, "type", env)
                     cast<HimeType>(it.value)
                 }).toToken(env)
             }, listOf(env.getType("type")), true)).toToken(env),
@@ -580,7 +545,7 @@ fun initCore(env: Env) {
                 env.addType(
                     HimeType(args[0].toString(), type.children, type.mode, type.column, type.identifier),
                     args.subList(2, args.size).map {
-                        himeAssertRuntime(env.isType(it, env.getType("type"))) { "$it is not type." }
+                        himeAssertType(it, "type", env)
                         cast<HimeType>(it.value)
                     })
                 return env.himeNil
@@ -692,7 +657,7 @@ fun initCore(env: Env) {
             "+" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 var num = args[0]
                 for (i in 1 until args.size) {
-                    himeAssertRuntime(env.isType(args[i], env.getType("num"))) { "${args[i]} is not num." }
+                    himeAssertType(args[i], "num", env)
                     num = env.himeAdd(num, args[i])
                 }
                 return num
@@ -705,7 +670,7 @@ fun initCore(env: Env) {
                         env.himeMult(num, BigInteger.TWO.toToken(env))
                     )
                 for (i in 1 until args.size) {
-                    himeAssertRuntime(env.isType(args[i], env.getType("num"))) { "${args[i]} is not num." }
+                    himeAssertType(args[i], "num", env)
                     num = env.himeSub(num, args[i])
                 }
                 return num.toToken(env)
@@ -713,7 +678,7 @@ fun initCore(env: Env) {
             "*" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 var num = args[0]
                 for (i in 1 until args.size) {
-                    himeAssertRuntime(env.isType(args[i], env.getType("num"))) { "${args[i]} is not num." }
+                    himeAssertType(args[i], "num", env)
                     num = env.himeMult(num, args[i])
                 }
                 return num
@@ -721,7 +686,7 @@ fun initCore(env: Env) {
             "/" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 var num = args[0]
                 for (i in 1 until args.size) {
-                    himeAssertRuntime(env.isType(args[i], env.getType("num"))) { "${args[i]} is not num." }
+                    himeAssertType(args[i], "num", env)
                     num = env.himeDiv(num, args[i])
                 }
                 return num
@@ -729,7 +694,7 @@ fun initCore(env: Env) {
             "and" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 himeAssertRuntime(args.isNotEmpty()) { "not enough arguments." }
                 for (arg in args) {
-                    himeAssertRuntime(env.isType(arg, env.getType("bool"))) { "$arg is not bool." }
+                    himeAssertType(arg, "bool", env)
                     if (!cast<Boolean>(arg.value))
                         return env.himeFalse
                 }
@@ -737,7 +702,7 @@ fun initCore(env: Env) {
             }, listOf(env.getType("bool")), true)).toToken(env),
             "or" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 for (arg in args) {
-                    himeAssertRuntime(env.isType(arg, env.getType("bool"))) { "$arg is not bool." }
+                    himeAssertType(arg, "bool", env)
                     if (cast<Boolean>(arg.value))
                         return env.himeTrue
                 }
@@ -745,15 +710,15 @@ fun initCore(env: Env) {
             }, listOf(env.getType("bool")), true)).toToken(env),
             "not" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 himeAssertRuntime(args.isNotEmpty()) { "not enough arguments." }
-                himeAssertRuntime(env.isType(args[0], env.getType("bool"))) { "${args[0]} is not bool." }
+                himeAssertType(args[0], "bool", env)
                 return if (cast<Boolean>(args[0].value)) env.himeFalse else env.himeTrue
             }, listOf(env.getType("bool")), false)).toToken(env),
             "=" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 himeAssertRuntime(args.isNotEmpty()) { "not enough arguments." }
                 for (i in args.indices) {
-                    himeAssertRuntime(env.isType(args[i], env.getType("eq"))) { "${args[i]} is not eq." }
+                    himeAssertType(args[i], "eq", env)
                     for (j in args.indices) {
-                        himeAssertRuntime(env.isType(args[j], env.getType("eq"))) { "${args[j]} is not eq." }
+                        himeAssertType(args[j], "eq", env)
                         if (i != j && !cast<Boolean>(env.himeEq(args[i], args[j])))
                             return env.himeFalse
                     }
@@ -763,9 +728,9 @@ fun initCore(env: Env) {
             "/=" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 himeAssertRuntime(args.isNotEmpty()) { "not enough arguments." }
                 for (i in args.indices) {
-                    himeAssertRuntime(env.isType(args[i], env.getType("ord"))) { "${args[i]} is not eq." }
+                    himeAssertType(args[i], "ord", env)
                     for (j in args.indices) {
-                        himeAssertRuntime(env.isType(args[j], env.getType("ord"))) { "${args[j]} is not eq." }
+                        himeAssertType(args[j], "ord", env)
                         if (i != j && cast<Boolean>(env.himeEq(args[i], args[j])))
                             return env.himeFalse
                     }
@@ -776,7 +741,7 @@ fun initCore(env: Env) {
                 himeAssertRuntime(args.isNotEmpty()) { "not enough arguments." }
                 var token = args[0]
                 for (index in 1 until args.size) {
-                    himeAssertRuntime(env.isType(args[index], env.getType("ord"))) { "${args[1]} is not ord." }
+                    himeAssertType(args[index], "ord", env)
                     if (env.himeLessOrEq(token, args[index]))
                         return env.himeFalse
                     token = args[index]
@@ -787,7 +752,7 @@ fun initCore(env: Env) {
                 himeAssertRuntime(args.isNotEmpty()) { "not enough arguments." }
                 var token = args[0]
                 for (index in 1 until args.size) {
-                    himeAssertRuntime(env.isType(args[index], env.getType("ord"))) { "${args[1]} is not ord." }
+                    himeAssertType(args[index], "ord", env)
                     if (env.himeGreaterOrEq(token, args[index]))
                         return env.himeFalse
                     token = args[index]
@@ -798,7 +763,7 @@ fun initCore(env: Env) {
                 himeAssertRuntime(args.isNotEmpty()) { "not enough arguments." }
                 var token = args[0]
                 for (index in 1 until args.size) {
-                    himeAssertRuntime(env.isType(args[index], env.getType("ord"))) { "${args[1]} is not ord." }
+                    himeAssertType(args[index], "ord", env)
                     if (env.himeLess(token, args[index]))
                         return env.himeFalse
                     token = args[index]
@@ -809,7 +774,7 @@ fun initCore(env: Env) {
                 himeAssertRuntime(args.isNotEmpty()) { "not enough arguments." }
                 var token = args[0]
                 for (index in 1 until args.size) {
-                    himeAssertRuntime(env.isType(args[index], env.getType("ord"))) { "${args[1]} is not ord." }
+                    himeAssertType(args[index], "ord", env)
                     if (env.himeGreater(token, args[index]))
                         return env.himeFalse
                     token = args[index]
@@ -817,9 +782,9 @@ fun initCore(env: Env) {
                 return env.himeTrue
             }, listOf(env.getType("ord")), true)).toToken(env),
             "random" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                himeAssertRuntime(env.isType(args[0], env.getType("num"))) { "${args[0]} is not num." }
+                himeAssertType(args[0], "num", env)
                 if (args.size > 1)
-                    himeAssertRuntime(env.isType(args[1], env.getType("num"))) { "${args[1]} is not num." }
+                    himeAssertType(args[1], "num", env)
                 val start = if (args.size == 1) BigInteger.ZERO else BigInteger(args[0].toString())
                 val end =
                     if (args.size == 1) BigInteger(args[0].toString()) else BigInteger(args[1].toString())
@@ -914,7 +879,7 @@ fun initCore(env: Env) {
             "list-add" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val tokens = ArrayList(cast<List<Token>>(args[0].value))
                 if (args.size > 2) {
-                    himeAssertRuntime(env.isType(args[1], env.getType("int"))) { "${args[1]} is not int." }
+                    himeAssertType(args[1], "int", env)
                     tokens.add(args[1].value.toString().toInt(), args[2])
                 } else
                     tokens.add(args[1])
@@ -943,7 +908,7 @@ fun initCore(env: Env) {
                 BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     val tokens = cast<MutableList<Token>>(args[0].value)
                     if (args.size > 2) {
-                        himeAssertRuntime(env.isType(args[1], env.getType("int"))) { "${args[1]} is not int." }
+                        himeAssertType(args[1], "int", env)
                         tokens.add(args[1].value.toString().toInt(), args[2])
                     } else
                         tokens.add(args[1])
@@ -1091,12 +1056,7 @@ fun initCore(env: Env) {
                     parameters.add(tokens[i])
                     // 例如对于(map f (list a b) (list c d))，则执行(f a c)等
                     for (j in 1 until args.size - 1) {
-                        himeAssertRuntime(
-                            env.isType(
-                                args[j + 1],
-                                env.getType("list")
-                            )
-                        ) { "${args[j + 1]} is not list." }
+                        himeAssertType(args[j + 1], "list", env)
                         parameters.add(cast<List<Token>>(args[j + 1].value)[i])
                     }
                     // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
@@ -1138,12 +1098,7 @@ fun initCore(env: Env) {
                     parameters.add(tokens[i])
                     // 例如对于(map f (list a b) (list c d))，则执行(f a c)等
                     for (j in 1 until args.size - 1) {
-                        himeAssertRuntime(
-                            env.isType(
-                                args[j + 1],
-                                env.getType("list")
-                            )
-                        ) { "${args[j + 1]} is not list." }
+                        himeAssertType(args[j + 1], "list", env)
                         parameters.add(cast<List<Token>>(args[j + 1].value)[i])
                     }
                     // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
@@ -1162,7 +1117,7 @@ fun initCore(env: Env) {
                     val asts = env.himeAstEmpty.copy()
                     asts.add(ASTNode(token))
                     val op = cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
-                    himeAssertRuntime(env.isType(op, env.getType("bool"))) { "$op is not bool." }
+                    himeAssertType(op, "bool", env)
                     if (cast<Boolean>(op.value))
                         result.add(token)
                 }
@@ -1239,7 +1194,7 @@ fun initCore(env: Env) {
             "max" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 var max = BigDecimal(args[0].toString())
                 for (i in 1 until args.size) {
-                    himeAssertRuntime(env.isType(args[i], env.getType("num"))) { "${args[i]} is not num." }
+                    himeAssertType(args[i], "num", env)
                     max = max.max(BigDecimal(args[i].toString()))
                 }
                 return max.toToken(env)
@@ -1247,7 +1202,7 @@ fun initCore(env: Env) {
             "min" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 var min = BigDecimal(args[0].toString())
                 for (i in 1 until args.size) {
-                    himeAssertRuntime(env.isType(args[i], env.getType("num"))) { "${args[i]} is not num." }
+                    himeAssertType(args[i], "num", env)
                     min = min.min(BigDecimal(args[i].toString()))
                 }
                 return min.toToken(env)
@@ -1259,7 +1214,7 @@ fun initCore(env: Env) {
                 himeAssertRuntime(args.isNotEmpty()) { "not enough arguments." }
                 var num = BigDecimal.ZERO
                 for (arg in args) {
-                    himeAssertRuntime(env.isType(arg, env.getType("num"))) { "$arg is not num." }
+                    himeAssertType(arg, "num", env)
                     num = num.add(BigDecimal(arg.value.toString()))
                 }
                 return num.divide(args.size.toBigDecimal()).toToken(env)
@@ -1276,7 +1231,7 @@ fun initCore(env: Env) {
             }, 1)).toToken(env),
             "gcd" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 for (arg in args)
-                    himeAssertRuntime(env.isType(arg, env.getType("int"))) { "$arg is not int." }
+                    himeAssertType(arg, "int", env)
                 var temp = BigInteger(args[0].toString()).gcd(BigInteger(args[1].toString()))
                 for (i in 2 until args.size)
                     temp = temp.gcd(BigInteger(args[i].toString()))
@@ -1286,7 +1241,7 @@ fun initCore(env: Env) {
             "lcm" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 fun BigInteger.lcm(n: BigInteger): BigInteger = (this.multiply(n).abs()).divide(this.gcd(n))
                 for (arg in args)
-                    himeAssertRuntime(env.isType(arg, env.getType("num"))) { "$arg is not num." }
+                    himeAssertType(arg, "num", env)
                 var temp = BigInteger(args[0].toString()).lcm(BigInteger(args[1].toString()))
                 for (i in 2 until args.size)
                     temp = temp.lcm(BigInteger(args[i].toString()))
@@ -1357,7 +1312,7 @@ fun initCore(env: Env) {
                 val list = cast<List<Token>>(args[0].value)
                 val bytes = ByteArray(list.size)
                 for (index in list.indices) {
-                    himeAssertRuntime(env.isType(list[index], env.getType("byte"))) { "${list[index]} is not byte." }
+                    himeAssertType(list[index], "byte", env)
                     bytes[index] = cast<Byte>(list[index].value)
                 }
                 return String(bytes).toToken(env)
@@ -1373,7 +1328,7 @@ fun initCore(env: Env) {
                 val result = StringBuilder()
                 val tokens = cast<List<Token>>(args[0].value)
                 for (t in tokens) {
-                    himeAssertRuntime(env.isType(t, env.getType("int"))) { "$t is not int." }
+                    himeAssertType(t, "int", env)
                     result.append(t.value.toString().toInt().toChar())
                 }
                 return result.toToken(env)
@@ -1529,12 +1484,7 @@ fun initFile(env: Env) {
                     val list = cast<List<Token>>(args[1].value)
                     val bytes = ByteArray(list.size)
                     for (index in list.indices) {
-                        himeAssertRuntime(
-                            env.isType(
-                                list[index],
-                                env.getType("byte")
-                            )
-                        ) { "${list[index]} is not byte." }
+                        himeAssertType(list[index], "byte", env)
                         bytes[index] = cast<Byte>(list[index].value)
                     }
                     Files.write(file.toPath(), bytes)
@@ -1554,7 +1504,7 @@ fun initTime(env: Env) {
                 return Date().time.toToken(env)
             }, 0)).toToken(env),
             "time-format" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                himeAssertRuntime(env.isType(args[1], env.getType("int"))) { "${args[1]} is not int." }
+                himeAssertType(args[1], "int", env)
                 return SimpleDateFormat(args[0].toString()).format(args[1].toString().toLong())
                     .toToken(env)
             }, 2)).toToken(env),
@@ -1578,7 +1528,7 @@ fun initTable(env: Env) {
             }, listOf(env.getType("table"), env.getType("any"), env.getType("any")), false)).toToken(env),
             "table-get" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 himeAssertRuntime(args.size > 1) { "not enough arguments." }
-                himeAssertRuntime(env.isType(args[0], env.getType("table"))) { "${args[0]} is not table." }
+                himeAssertType(args[0], "table", env)
                 val table = cast<Map<Token, Token>>(args[0].value)
                 return table[args[1]] ?: env.himeNil
             }, listOf(env.getType("table"), env.getType("any")), false)).toToken(env),
