@@ -151,6 +151,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
             )
         )
         typeAny = HimeType("any", types.values.toMutableList())
+        types["any"] = typeAny
     }
 
     private fun initEqs() {
