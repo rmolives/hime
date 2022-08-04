@@ -1,5 +1,6 @@
 package org.hime.lang
 
+import org.hime.cast
 import org.hime.parse.Token
 
 /**
@@ -62,7 +63,19 @@ class SymbolTable(
         var data = this
         while (data.father != null && !data.table.containsKey(key))
             data = data.father!!
-        return data.table[key]!!
+        return data.table[key]?: throw HimeRuntimeException("$key does not exist.")
+    }
+
+    fun getFunction(env: Env, key: String): HimeFunctionScheduler {
+        var data = this
+        while (data.father != null && !data.table.containsKey(key))
+            data = data.father!!
+        if (data.table.containsKey(key)) {
+            val token = data.table[key] ?: throw HimeRuntimeException("$key does not exist.")
+            himeAssertRuntime(env.isType(token, env.getType("function"))) { "$token is not function." }
+            return cast<HimeFunctionScheduler>(token.value)
+        }
+        return HimeFunctionScheduler(env)
     }
 
     /**

@@ -24,7 +24,7 @@ fun eval(env: Env, ast: ASTNode, symbol: SymbolTable): Token {
         return ast.tok
     // 如果为函数
     if (env.isType(ast.tok, env.getType("function"))) {
-        ast.tok = cast<HimeFunction>(ast.tok.value).call(ast, symbol)
+        ast.tok = cast<HimeFunctionScheduler>(ast.tok.value).call(ast, symbol)
         ast.clear()
     }
     return ast.tok

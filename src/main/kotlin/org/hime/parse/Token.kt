@@ -1,11 +1,6 @@
 package org.hime.parse
 
-import org.hime.lang.FuncType
-import org.hime.lang.HimeFunction
-import org.hime.lang.SymbolTable
-import org.hime.lang.eval
-import org.hime.lang.Env
-import org.hime.lang.HimeType
+import org.hime.lang.*
 import org.hime.toToken
 import java.util.*
 
@@ -41,22 +36,19 @@ fun structureHimeFunction(
     paramTypes: List<HimeType>,
     asts: List<ASTNode>,
     symbol: SymbolTable
-): Token {
-    return Token(
-        env.getType("function"),
-        HimeFunction(env, FuncType.USER_DEFINED, fun(args: List<Token>): Token {
-            // 判断参数的数量
-            assert(args.size >= parameters.size)
-            // 新建执行的新环境（继承）
-            val newSymbol = symbol.createChild()
-            for (i in parameters.indices)
-                newSymbol.put(parameters[i], args[i])
-            var result = env.himeNil
-            for (astNode in asts)
-                result = eval(env, astNode.copy(), newSymbol)
-            return result
-        }, paramTypes, false)
-    )
+): HimeFunction {
+    return HimeFunction(env, FuncType.USER_DEFINED, fun(args: List<Token>): Token {
+        // 判断参数的数量
+        assert(args.size >= parameters.size)
+        // 新建执行的新环境（继承）
+        val newSymbol = symbol.createChild()
+        for (i in parameters.indices)
+            newSymbol.put(parameters[i], args[i])
+        var result = env.himeNil
+        for (astNode in asts)
+            result = eval(env, astNode.copy(), newSymbol)
+        return result
+    }, paramTypes, false)
 }
 
 /**
@@ -73,24 +65,21 @@ fun variableHimeFunction(
     paramTypes: List<HimeType>,
     asts: List<ASTNode>,
     symbol: SymbolTable
-): Token {
-    return Token(
-        env.getType("function"),
-        HimeFunction(env, FuncType.USER_DEFINED, fun(args: List<Token>): Token {
-            // 判断参数的数量
-            assert(args.size >= parameters.size - 1)
-            // 新建执行的新环境（继承）
-            val newSymbol = symbol.createChild()
-            for (i in 0 until parameters.size - 1)
-                newSymbol.put(parameters[i], args[i])
-            val variableArgs = ArrayList<Token>()
-            for (i in parameters.size - 1 until args.size)
-                variableArgs.add(args[i])
-            newSymbol.put(parameters[parameters.size - 1], variableArgs.toToken(env))
-            var result = env.himeNil
-            for (astNode in asts)
-                result = eval(env, astNode.copy(), newSymbol)
-            return result
-        }, paramTypes, true)
-    )
+): HimeFunction {
+    return HimeFunction(env, FuncType.USER_DEFINED, fun(args: List<Token>): Token {
+        // 判断参数的数量
+        assert(args.size >= parameters.size - 1)
+        // 新建执行的新环境（继承）
+        val newSymbol = symbol.createChild()
+        for (i in 0 until parameters.size - 1)
+            newSymbol.put(parameters[i], args[i])
+        val variableArgs = ArrayList<Token>()
+        for (i in parameters.size - 1 until args.size)
+            variableArgs.add(args[i])
+        newSymbol.put(parameters[parameters.size - 1], variableArgs.toToken(env))
+        var result = env.himeNil
+        for (astNode in asts)
+            result = eval(env, astNode.copy(), newSymbol)
+        return result
+    }, paramTypes, true)
 }

@@ -1,7 +1,7 @@
 package org.hime
 
-import org.hime.lang.HimeFunction
 import org.hime.lang.Env
+import org.hime.lang.HimeFunctionScheduler
 import org.hime.lang.HimeType
 import org.hime.parse.Token
 import java.math.BigDecimal
@@ -39,7 +39,7 @@ fun Any.toToken(env: Env): Token {
         }
         is Boolean -> Token(env.getType("bool"), this)
         is Byte -> Token(env.getType("byte"), this)
-        is HimeFunction -> Token(env.getType("function"), this)
+        is HimeFunctionScheduler -> Token(env.getType("function"), this)
         is ReentrantLock -> Token(env.getType("lock"), this)
         else -> Token(env.getType("any"), this)
     }

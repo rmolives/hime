@@ -11,17 +11,17 @@ import java.nio.file.Paths
 fun initFile(env: Env) {
     env.symbol.table.putAll(
         mutableMapOf(
-            "file-exists" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "file-exists" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return File(args[0].toString()).exists().toToken(env)
             }, 1)).toToken(env),
-            "file-list" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "file-list" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val list = ArrayList<Token>()
                 val files = File(args[0].toString()).listFiles()
                 for (file in files!!)
                     list.add(file.path.toToken(env))
                 return list.toToken(env)
             }, 1)).toToken(env),
-            "file-mkdirs" to (HimeFunction(
+            "file-mkdirs" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     val file = File(args[0].toString())
@@ -33,7 +33,7 @@ fun initFile(env: Env) {
                 },
                 1
             )).toToken(env),
-            "file-new" to (HimeFunction(
+            "file-new" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     val file = File(args[0].toString())
@@ -43,10 +43,10 @@ fun initFile(env: Env) {
                 },
                 1
             )).toToken(env),
-            "file-read-string" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "file-read-string" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return Files.readString(Paths.get(args[0].toString())).toToken(env)
             }, 1)).toToken(env),
-            "file-remove" to (HimeFunction(
+            "file-remove" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     File(args[0].toString()).delete()
@@ -54,7 +54,7 @@ fun initFile(env: Env) {
                 },
                 1
             )).toToken(env),
-            "file-write-string" to (HimeFunction(
+            "file-write-string" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     val file = File(args[0].toString())
@@ -67,14 +67,14 @@ fun initFile(env: Env) {
                 },
                 2
             )).toToken(env),
-            "file-read-bytes" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "file-read-bytes" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 val list = ArrayList<Token>()
                 val bytes = Files.readAllBytes(Paths.get(args[0].toString()))
                 for (byte in bytes)
                     list.add(byte.toToken(env))
                 return list.toToken(env)
             }, 1)).toToken(env),
-            "file-write-bytes" to (HimeFunction(
+            "file-write-bytes" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     val file = File(args[0].toString())

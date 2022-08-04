@@ -1,10 +1,7 @@
 package org.hime.core
 
 import org.hime.cast
-import org.hime.lang.Env
-import org.hime.lang.FuncType
-import org.hime.lang.HimeFunction
-import org.hime.lang.SymbolTable
+import org.hime.lang.*
 import org.hime.parse.ASTNode
 import org.hime.parse.Token
 import org.hime.toToken
@@ -13,10 +10,10 @@ import java.util.concurrent.locks.ReentrantLock
 fun initThread(env: Env) {
     env.symbol.table.putAll(
         mutableMapOf(
-            "make-lock" to (HimeFunction(env, FuncType.BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+            "make-lock" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
                 return ReentrantLock().toToken(env)
             }, 0)).toToken(env),
-            "lock" to (HimeFunction(
+            "lock" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN,
                 @Synchronized
@@ -26,7 +23,7 @@ fun initThread(env: Env) {
                     return env.himeNil
                 }, listOf(env.getType("lock")), true
             )).toToken(env),
-            "unlock" to (HimeFunction(
+            "unlock" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN,
                 @Synchronized
@@ -36,14 +33,14 @@ fun initThread(env: Env) {
                     return env.himeNil
                 }, listOf(env.getType("lock")), true
             )).toToken(env),
-            "get-lock" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "get-lock" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return cast<ReentrantLock>(args[0].value).isLocked.toToken(env)
             }, listOf(env.getType("lock")), false)).toToken(env),
-            "sleep" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "sleep" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 Thread.sleep(args[0].toString().toLong())
                 return env.himeNil
             }, listOf(env.getType("int")), false)).toToken(env),
-            "thread" to (HimeFunction(
+            "thread" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                     // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
@@ -51,60 +48,60 @@ fun initThread(env: Env) {
                     asts.add(ASTNode(Thread.currentThread().toToken(env)))
                     return if (args.size > 1)
                         Thread({
-                            cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+                            cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
                         }, args[1].toString()).toToken(env)
                     else
                         Thread {
-                            cast<HimeFunction>(args[0].value).call(asts, symbol.createChild())
+                            cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
                         }.toToken(env)
                 },
                 listOf(env.getType("function")),
                 true
             )).toToken(env), //这种类重载函数的参数数量处理还比较棘手
-            "thread-start" to (HimeFunction(
+            "thread-start" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     cast<Thread>(args[0].value).start()
                     return env.himeNil
                 }, listOf(env.getType("thread")), false
             )).toToken(env),
-            "thread-current" to (HimeFunction(
+            "thread-current" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
                     return Thread.currentThread().toToken(env)
                 }, 0
             )).toToken(env),
-            "thread-name" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "thread-name" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return cast<Thread>(args[0].value).name.toToken(env)
             }, listOf(env.getType("thread")), false)).toToken(env),
-            "thread-set-daemon" to (HimeFunction(
+            "thread-set-daemon" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     cast<Thread>(args[0].value).isDaemon = cast<Boolean>(args[1].value)
                     return env.himeNil
                 }, listOf(env.getType("thread"), env.getType("bool")), false
             )).toToken(env),
-            "thread-daemon" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "thread-daemon" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return cast<Thread>(args[0].value).isDaemon.toToken(env)
             }, listOf(env.getType("thread")), false)).toToken(env),
-            "thread-interrupt" to (HimeFunction(
+            "thread-interrupt" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     cast<Thread>(args[0].value).interrupt()
                     return env.himeNil
                 }, listOf(env.getType("thread")), false
             )).toToken(env),
-            "thread-join" to (HimeFunction(
+            "thread-join" to HimeFunctionScheduler(env).add(HimeFunction(
                 env,
                 FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                     cast<Thread>(args[0].value).join()
                     return env.himeNil
                 }, listOf(env.getType("thread")), false
             )).toToken(env),
-            "thread-alive" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "thread-alive" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return cast<Thread>(args[0].value).isAlive.toToken(env)
             }, listOf(env.getType("thread")), false)).toToken(env),
-            "thread-interrupted" to (HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+            "thread-interrupted" to HimeFunctionScheduler(env).add(HimeFunction(env, FuncType.BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return cast<Thread>(args[0].value).isInterrupted.toToken(env)
             }, listOf(env.getType("thread")), false)).toToken(env)
         )
