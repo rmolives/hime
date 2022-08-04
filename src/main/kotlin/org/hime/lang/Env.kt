@@ -206,7 +206,8 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         types[type.name] = type
         for (f in father)
             f.children.add(type)
-        typeAny.children.add(type)
+        if (father.isEmpty())
+            typeAny.children.add(type)
     }
 
     fun isType(token: Token, type: HimeType) = getTypeWeight(token, type).first
