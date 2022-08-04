@@ -8,7 +8,6 @@ import org.hime.toToken
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
-import kotlin.math.max
 
 class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     private lateinit var types: MutableMap<String, HimeType>
@@ -207,59 +206,43 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
             f.children.add(type)
     }
 
-    fun isType(token: Token, type: HimeType) = getTypeWeight(token, type).first
-
-    fun getTypeWeight(token: Token, type: HimeType): Pair<Boolean, Int> {
+    fun isType(token: Token, type: HimeType): Boolean {
         if (type == typeAny || token.type == type)
-            return Pair(true, 0)
-        var weight = Int.MIN_VALUE
-        for (child in type.children) {
-            val result = getTypeWeight(token, child)
-            if (result.first)
-                weight = max(result.second, weight)
-        }
-        if (weight != Int.MIN_VALUE)
-            return Pair(true, weight - 1)
+            return true
+        for (child in type.children)
+            if (isType(token, child))
+                return true
         when (type.mode) {
             HimeType.HimeTypeMode.INTERSECTION -> {
-                for (t in type.column) {
-                    val result = getTypeWeight(token, t)
-                    if (!result.first)
-                        return Pair(false, 0)
-                    weight = max(result.second, weight)
-                }
-                return Pair(true, weight - 1)
+                for (t in type.column)
+                    if (!isType(token, t))
+                        return false
+                return true
             }
 
             HimeType.HimeTypeMode.UNION -> {
-                for (t in type.column) {
-                    val result = getTypeWeight(token, t)
-                    if (result.first)
-                        weight = max(result.second, weight)
-                }
-                if (weight != Int.MIN_VALUE)
-                    return Pair(true, weight - 1)
-                return Pair(false, 0)
+                for (t in type.column)
+                    if (isType(token, t))
+                        return true
+                return false
             }
 
             HimeType.HimeTypeMode.COMPLEMENTARY -> {
                 for (i in 1 until type.column.size) {
-                    val result = getTypeWeight(token, type.column[0])
-                    if (!(result.first && !getTypeWeight(token, type.column[i]).first))
-                        return Pair(false, 0)
-                    weight = max(result.second, weight)
+                    if (!(isType(token, type.column[0]) && !isType(token, type.column[i])))
+                        return false
                 }
-                return Pair(true, weight - 1)
+                return true
             }
 
             HimeType.HimeTypeMode.WRONG -> {
                 for (t in type.column)
-                    if (getTypeWeight(token, t).first)
-                        return Pair(false, 0)
-                return Pair(true, 0)
+                    if (isType(token, t))
+                        return false
+                return true
             }
 
-            else -> return Pair(false, 0)
+            else -> return false
         }
     }
 
