@@ -138,7 +138,7 @@ fun initCore(env: Env) {
                     lists = temp
                 }
                 return result.toToken(env)
-            }, listOf(env.getType("list"), env.getType("any")), true)).toToken(env),
+            }, listOf(env.getType("function"), env.getType("list")), true)).toToken(env),
             "stream-for-each" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                 if (args[1] == env.himeEmptyStream)
                     return env.himeEmptyStream
@@ -173,7 +173,7 @@ fun initCore(env: Env) {
                     lists = temp
                 }
                 return env.himeNil
-            }, listOf(env.getType("list"), env.getType("any")), true)).toToken(env),
+            }, listOf(env.getType("function"), env.getType("list")), true)).toToken(env),
             "stream-filter" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                 if (args[1] == env.himeEmptyStream)
                     return arrayListOf<Token>().toToken(env)
@@ -194,7 +194,7 @@ fun initCore(env: Env) {
                     tokens = cast<List<Token>>(temp.value)
                 }
                 return result.toToken(env)
-            }, listOf(env.getType("function")), true)).toToken(env),
+            }, listOf(env.getType("function"), env.getType("list")), false)).toToken(env),
             "stream-ref" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 himeAssertRuntime(args.size > 1) { "not enough arguments." }
                 himeAssertType(args[0], "list", env)
@@ -206,7 +206,7 @@ fun initCore(env: Env) {
                     temp = cast<List<Token>>(cast<HimeFunction>(temp[1].value).call(arrayListOf()).value)
                 }
                 return temp[0]
-            }, listOf(env.getType("list"), env.getType("any")), false)).toToken(env),
+            }, listOf(env.getType("list"), env.getType("int")), false)).toToken(env),
             // (delay e) => (lambda () e)
             "delay" to (HimeFunction(env, STATIC, fun(ast: ASTNode, symbol: SymbolTable): Token {
                 himeAssertRuntime(ast.isNotEmpty()) { "not enough arguments." }
