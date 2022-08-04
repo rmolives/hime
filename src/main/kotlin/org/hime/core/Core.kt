@@ -809,22 +809,6 @@ fun initCore(env: Env) {
                     if (returnInteger > end) end else returnInteger
                 return returnInteger.toToken(env)
             }, listOf(env.getType("int")), true)).toToken(env),
-            "cons" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return ArrayList(args).toToken(env)
-            }, 2)).toToken(env),
-            "car" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                return cast<List<Token>>(args[0].value)[0]
-            }, listOf(env.getType("list")), false)).toToken(env),
-            "cdr" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
-                val tokens = cast<List<Token>>(args[0].value)
-                val list = ArrayList<Token>()
-                // 例如(cdr (list a b c d))将返回(list b c d)
-                for (i in 1 until tokens.size)
-                    list.add(tokens[i])
-                if (list.size == 1)
-                    return list[0].toToken(env)
-                return list.toToken(env)
-            }, listOf(env.getType("list")), false)).toToken(env),
             "list" to (HimeFunction(env, BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                 return args.toToken(env)
             })).toToken(env),
