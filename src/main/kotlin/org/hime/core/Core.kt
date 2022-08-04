@@ -604,7 +604,7 @@ fun initCore(env: Env) {
             "read" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
                 return Scanner(env.io.`in`).next().toToken(env)
             }, 0)).toToken(env),
-            "read-num" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
+            "read-int" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
                 return Scanner(env.io.`in`).nextBigInteger().toToken(env)
             }, 0)).toToken(env),
             "read-real" to (HimeFunction(env, BUILT_IN, fun(_: List<Token>, _: SymbolTable): Token {
