@@ -20,10 +20,6 @@ class HimeFunction(
     // 接受任意类型，任意个数的参数的函数
     constructor(env: Env, funcType: FuncType, func: Any) : this(env, funcType, func, listOf(), true)
 
-    // 接受指定同一类型，任意个数的参数的函数
-    constructor(env: Env, funcType: FuncType, func: Any, varType: HimeType) :
-            this(env, funcType, func, listOf(), true, varType)
-
     // 接受任意类型，指定个数的参数的函数
     constructor(env: Env, funcType: FuncType, func: Any, size: Int) :
             this(env, funcType, func, List(size, fun(_) = env.getType("any")), false)
@@ -38,7 +34,7 @@ class HimeFunction(
         if (!variadic)
             himeAssertRuntime(args.size == paramTypes.size) { "too many arguments." }
         else {
-            for (i in args.size - paramTypes.size..args.size)
+            for (i in args.size - paramTypes.size until args.size)
                 himeAssertRuntime(env.isType(args[i], varType)) {
                     "${paramTypes[i].name} expected but ${varType.name} at position $i"
                 }

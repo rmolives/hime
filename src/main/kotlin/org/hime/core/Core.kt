@@ -473,8 +473,7 @@ fun initCore(env: Env) {
                         for (i in 0 until ast[0].size()) {
                             himeAssertType(ast[0][i].tok, "id", env)
                             parameters.add(ast[0][i].tok.toString())
-                            if (i != ast[0].size() - 1)
-                                paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
+                            paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                         }
                         val asts = ArrayList<ASTNode>()
                         // 将ast都复制一遍并存到asts中
