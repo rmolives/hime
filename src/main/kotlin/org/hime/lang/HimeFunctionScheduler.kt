@@ -30,6 +30,8 @@ class HimeFunctionScheduler(private val env: Env, private val functions: Mutable
     fun call(args: List<Token>, symbol: SymbolTable = env.symbol): Token {
         val its =
             functions.filter { args.size == it.paramTypes.size || (it.variadic && args.size >= it.paramTypes.size) }
+        if (its.size == 1) // 即没有重载
+            return its[0].call(args, symbol)
         val matchList = MutableList(its.size, fun(idx) = Pair(idx, noMatchLevel)) // Pair为(idx, matchLevel)
         loop@ for (i in matchList.indices) {
             val it = its[matchList[i].first]
@@ -52,4 +54,8 @@ class HimeFunctionScheduler(private val env: Env, private val functions: Mutable
             throw HimeRuntimeException("Ambiguous call.")
         return its[matchList[0].first].call(args, symbol)
     }
+
+    val size get() = functions.size
+
+    operator fun get(idx: Int) = functions[idx]
 }

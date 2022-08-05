@@ -39,8 +39,6 @@ fun structureHimeFunction(
     symbol: SymbolTable
 ): HimeFunction {
     return HimeFunction(env, FuncType.USER_DEFINED, fun(args: List<Token>): Token {
-        // 判断参数的数量
-        assert(args.size >= parameters.size)
         // 新建执行的新环境（继承）
         val newSymbol = symbol.createChild()
         for (i in parameters.indices)

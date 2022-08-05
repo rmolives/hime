@@ -706,14 +706,29 @@ fun initCore(env: Env) {
                         return result
                     })
             ).toToken(env),
-            "new-type" to HimeFunctionScheduler(env).add(
-                HimeFunction(
-                    env,
-                    BUILT_IN,
-                    fun(_: List<Token>, _: SymbolTable): Token {
-                        return HimeType().toToken(env)
-                    },
-                    0
+            "new-type" to HimeFunctionScheduler(env,
+                arrayListOf(
+                    HimeFunction(
+                        env,
+                        BUILT_IN,
+                        fun(_: List<Token>, _: SymbolTable): Token {
+                            return HimeType().toToken(env)
+                        },
+                        0
+                    ),
+                    HimeFunction(
+                        env,
+                        BUILT_IN,
+                        fun(args: List<Token>, _: SymbolTable): Token {
+                            val scheduler = cast<HimeFunctionScheduler>(args[0].value)
+                            himeAssertRuntime(scheduler.size == 1) {
+                                "An overloaded function cannot be a type judge."
+                            }
+                            return HimeType(mode = HimeType.HimeTypeMode.JUDGE, judge = scheduler[0]).toToken(env)
+                        },
+                        listOf(env.getType("function")),
+                        false
+                    ),
                 )
             ).toToken(env),
             "type-intersection" to HimeFunctionScheduler(env).add(
