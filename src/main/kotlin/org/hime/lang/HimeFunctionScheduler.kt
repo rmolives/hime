@@ -45,6 +45,6 @@ class HimeFunctionScheduler(private val env: Env, private val functions: Mutable
                 function = it
             }
         }
-        return function?.call(args, symbol) ?: throw HimeRuntimeException("function is null.")
+        return function?.call(args, symbol) ?: throw HimeRuntimeException("No matching function was found.")
     }
 }
