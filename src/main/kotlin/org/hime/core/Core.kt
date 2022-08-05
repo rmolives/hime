@@ -790,7 +790,7 @@ fun initCore(env: Env) {
                     true
                 )
             ).toToken(env),
-            "type" to HimeFunctionScheduler(env).add(
+            "get-type" to HimeFunctionScheduler(env).add(
                 HimeFunction(
                     env,
                     BUILT_IN,
