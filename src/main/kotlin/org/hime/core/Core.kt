@@ -579,7 +579,7 @@ fun initCore(env: Env) {
                         val parameters = ArrayList<String>()
                         val paramTypes = ArrayList<HimeType>()
                         // 判断非(lambda () e)
-                        if (ast[0].tok != env.himeEmptyStream) {
+                        if (ast[0].tok != env.himeEmpty) {
                             himeAssertType(ast[0].tok, "id", env)
                             parameters.add(ast[0].tok.toString())
                             paramTypes.add(cast<HimeTypeId>(ast[0].tok.type).type)
