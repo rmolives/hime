@@ -13,9 +13,9 @@ import org.hime.parse.*
  * @return       结果
  */
 fun call(env: Env, code: String, symbol: SymbolTable = env.symbol): Token {
-    val asts = parser(env, lexer(env, preprocessor(code)))
+    val codes = splitCode(preprocessor(code))
     var result = env.himeNil
-    for (ast in asts)
-        result = eval(env, ast, symbol)
+    for (exp in codes)
+        result = eval(env, parser(env, lexer(env, exp)), symbol)
     return result
 }

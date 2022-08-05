@@ -932,8 +932,7 @@ fun initCore(env: Env) {
                         // 导入工作目录的模块
                         val file = File(System.getProperty("user.dir") + "/" + path.replace(".", "/") + ".hime")
                         if (file.exists())
-                            for (node in parser(env, lexer(env, preprocessor(Files.readString(file.toPath())))))
-                                eval(env, node, symbol)
+                            call(env, Files.readString(file.toPath()), symbol)
                         return env.himeNil
                     },
                     1
