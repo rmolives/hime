@@ -785,7 +785,7 @@ fun initCore(env: Env) {
                             })
                         return env.himeNil
                     },
-                    listOf(env.getType("any"), env.getType("type")),
+                    listOf(env.getType("id"), env.getType("type")),
                     true
                 )
             ).toToken(env),
