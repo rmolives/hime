@@ -3,7 +3,6 @@ package org.hime.lang
 import org.hime.cast
 import org.hime.parse.ASTNode
 import org.hime.parse.Token
-import java.lang.Integer.min
 
 class HimeFunctionScheduler(private val env: Env, private val functions: MutableList<HimeFunction> = ArrayList()) {
     fun add(function: HimeFunction): HimeFunctionScheduler {
@@ -34,7 +33,7 @@ class HimeFunctionScheduler(private val env: Env, private val functions: Mutable
             functions.filter { args.size == it.paramTypes.size || (it.variadic && args.size >= it.paramTypes.size) }
         loop@ for (it in its) {
             var weight = 0
-            for (index in 0 until min(it.paramTypes.size, args.size)) {
+            for (index in 0 until it.paramTypes.size) {
                 val type = env.getTypeWeight(args[index], it.paramTypes[index])
                 if (!type.first)
                     continue@loop
