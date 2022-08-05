@@ -7,7 +7,7 @@ open class HimeType(
     open val name: String = generateRandomString(),
     open val children: MutableList<HimeType> = arrayListOf(),
     open val mode: HimeTypeMode = HimeTypeMode.BASIC,
-    open val column: List<HimeType> = arrayListOf(),
+    open val judge: HimeFunction? = null,
     open val identifier: String = generateRandomString()
 ) {
     override fun equals(other: Any?): Boolean {
@@ -23,8 +23,9 @@ open class HimeType(
     }
 
     enum class HimeTypeMode {
-        BASIC, INTERSECTION, UNION, COMPLEMENTARY, WRONG
+        BASIC, JUDGE
     }
 }
 
-open class HimeTypeId(val env: Env, val type: HimeType = env.getType("any")) : HimeType(name = "id", identifier = "id_identifier")
+open class HimeTypeId(val env: Env, val type: HimeType = env.getType("any")) :
+    HimeType(name = "id", identifier = "id_identifier")

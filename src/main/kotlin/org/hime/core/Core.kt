@@ -721,13 +721,21 @@ fun initCore(env: Env) {
                     env,
                     BUILT_IN,
                     fun(args: List<Token>, _: SymbolTable): Token {
-                        return HimeType(mode = HimeType.HimeTypeMode.INTERSECTION, column = args.map {
-                            himeAssertType(it, "type", env)
-                            cast<HimeType>(it.value)
-                        }).toToken(env)
+                        val types = args.map {cast<HimeType>(it.value)}
+                        return HimeType(mode = HimeType.HimeTypeMode.JUDGE,
+                            judge = HimeFunction(env, BUILT_IN,
+                                fun(args: List<Token>, _: SymbolTable): Token {
+                                    for (t in types) {
+                                        val result = env.typeMatch(args[0], t)
+                                        if (!result.matched())
+                                            return false.toToken(env)
+                                    }
+                                    return true.toToken(env)
+                                }, 1)).toToken(env)
                     },
                     listOf(env.getType("type")),
-                    true
+                    true,
+                    env.getType("type")
                 )
             ).toToken(env),
             "type-union" to HimeFunctionScheduler(env).add(
@@ -735,13 +743,21 @@ fun initCore(env: Env) {
                     env,
                     BUILT_IN,
                     fun(args: List<Token>, _: SymbolTable): Token {
-                        return HimeType(mode = HimeType.HimeTypeMode.UNION, column = args.map {
-                            himeAssertType(it, "type", env)
-                            cast<HimeType>(it.value)
-                        }).toToken(env)
+                        val types = args.map {cast<HimeType>(it.value)}
+                        return HimeType(mode = HimeType.HimeTypeMode.JUDGE,
+                            judge = HimeFunction(env, BUILT_IN,
+                                fun(args: List<Token>, _: SymbolTable): Token {
+                                    for (t in types) {
+                                        val result = env.typeMatch(args[0], t)
+                                        if (result.matched())
+                                            return true.toToken(env)
+                                    }
+                                    return false.toToken(env)
+                                }, 1)).toToken(env)
                     },
                     listOf(env.getType("type")),
-                    true
+                    true,
+                    env.getType("type")
                 )
             ).toToken(env),
             "type-complementary" to HimeFunctionScheduler(env).add(
@@ -749,13 +765,21 @@ fun initCore(env: Env) {
                     env,
                     BUILT_IN,
                     fun(args: List<Token>, _: SymbolTable): Token {
-                        return HimeType(mode = HimeType.HimeTypeMode.COMPLEMENTARY, column = args.map {
-                            himeAssertType(it, "type", env)
-                            cast<HimeType>(it.value)
-                        }).toToken(env)
+                        val types = args.map {cast<HimeType>(it.value)}
+                        return HimeType(mode = HimeType.HimeTypeMode.JUDGE,
+                            judge = HimeFunction(env, BUILT_IN,
+                                fun(args: List<Token>, _: SymbolTable): Token {
+                                    val result = env.typeMatch(args[0], types[0])
+                                    for (i in 1 until types.size) {
+                                        if (!(result.matched() && !env.typeMatch(args[0], types[i]).matched()))
+                                            return false.toToken(env)
+                                    }
+                                    return true.toToken(env)
+                                }, 1)).toToken(env)
                     },
                     listOf(env.getType("type")),
-                    true
+                    true,
+                    env.getType("type")
                 )
             ).toToken(env),
             "type-wrong" to HimeFunctionScheduler(env).add(
@@ -763,13 +787,21 @@ fun initCore(env: Env) {
                     env,
                     BUILT_IN,
                     fun(args: List<Token>, _: SymbolTable): Token {
-                        return HimeType(mode = HimeType.HimeTypeMode.WRONG, column = args.map {
-                            himeAssertType(it, "type", env)
-                            cast<HimeType>(it.value)
-                        }).toToken(env)
+                        val types = args.map {cast<HimeType>(it.value)}
+                        return HimeType(mode = HimeType.HimeTypeMode.JUDGE,
+                            judge = HimeFunction(env, BUILT_IN,
+                                fun(args: List<Token>, _: SymbolTable): Token {
+                                    for (t in types) {
+                                        val result = env.typeMatch(args[0], t)
+                                        if (result.matched())
+                                            return false.toToken(env)
+                                    }
+                                    return true.toToken(env)
+                                }, 1)).toToken(env)
                     },
                     listOf(env.getType("type")),
-                    true
+                    true,
+                    env.getType("type")
                 )
             ).toToken(env),
             "def-type" to HimeFunctionScheduler(env).add(
@@ -779,7 +811,7 @@ fun initCore(env: Env) {
                     fun(args: List<Token>, _: SymbolTable): Token {
                         val type = cast<HimeType>(args[1].value)
                         env.addType(
-                            HimeType(args[0].toString(), type.children, type.mode, type.column, type.identifier),
+                            HimeType(args[0].toString(), type.children, type.mode, type.judge, type.identifier),
                             args.subList(2, args.size).map {
                                 himeAssertType(it, "type", env)
                                 cast<HimeType>(it.value)

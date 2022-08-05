@@ -1,5 +1,6 @@
 package org.hime.lang
 
+import org.hime.cast
 import org.hime.core.initCore
 import org.hime.lang.typeMatch.*
 import org.hime.parse.ASTNode
@@ -210,7 +211,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
             typeAny.children.add(type)
     }
 
-    fun isType(token: Token, type: HimeType) = typeMatch(token, type).matched()
+    fun isType(token: Token, type: HimeType) = type == getType("any") || typeMatch(token, type).matched()
 
     fun typeMatch(token: Token, type: HimeType): MatchLevel {
         //同类型匹配
@@ -227,44 +228,14 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         if (maxMatchLevel.matched())
             return maxMatchLevel.incInherit()
 
-        //裁决器匹配 //TODO
-        when (type.mode) {
-            HimeType.HimeTypeMode.INTERSECTION -> {
-                for (t in type.column) {
-                    val result = typeMatch(token, t)
-                    if (!result.matched())
-                        return noMatchLevel
-                }
-                return judgeMatchLevel
-            }
-
-            HimeType.HimeTypeMode.UNION -> {
-                for (t in type.column) {
-                    val result = typeMatch(token, t)
-                    if (result.matched())
-                        return judgeMatchLevel
-                }
-                return noMatchLevel
-            }
-
-            HimeType.HimeTypeMode.COMPLEMENTARY -> {
-                for (i in 1 until type.column.size) {
-                    val result = typeMatch(token, type.column[0])
-                    if (!(result.matched() && !typeMatch(token, type.column[i]).matched()))
-                        return noMatchLevel
-                }
-                return judgeMatchLevel
-            }
-
-            HimeType.HimeTypeMode.WRONG -> {
-                for (t in type.column)
-                    if (typeMatch(token, t).matched())
-                        return noMatchLevel
-                return judgeMatchLevel
-            }
-
-            else -> return noMatchLevel
+        //裁决器匹配
+        if (type.mode == HimeType.HimeTypeMode.JUDGE) {
+            val res = type.judge!!.call(listOf(token))
+            himeAssertType(res, "bool", this)
+            return if (cast(res.value)) judgeMatchLevel else noMatchLevel
         }
+
+        return noMatchLevel
     }
 
     fun getType(name: String) =
