@@ -1,6 +1,7 @@
 package org.hime.lang
 
 import org.hime.core.initCore
+import org.hime.lang.typeMatch.*
 import org.hime.parse.ASTNode
 import org.hime.parse.AstType
 import org.hime.parse.Token
@@ -8,7 +9,6 @@ import org.hime.toToken
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
-import kotlin.math.max
 
 class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     lateinit var types: MutableMap<String, HimeType>
@@ -210,59 +210,60 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
             typeAny.children.add(type)
     }
 
-    fun isType(token: Token, type: HimeType) = getTypeWeight(token, type).first
+    fun isType(token: Token, type: HimeType) = typeMatch(token, type).matched()
 
-    fun getTypeWeight(token: Token, type: HimeType): Pair<Boolean, Int> {
+    fun typeMatch(token: Token, type: HimeType): MatchLevel {
+        //同类型匹配
         if (token.type == type)
-            return Pair(true, 0)
-        var weight = Int.MIN_VALUE
+            return sameMatchLevel
+
+        //继承匹配
+        var maxMatchLevel = noMatchLevel
         for (child in type.children) {
-            val result = getTypeWeight(token, child)
-            if (result.first)
-                weight = max(result.second, weight)
+            val result = typeMatch(token, child)
+            if (result > maxMatchLevel)
+                maxMatchLevel = result
         }
-        if (weight != Int.MIN_VALUE)
-            return Pair(true, weight - 1)
+        if (maxMatchLevel.matched())
+            return maxMatchLevel.incInherit()
+
+        //裁决器匹配 //TODO
         when (type.mode) {
             HimeType.HimeTypeMode.INTERSECTION -> {
                 for (t in type.column) {
-                    val result = getTypeWeight(token, t)
-                    if (!result.first)
-                        return Pair(false, Int.MIN_VALUE)
-                    weight = max(result.second, weight)
+                    val result = typeMatch(token, t)
+                    if (!result.matched())
+                        return noMatchLevel
                 }
-                return Pair(true, weight - 1)
+                return judgeMatchLevel
             }
 
             HimeType.HimeTypeMode.UNION -> {
                 for (t in type.column) {
-                    val result = getTypeWeight(token, t)
-                    if (result.first)
-                        weight = max(result.second, weight)
+                    val result = typeMatch(token, t)
+                    if (result.matched())
+                        return judgeMatchLevel
                 }
-                if (weight != Int.MIN_VALUE)
-                    return Pair(true, weight - 1)
-                return Pair(false, Int.MIN_VALUE)
+                return noMatchLevel
             }
 
             HimeType.HimeTypeMode.COMPLEMENTARY -> {
                 for (i in 1 until type.column.size) {
-                    val result = getTypeWeight(token, type.column[0])
-                    if (!(result.first && !getTypeWeight(token, type.column[i]).first))
-                        return Pair(false, Int.MIN_VALUE)
-                    weight = max(result.second, weight)
+                    val result = typeMatch(token, type.column[0])
+                    if (!(result.matched() && !typeMatch(token, type.column[i]).matched()))
+                        return noMatchLevel
                 }
-                return Pair(true, weight - 1)
+                return judgeMatchLevel
             }
 
             HimeType.HimeTypeMode.WRONG -> {
                 for (t in type.column)
-                    if (getTypeWeight(token, t).first)
-                        return Pair(false, Int.MIN_VALUE)
-                return Pair(true, 0)
+                    if (typeMatch(token, t).matched())
+                        return noMatchLevel
+                return judgeMatchLevel
             }
 
-            else -> return Pair(false, Int.MIN_VALUE)
+            else -> return noMatchLevel
         }
     }
 
