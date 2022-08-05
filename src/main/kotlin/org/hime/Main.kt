@@ -9,7 +9,7 @@ fun main(args: Array<String>) {
     if (args.isEmpty())
         repl()
     else if (args[0] == "--version" || args[0] == "-v")
-        println("Hime V0.2\nhttps://www.wumoe.org.cn/\nWuMoe Community.")
+        println("Hime V0.2\nWuMoe Community.")
     else
         call(Env(), Files.readString(Path.of(args[0])))
 }
