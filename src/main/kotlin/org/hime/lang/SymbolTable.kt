@@ -5,6 +5,7 @@ import org.hime.parse.Token
 import org.hime.toToken
 
 /**
+ * @param env    从属环境
  * @param table  一系列绑定
  * @param father 所属的父SymbolTable
  */
