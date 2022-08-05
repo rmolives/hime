@@ -14,7 +14,8 @@ fun initRegex(env: Env) {
                     fun(args: List<Token>, _: SymbolTable): Token {
                         return args[0].toString().matches(Regex(args[1].toString())).toToken(env)
                     },
-                    2
+                    arrayListOf(env.getType("string"), env.getType("string")),
+                    false
                 )
             ).toToken(env)
         )
