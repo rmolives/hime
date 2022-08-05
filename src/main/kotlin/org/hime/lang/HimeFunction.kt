@@ -14,10 +14,15 @@ class HimeFunction(
     val funcType: FuncType,
     val func: Any,
     val paramTypes: List<HimeType>,
-    val variadic: Boolean
+    val variadic: Boolean,
+    val varType: HimeType = env.getType("any")
 ) {
     // 接受任意类型，任意个数的参数的函数
     constructor(env: Env, funcType: FuncType, func: Any) : this(env, funcType, func, listOf(), true)
+
+    // 接受指定同一类型，任意个数的参数的函数
+    constructor(env: Env, funcType: FuncType, func: Any, varType: HimeType) :
+            this(env, funcType, func, listOf(), true, varType)
 
     // 接受任意类型，指定个数的参数的函数
     constructor(env: Env, funcType: FuncType, func: Any, size: Int) :
@@ -27,9 +32,17 @@ class HimeFunction(
         himeAssertRuntime(funcType != FuncType.STATIC) { "static function definition." }
         himeAssertRuntime(args.size >= paramTypes.size) { "not enough arguments." }
         for (i in paramTypes.indices)
-            himeAssertRuntime(env.isType(args[i], paramTypes[i])) { "${paramTypes[i].name} expected but ${args[i].type.name} at position $i" }
+            himeAssertRuntime(env.isType(args[i], paramTypes[i])) {
+                "${paramTypes[i].name} expected but ${args[i].type.name} at position $i"
+            }
         if (!variadic)
             himeAssertRuntime(args.size == paramTypes.size) { "too many arguments." }
+        else {
+            for (i in args.size - paramTypes.size..args.size)
+                himeAssertRuntime(env.isType(args[i], varType)) {
+                    "${paramTypes[i].name} expected but ${varType.name} at position $i"
+                }
+        }
         val result = when (this.funcType) {
             FuncType.USER_DEFINED -> cast<Hime_HimeFunction>(func)(args)
             FuncType.BUILT_IN -> cast<Hime_Function>(func)(args, symbol)

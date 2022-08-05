@@ -465,7 +465,8 @@ fun initCore(env: Env) {
                     STATIC,
                     fun(ast: ASTNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
-                        himeAssertRuntime(!symbol.table.containsKey(ast[0].tok.toString()) || !(ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)) { "repeat binding ${ast[0].tok}." }
+                        himeAssertRuntime(!symbol.table.containsKey(ast[0].tok.toString()) ||
+                                !(ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)) { "repeat binding ${ast[0].tok}." }
                         himeAssertRuntime(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION) { "format error." }
                         val parameters = ArrayList<String>()
                         val paramTypes = ArrayList<HimeType>()
@@ -482,7 +483,7 @@ fun initCore(env: Env) {
                         symbol.put(
                             ast[0].tok.toString(),
                             symbol.getFunction(env, ast[0].tok.toString())
-                                .add(variableHimeFunction(env, parameters, paramTypes, asts, symbol.createChild()))
+                                .add(variadicHimeFunction(env, parameters, paramTypes, asts, symbol.createChild()))
                                 .toToken(env)
                         )
                         return env.himeNil
@@ -563,7 +564,7 @@ fun initCore(env: Env) {
                         symbol.set(
                             ast[0].tok.toString(),
                             symbol.getFunction(env, ast[0].tok.toString())
-                                .add(variableHimeFunction(env, parameters, paramTypes, asts, symbol.createChild()))
+                                .add(variadicHimeFunction(env, parameters, paramTypes, asts, symbol.createChild()))
                                 .toToken(env)
                         )
                         return env.himeNil
