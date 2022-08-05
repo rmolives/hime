@@ -11,8 +11,8 @@ import java.math.MathContext
 import kotlin.math.max
 
 class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
-    private lateinit var types: MutableMap<String, HimeType>
-    private lateinit var typeAny: HimeType
+    lateinit var types: MutableMap<String, HimeType>
+    lateinit var typeAny: HimeType
 
     lateinit var himeTrue: Token
     lateinit var himeFalse: Token
@@ -198,7 +198,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     }
 
     private fun initSymbols() {
-        symbol = SymbolTable(HashMap(), null)
+        symbol = SymbolTable(this, HashMap())
         initCore(this)
     }
 

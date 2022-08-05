@@ -811,17 +811,6 @@ fun initCore(env: Env) {
                     false
                 )
             ).toToken(env),
-            "->type" to HimeFunctionScheduler(env).add(
-                HimeFunction(
-                    env,
-                    BUILT_IN,
-                    fun(args: List<Token>, _: SymbolTable): Token {
-                        return env.getType(args[0].toString()).toToken(env)
-                    },
-                    listOf(env.getType("any")),
-                    false
-                )
-            ).toToken(env),
             "type?" to HimeFunctionScheduler(env).add(
                 HimeFunction(
                     env,

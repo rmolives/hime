@@ -2,14 +2,16 @@ package org.hime.lang
 
 import org.hime.cast
 import org.hime.parse.Token
+import org.hime.toToken
 
 /**
  * @param table  一系列绑定
  * @param father 所属的父SymbolTable
  */
 class SymbolTable(
+    private var env: Env,
     var table: MutableMap<String, Token>,
-    private var father: SymbolTable?
+    private var father: SymbolTable? = null
 ) {
     /**
      * 删除绑定
@@ -48,6 +50,8 @@ class SymbolTable(
      * @param key binding key
      */
     fun contains(key: String): Boolean {
+        if (env.types.containsKey(key))
+            return true
         var data = this
         while (data.father != null && !data.table.containsKey(key))
             data = data.father!!
@@ -63,7 +67,8 @@ class SymbolTable(
         var data = this
         while (data.father != null && !data.table.containsKey(key))
             data = data.father!!
-        return data.table[key]?: throw HimeRuntimeException("$key does not exist.")
+        return data.table[key] ?: if (env.types.containsKey(key)) env.types[key]?.toToken(env)
+            ?: throw HimeRuntimeException("$key does not exist.") else throw HimeRuntimeException("$key does not exist.")
     }
 
     fun getFunction(env: Env, key: String): HimeFunctionScheduler {
@@ -83,6 +88,6 @@ class SymbolTable(
      * @return child
      */
     fun createChild(): SymbolTable {
-        return SymbolTable(HashMap(), this)
+        return SymbolTable(env, HashMap(), this)
     }
 }
