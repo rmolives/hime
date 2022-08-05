@@ -34,7 +34,7 @@ class HimeFunction(
         if (!variadic)
             himeAssertRuntime(args.size == paramTypes.size) { "too many arguments." }
         else {
-            for (i in args.size - paramTypes.size until args.size)
+            for (i in paramTypes.size until args.size)
                 himeAssertRuntime(env.isType(args[i], varType)) {
                     "${paramTypes[i].name} expected but ${varType.name} at position $i"
                 }

@@ -81,5 +81,5 @@ fun variadicHimeFunction(
         for (astNode in asts)
             result = eval(env, astNode.copy(), newSymbol)
         return result
-    }, paramTypes, true, paramTypes[paramTypes.size - 1])
+    }, paramTypes.slice(paramTypes.indices), true, paramTypes[paramTypes.size - 1])
 }

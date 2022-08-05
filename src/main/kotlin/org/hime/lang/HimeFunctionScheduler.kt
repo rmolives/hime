@@ -27,23 +27,28 @@ class HimeFunctionScheduler(private val env: Env, private val functions: Mutable
     }
 
     fun call(args: List<Token>, symbol: SymbolTable = env.symbol): Token {
-        var maxWeight = Int.MIN_VALUE
-        var function: HimeFunction? = null
         val its =
             functions.filter { args.size == it.paramTypes.size || (it.variadic && args.size >= it.paramTypes.size) }
-        loop@ for (it in its) {
-            var weight = 0
-            for (index in 0 until it.paramTypes.size) {
-                val type = env.getTypeWeight(args[index], it.paramTypes[index])
-                if (!type.first)
+        val matchList = MutableList(its.size, fun(idx) = Pair(idx, 0)) // Pair为(idx, weight)
+        loop@ for (i in matchList.indices) {
+            val it = its[matchList[i].first]
+            for (j in 0 until it.paramTypes.size) {
+                val res = env.getTypeWeight(args[j], it.paramTypes[j])
+                if (!res.first)
                     continue@loop
-                weight += env.getTypeWeight(args[index], it.paramTypes[index]).second
+                matchList[i] = Pair(matchList[i].first, res.second)
             }
-            if (weight >= maxWeight) {
-                maxWeight = weight
-                function = it
-            }
+            if (it.variadic)
+                for (j in it.paramTypes.size until args.size)
+                    if (!env.getTypeWeight(args[j], it.varType).first)
+                        matchList[i] = Pair(matchList[i].first, 0)
         }
-        return function?.call(args, symbol) ?: throw HimeRuntimeException("No matching function was found.")
+        // rhs比较lhs（而不是lhs比较rhs）使得权重大的函数排在列表的首部
+        matchList.sortWith(fun(lhs, rhs) = rhs.second.compareTo(lhs.second))
+        if (matchList.isEmpty())
+            throw HimeRuntimeException("No matching function was found.")
+        else if (matchList.size >= 2 && matchList[0].second <= matchList[1].second)
+            throw HimeRuntimeException("Ambiguous call.")
+        return its[matchList[0].first].call(args, symbol)
     }
 }

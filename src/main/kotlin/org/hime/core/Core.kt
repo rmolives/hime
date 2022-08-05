@@ -425,7 +425,8 @@ fun initCore(env: Env) {
                     STATIC,
                     fun(ast: ASTNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
-                        himeAssertRuntime(!symbol.table.containsKey(ast[0].tok.toString()) || !(ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)) { "repeat binding ${ast[0].tok}." }
+                        himeAssertRuntime(!symbol.table.containsKey(ast[0].tok.toString()) ||
+                                !(ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)) { "repeat binding ${ast[0].tok}." }
                         // 如果是(def key value)
                         if (ast[0].isEmpty() && ast[0].type != AstType.FUNCTION) {
                             var result = env.himeNil
