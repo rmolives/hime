@@ -228,7 +228,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                 for (t in type.column) {
                     val result = getTypeWeight(token, t)
                     if (!result.first)
-                        return Pair(false, 0)
+                        return Pair(false, Int.MIN_VALUE)
                     weight = max(result.second, weight)
                 }
                 return Pair(true, weight - 1)
@@ -242,14 +242,14 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                 }
                 if (weight != Int.MIN_VALUE)
                     return Pair(true, weight - 1)
-                return Pair(false, 0)
+                return Pair(false, Int.MIN_VALUE)
             }
 
             HimeType.HimeTypeMode.COMPLEMENTARY -> {
                 for (i in 1 until type.column.size) {
                     val result = getTypeWeight(token, type.column[0])
                     if (!(result.first && !getTypeWeight(token, type.column[i]).first))
-                        return Pair(false, 0)
+                        return Pair(false, Int.MIN_VALUE)
                     weight = max(result.second, weight)
                 }
                 return Pair(true, weight - 1)
@@ -258,11 +258,11 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
             HimeType.HimeTypeMode.WRONG -> {
                 for (t in type.column)
                     if (getTypeWeight(token, t).first)
-                        return Pair(false, 0)
+                        return Pair(false, Int.MIN_VALUE)
                 return Pair(true, 0)
             }
 
-            else -> return Pair(false, 0)
+            else -> return Pair(false, Int.MIN_VALUE)
         }
     }
 
