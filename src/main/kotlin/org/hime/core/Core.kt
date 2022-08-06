@@ -56,7 +56,7 @@ fun initCore(env: Env) {
                                 BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
                                     himeAssertRuntime(args[0].value is ArrayList<*>) { "structure is not list." }
                                     cast<ArrayList<Token>>(args[0].value)[i - 1] = args[1]
-                                    return env.himeNil
+                                    return args[0]
                                 },
                                 listOf(typeEmbedded),
                                 false
