@@ -12,7 +12,9 @@ import java.math.BigInteger
 import java.math.MathContext
 
 class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
-    lateinit var types: MutableMap<String, HimeType>
+    var types = HashMap<String, HimeType>()
+    var symbol = SymbolTable(this, HashMap())
+
     lateinit var typeAny: HimeType
 
     lateinit var himeTrue: Token
@@ -22,7 +24,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     lateinit var himeEmptyStream: Token
     lateinit var himeLb: Token
     lateinit var himeRb: Token
-    lateinit var symbol: SymbolTable
+
     lateinit var himeAstEmpty: AstNode
 
     private lateinit var eqs: MutableMap<HimeType, (Token, Token) -> Boolean>
@@ -125,7 +127,6 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     }
 
     private fun initType() {
-        types = HashMap()
         typeAny = HimeType("any")
         addType(typeAny)
         addType(HimeType("structure"))
@@ -202,7 +203,6 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     }
 
     private fun initSymbols() {
-        symbol = SymbolTable(this, HashMap())
         initCore(this)
     }
 
