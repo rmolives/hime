@@ -38,7 +38,7 @@ fun initCore(env: Env) {
                         val types = ArrayList<HimeType>()
                         for (i in 1 until ast.size()) {
                             val name = ast[i].tok.toString()
-                            himeAssertType(ast[i].tok, "type", env)
+                            himeAssertType(ast[i].tok, "id", env)
                             val typeEmbedded = cast<HimeTypeId>(ast[i].tok.type).type
                             types.add(typeEmbedded)
                             symbol.put("$key-$name", symbol.getFunction(env, "$key-$name").add(HimeFunction(
