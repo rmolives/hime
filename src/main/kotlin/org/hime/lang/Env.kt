@@ -128,7 +128,10 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
 
     private fun initType() {
         typeAny = HimeType("any")
+        val functionType = HimeType("function")
+        types["function"] = functionType
         addType(typeAny)
+        addType(functionType)
         addType(HimeType("structure"))
         addType(HimeType("int"))
         addType(HimeType("string"))
@@ -137,7 +140,6 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         addType(HimeType("word"))
         addType(HimeType("thread"))
         addType(HimeType("lock"))
-        addType(HimeType("function"))
         addType(HimeType("type"))
         addType(HimeType("byte"))
         addType(HimeType("real", arrayListOf(getType("int"))))
