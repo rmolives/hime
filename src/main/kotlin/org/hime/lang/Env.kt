@@ -125,9 +125,9 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     }
 
     private fun initType() {
+        types = HashMap()
         typeAny = HimeType("any")
         addType(typeAny)
-        types = HashMap()
         addType(HimeType("structure"))
         addType(HimeType("int"))
         addType(HimeType("string"))
