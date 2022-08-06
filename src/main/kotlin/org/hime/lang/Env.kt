@@ -230,7 +230,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
 
         //裁决器匹配
         if (type.mode == HimeType.HimeTypeMode.JUDGE) {
-            val res = type.judge!!.call(listOf(token))
+            val res = type.judge?.call(listOf(token))?: throw HimeRuntimeException("judge is null.")
             himeAssertType(res, "bool", this)
             return if (cast(res.value)) judgeMatchLevel else noMatchLevel
         }
