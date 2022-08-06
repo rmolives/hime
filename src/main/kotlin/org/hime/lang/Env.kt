@@ -125,6 +125,8 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     }
 
     private fun initType() {
+        typeAny = HimeType("any")
+        addType(typeAny)
         types = HashMap()
         addType(HimeType("structure"))
         addType(HimeType("int"))
@@ -154,8 +156,6 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
                 )
             )
         )
-        typeAny = HimeType("any", types.values.toMutableList())
-        addType(typeAny)
     }
 
     private fun initEqs() {
