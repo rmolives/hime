@@ -25,6 +25,52 @@ fun initCore(env: Env) {
             "false" to env.himeFalse,
             "nil" to env.himeNil,
             "empty-stream" to env.himeEmptyStream,
+            "def-structure" to HimeFunctionScheduler(env).add(
+                HimeFunction(
+                    env,
+                    STATIC,
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
+                        himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
+                        himeAssertRuntime(!symbol.table.containsKey(ast[0].tok.toString())) { "repeat binding ${ast[0].tok}." }
+                        val key = ast[0].tok.toString()
+                        val type = HimeType(key)
+                        env.addType(type, arrayListOf(env.getType("structure")))
+                        val types = ArrayList<HimeType>()
+                        for (i in 1 until ast.size()) {
+                            val name = ast[i].tok.toString()
+                            val typeEmbedded = env.getType(name)
+                            types.add(typeEmbedded)
+                            symbol.put("$key-$name", symbol.getFunction(env, "$key-$name").add(HimeFunction(
+                                env,
+                                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                                    himeAssertRuntime(args[0].value is List<*>) { "structure is not list." }
+                                    val result = cast<List<Token>>(args[0].value)[i - 1]
+                                    himeAssertType(result, typeEmbedded, env)
+                                    return result
+                                },
+                                listOf(type),
+                                false
+                            )).toToken(env))
+                            symbol.put("set-$key-$name!", symbol.getFunction(env, "set-$key-$name!").add(HimeFunction(
+                                env,
+                                BUILT_IN, fun(args: List<Token>, _: SymbolTable): Token {
+                                    himeAssertRuntime(args[0].value is ArrayList<*>) { "structure is not list." }
+                                    cast<ArrayList<Token>>(args[0].value)[i - 1] = args[1]
+                                    return env.himeNil
+                                },
+                                listOf(typeEmbedded),
+                                false
+                            )).toToken(env))
+                        }
+                        symbol.put("make-$key", symbol.getFunction(env, "make-$key").add(HimeFunction(
+                            env,
+                            BUILT_IN, fun(args: List<Token>, _: SymbolTable) = Token(type, ArrayList<Token>(args)),
+                            types,
+                            false
+                        )).toToken(env))
+                        return env.himeNil
+                    })
+            ).toToken(env),
             "def-symbol" to HimeFunctionScheduler(env).add(
                 HimeFunction(
                     env,

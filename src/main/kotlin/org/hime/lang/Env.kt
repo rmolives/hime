@@ -126,6 +126,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
 
     private fun initType() {
         types = HashMap()
+        types["structure"] = HimeType("structure")
         types["int"] = HimeType("int")
         types["string"] = HimeType("string")
         types["list"] = HimeType("list")
@@ -203,7 +204,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         initCore(this)
     }
 
-    fun addType(type: HimeType, father: List<HimeType>) {
+    fun addType(type: HimeType, father: List<HimeType> = arrayListOf()) {
         types[type.name] = type
         for (f in father)
             f.children.add(type)
