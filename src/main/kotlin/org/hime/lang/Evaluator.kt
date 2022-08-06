@@ -1,7 +1,7 @@
 package org.hime.lang
 
 import org.hime.cast
-import org.hime.parse.ASTNode
+import org.hime.parse.AstNode
 import org.hime.parse.AstType
 import org.hime.parse.Token
 
@@ -12,7 +12,7 @@ import org.hime.parse.Token
  * @param symbol 符号表
  * @return       求值返回的值
  */
-fun eval(env: Env, ast: ASTNode, symbol: SymbolTable): Token {
+fun eval(env: Env, ast: AstNode, symbol: SymbolTable): Token {
     var temp = ast.tok
     while (true)
         temp = if (env.isType(temp, env.getType("id")) && symbol.contains(cast<String>(temp.value)))

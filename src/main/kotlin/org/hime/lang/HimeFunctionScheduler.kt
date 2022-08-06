@@ -2,7 +2,7 @@ package org.hime.lang
 
 import org.hime.cast
 import org.hime.lang.typeMatch.noMatchLevel
-import org.hime.parse.ASTNode
+import org.hime.parse.AstNode
 import org.hime.parse.Token
 
 class HimeFunctionScheduler(private val env: Env, private val functions: MutableList<HimeFunction> = ArrayList()) {
@@ -11,7 +11,7 @@ class HimeFunctionScheduler(private val env: Env, private val functions: Mutable
         return this
     }
 
-    fun call(ast: ASTNode, symbol: SymbolTable = env.symbol): Token {
+    fun call(ast: AstNode, symbol: SymbolTable = env.symbol): Token {
         for (function in functions) {
             if (function.funcType == FuncType.STATIC) {
                 ast.tok = cast<Hime_StaticFunction>(function.func)(ast, symbol)

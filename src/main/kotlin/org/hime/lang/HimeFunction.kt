@@ -1,13 +1,13 @@
 package org.hime.lang
 
 import org.hime.cast
-import org.hime.parse.ASTNode
+import org.hime.parse.AstNode
 import org.hime.parse.Token
 import org.hime.toToken
 
 typealias Hime_HimeFunction = (List<Token>) -> Token                        // 自举函数
 typealias Hime_Function = (List<Token>, SymbolTable) -> Token
-typealias Hime_StaticFunction = (ASTNode, SymbolTable) -> Token
+typealias Hime_StaticFunction = (AstNode, SymbolTable) -> Token
 
 class HimeFunction(
     val env: Env,

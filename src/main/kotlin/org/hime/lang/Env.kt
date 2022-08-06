@@ -3,7 +3,7 @@ package org.hime.lang
 import org.hime.cast
 import org.hime.core.initCore
 import org.hime.lang.typeMatch.*
-import org.hime.parse.ASTNode
+import org.hime.parse.AstNode
 import org.hime.parse.AstType
 import org.hime.parse.Token
 import org.hime.toToken
@@ -23,7 +23,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
     lateinit var himeLb: Token
     lateinit var himeRb: Token
     lateinit var symbol: SymbolTable
-    lateinit var himeAstEmpty: ASTNode
+    lateinit var himeAstEmpty: AstNode
 
     private lateinit var eqs: MutableMap<HimeType, (Token, Token) -> Boolean>
     private lateinit var ords: MutableMap<HimeType, MutableMap<String, (Token, Token) -> Boolean>>
@@ -195,7 +195,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         himeEmptyStream = Token(getType("word"), "empty-stream")
         himeLb = Token(getType("id"), "(")
         himeRb = Token(getType("id"), ")")
-        himeAstEmpty = ASTNode(himeEmpty, AstType.FUNCTION)
+        himeAstEmpty = AstNode(himeEmpty, AstType.FUNCTION)
     }
 
     private fun initSymbols() {

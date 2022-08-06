@@ -29,14 +29,14 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
                         himeAssertRuntime(!symbol.table.containsKey(ast[0].tok.toString())) { "repeat binding ${ast[0].tok}." }
                         himeAssertRuntime(ast[0].isNotEmpty()) { "Irregular definition." }
                         val parameters = ArrayList<String>()
                         for (i in 0 until ast[0].size())
                             parameters.add(ast[0][i].tok.toString())
-                        val asts = ArrayList<ASTNode>()
+                        val asts = ArrayList<AstNode>()
                         for (i in 1 until ast.size())
                             asts.add(ast[i].copy())
                         symbol.put(
@@ -45,20 +45,20 @@ fun initCore(env: Env) {
                                 HimeFunction(
                                     env,
                                     STATIC,
-                                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                                    fun(ast: AstNode, symbol: SymbolTable): Token {
                                         if (ast.type == AstType.FUNCTION) {
                                             var result = env.himeNil
                                             val newSymbol = symbol.createChild()
                                             for (node in ast.children)
-                                                result = eval(env, ASTNode(eval(env, node, newSymbol)), newSymbol)
+                                                result = eval(env, AstNode(eval(env, node, newSymbol)), newSymbol)
                                             return result
                                         }
-                                        val newAsts = ArrayList<ASTNode>()
+                                        val newAsts = ArrayList<AstNode>()
                                         for (node in asts) {
                                             val newAst = node.copy()
 
                                             // 递归替换宏
-                                            fun rsc(ast: ASTNode, id: String, value: ASTNode) {
+                                            fun rsc(ast: AstNode, id: String, value: AstNode) {
                                                 if (env.isType(
                                                         ast.tok,
                                                         env.getType("id")
@@ -90,11 +90,11 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
                         // 对(cons-stream t1 t2)中的t1进行求值
                         val t1 = eval(env, ast[0], symbol.createChild())
-                        val asts = ArrayList<ASTNode>()
+                        val asts = ArrayList<AstNode>()
                         // 对t1后面的内容都作为begin添加到asts中
                         for (i in 1 until ast.size())
                             asts.add(ast[i].copy())
@@ -171,7 +171,7 @@ fun initCore(env: Env) {
                             // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                             val asts = env.himeAstEmpty.copy()
                             for (arg in parameters)
-                                asts.add(ASTNode(arg))
+                                asts.add(AstNode(arg))
                             // 将parameters按匹配的类型添加到函数中并执行
                             result.add(cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol))
                             val temp = ArrayList<List<Token>>()
@@ -213,7 +213,7 @@ fun initCore(env: Env) {
                             // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                             val asts = env.himeAstEmpty.copy()
                             for (arg in parameters)
-                                asts.add(ASTNode(arg))
+                                asts.add(AstNode(arg))
                             // 将parameters按匹配的类型添加到函数中并执行
                             cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
                             val temp = ArrayList<List<Token>>()
@@ -246,7 +246,7 @@ fun initCore(env: Env) {
                         while (tokens[0].value != env.himeEmptyStream) {
                             // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                             val asts = env.himeAstEmpty.copy()
-                            asts.add(ASTNode(tokens[0]))
+                            asts.add(AstNode(tokens[0]))
                             val op = cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
                             himeAssertType(op, "bool", env)
                             if (cast<Boolean>(op.value))
@@ -288,9 +288,9 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.isNotEmpty()) { "not enough arguments." }
-                        val asts = ArrayList<ASTNode>()
+                        val asts = ArrayList<AstNode>()
                         for (i in 0 until ast.size())
                             asts.add(ast[i].copy())
                         return HimeFunctionScheduler(env).add(
@@ -326,7 +326,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.isNotEmpty()) { "not enough arguments." }
                         // 新建执行的新环境（继承）
                         val newSymbol = symbol.createChild()
@@ -340,7 +340,7 @@ fun initCore(env: Env) {
                                     parameters.add(ast[0][i].tok.toString())
                                     paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                                 }
-                                val asts = ArrayList<ASTNode>()
+                                val asts = ArrayList<AstNode>()
                                 for (i in 1 until node.size())
                                     asts.add(node[i].copy())
                                 // 这里采用原环境的继承，因为let不可互相访问
@@ -374,7 +374,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.isNotEmpty()) { "not enough arguments." }
                         // 新建执行的新环境（继承）
                         val newSymbol = symbol.createChild()
@@ -388,7 +388,7 @@ fun initCore(env: Env) {
                                     parameters.add(ast[0][i].tok.toString())
                                     paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                                 }
-                                val asts = ArrayList<ASTNode>()
+                                val asts = ArrayList<AstNode>()
                                 for (i in 1 until node.size())
                                     asts.add(node[i].copy())
                                 // 这里采用新环境的继承，因为let*可互相访问
@@ -423,7 +423,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
                         himeAssertRuntime(!symbol.table.containsKey(ast[0].tok.toString()) ||
                                 !(ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)) { "repeat binding ${ast[0].tok}." }
@@ -445,7 +445,7 @@ fun initCore(env: Env) {
                                 parameters.add(ast[0][i].tok.toString())
                                 paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                             }
-                            val asts = ArrayList<ASTNode>()
+                            val asts = ArrayList<AstNode>()
                             // 将ast都复制一遍并存到asts中
                             for (i in 1 until ast.size())
                                 asts.add(ast[i].copy())
@@ -464,7 +464,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
                         himeAssertRuntime(!symbol.table.containsKey(ast[0].tok.toString()) ||
                                 !(ast[0].isEmpty() && ast[0].type != AstType.FUNCTION)) { "repeat binding ${ast[0].tok}." }
@@ -476,7 +476,7 @@ fun initCore(env: Env) {
                             parameters.add(ast[0][i].tok.toString())
                             paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                         }
-                        val asts = ArrayList<ASTNode>()
+                        val asts = ArrayList<AstNode>()
                         // 将ast都复制一遍并存到asts中
                         for (i in 1 until ast.size())
                             asts.add(ast[i].copy())
@@ -494,7 +494,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.isNotEmpty()) { "not enough arguments." }
                         himeAssertRuntime(symbol.contains(ast[0].tok.toString())) { "environment does not contain ${ast[0].tok} binding." }
                         // 从环境中删除绑定
@@ -507,7 +507,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
                         himeAssertRuntime(symbol.contains(ast[0].tok.toString())) { "environment does not contain ${ast[0].tok} binding." }
                         // 如果是(set key value)
@@ -527,7 +527,7 @@ fun initCore(env: Env) {
                                 parameters.add(ast[0][i].tok.toString())
                                 paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                             }
-                            val asts = ArrayList<ASTNode>()
+                            val asts = ArrayList<AstNode>()
                             // 将ast都复制一遍并存到asts中
                             for (i in 1 until ast.size())
                                 asts.add(ast[i].copy())
@@ -545,7 +545,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
                         himeAssertRuntime(symbol.contains(ast[0].tok.toString())) { "environment does not contain ${ast[0].tok} binding." }
                         himeAssertRuntime(ast[0].isNotEmpty() || ast[0].type != AstType.FUNCTION) { "format error." }
@@ -557,7 +557,7 @@ fun initCore(env: Env) {
                             if (i != ast[0].size() - 1)
                                 paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                         }
-                        val asts = ArrayList<ASTNode>()
+                        val asts = ArrayList<AstNode>()
                         // 将ast都复制一遍并存到asts中
                         for (i in 1 until ast.size())
                             asts.add(ast[i].copy())
@@ -574,7 +574,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
                         val parameters = ArrayList<String>()
                         val paramTypes = ArrayList<HimeType>()
@@ -589,7 +589,7 @@ fun initCore(env: Env) {
                                 paramTypes.add(cast<HimeTypeId>(ast[0][i].tok.type).type)
                             }
                         }
-                        val asts = ArrayList<ASTNode>()
+                        val asts = ArrayList<AstNode>()
                         // 将ast都复制一遍并存到asts中
                         for (i in 1 until ast.size())
                             asts.add(ast[i].copy())
@@ -608,7 +608,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
                         // 新建执行的新环境（继承）
                         val newSymbol = symbol.createChild()
@@ -627,7 +627,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         // 新建执行的新环境（继承）
                         val newSymbol = symbol.createChild()
                         for (node in ast.children) {
@@ -652,7 +652,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         himeAssertRuntime(ast.size() > 1) { "not enough arguments." }
                         val newSymbol = symbol.createChild()
                         val op = eval(env, ast[0].copy(), newSymbol)
@@ -676,7 +676,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         // 新建执行的新环境（继承）
                         val newSymbol = symbol.createChild()
                         var result = env.himeNil
@@ -689,7 +689,7 @@ fun initCore(env: Env) {
                 HimeFunction(
                     env,
                     STATIC,
-                    fun(ast: ASTNode, symbol: SymbolTable): Token {
+                    fun(ast: AstNode, symbol: SymbolTable): Token {
                         // 新建执行的新环境（继承）
                         val newSymbol = symbol.createChild()
                         var result = env.himeNil
@@ -895,7 +895,7 @@ fun initCore(env: Env) {
                         // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                         val asts = env.himeAstEmpty.copy()
                         for (arg in parameters)
-                            asts.add(ASTNode(arg))
+                            asts.add(AstNode(arg))
                         return cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
                     },
                     listOf(env.getType("function")),
@@ -911,7 +911,7 @@ fun initCore(env: Env) {
                         // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                         val asts = env.himeAstEmpty.copy()
                         for (arg in parameters)
-                            asts.add(ASTNode(arg))
+                            asts.add(AstNode(arg))
                         return cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
                     },
                     listOf(env.getType("function")),
@@ -1662,7 +1662,7 @@ fun initCore(env: Env) {
                                 // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                                 val asts = env.himeAstEmpty.copy()
                                 for (arg in parameters)
-                                    asts.add(ASTNode(arg))
+                                    asts.add(AstNode(arg))
                                 return cast<HimeFunctionScheduler>(func.value).call(asts, symbol.createChild())
                             }
                             return HimeFunctionScheduler(env).add(
@@ -1697,7 +1697,7 @@ fun initCore(env: Env) {
                         // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                         val asts = env.himeAstEmpty.copy()
                         for (arg in parameters)
-                            asts.add(ASTNode(arg))
+                            asts.add(AstNode(arg))
                         return cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
 
                     },
@@ -1723,7 +1723,7 @@ fun initCore(env: Env) {
                             // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                             val asts = env.himeAstEmpty.copy()
                             for (arg in parameters)
-                                asts.add(ASTNode(arg))
+                                asts.add(AstNode(arg))
                             result.add(cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild()))
                         }
                         return result.toToken(env)
@@ -1743,7 +1743,7 @@ fun initCore(env: Env) {
                             // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                             val asts = env.himeAstEmpty.copy()
                             for (arg in arrayListOf(tokens[i], result))
-                                asts.add(ASTNode(arg))
+                                asts.add(AstNode(arg))
                             result = cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
                         }
                         return result
@@ -1763,7 +1763,7 @@ fun initCore(env: Env) {
                             // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                             val asts = env.himeAstEmpty.copy()
                             for (arg in arrayListOf(result, tokens[i]))
-                                asts.add(ASTNode(arg))
+                                asts.add(AstNode(arg))
                             result = cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
                         }
                         return result
@@ -1789,7 +1789,7 @@ fun initCore(env: Env) {
                             // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                             val asts = env.himeAstEmpty.copy()
                             for (arg in parameters)
-                                asts.add(ASTNode(arg))
+                                asts.add(AstNode(arg))
                             cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
                         }
                         return env.himeNil
@@ -1808,7 +1808,7 @@ fun initCore(env: Env) {
                         for (token in tokens) {
                             // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                             val asts = env.himeAstEmpty.copy()
-                            asts.add(ASTNode(token))
+                            asts.add(AstNode(token))
                             val op = cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())
                             himeAssertType(op, "bool", env)
                             if (cast<Boolean>(op.value))

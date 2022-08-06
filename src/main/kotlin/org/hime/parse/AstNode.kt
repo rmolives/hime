@@ -8,10 +8,10 @@ import java.util.*
  *      /   \
  *  (child)(child)
  */
-class ASTNode {
+class AstNode {
     var tok: Token                      // 运算符
     var type = AstType.BASIC            // 抽象语法树类型
-    var children: MutableList<ASTNode>     // 运算对象
+    var children: MutableList<AstNode>     // 运算对象
 
     /**
      * 建立新的抽象语法树
@@ -27,7 +27,7 @@ class ASTNode {
      * @param tok   运算符
      * @param child 运算对象
      */
-    constructor(tok: Token, child: MutableList<ASTNode>) {
+    constructor(tok: Token, child: MutableList<AstNode>) {
         this.tok = tok
         this.children = child
     }
@@ -47,11 +47,11 @@ class ASTNode {
      * 复制抽象语法树
      * @return 复制的语法树
      */
-    fun copy(): ASTNode {
-        val list: MutableList<ASTNode> = LinkedList()
+    fun copy(): AstNode {
+        val list: MutableList<AstNode> = LinkedList()
         for (ast in children)
             list.add(ast.copy())
-        val newAst = ASTNode(tok, list)
+        val newAst = AstNode(tok, list)
         newAst.type = type
         return newAst
     }
@@ -60,7 +60,7 @@ class ASTNode {
      * 添加新的运算对象
      * @param node 运算的抽象语法树
      */
-    fun add(node: ASTNode) {
+    fun add(node: AstNode) {
         children.add(node)
     }
 
@@ -69,7 +69,7 @@ class ASTNode {
      * @param i index
      * @return 运算对象
      */
-    operator fun get(i: Int): ASTNode {
+    operator fun get(i: Int): AstNode {
         return children[i]
     }
 

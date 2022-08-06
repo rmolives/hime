@@ -2,7 +2,7 @@ package org.hime.core
 
 import org.hime.cast
 import org.hime.lang.*
-import org.hime.parse.ASTNode
+import org.hime.parse.AstNode
 import org.hime.parse.Token
 import org.hime.toToken
 import java.util.concurrent.locks.ReentrantLock
@@ -73,7 +73,7 @@ fun initThread(env: Env) {
                     FuncType.BUILT_IN, fun(args: List<Token>, symbol: SymbolTable): Token {
                         // 为了能够（简便的）调用HimeFunction，将参数放到一个ast树中
                         val asts = env.himeAstEmpty.copy()
-                        asts.add(ASTNode(Thread.currentThread().toToken(env)))
+                        asts.add(AstNode(Thread.currentThread().toToken(env)))
                         return if (args.size > 1)
                             Thread({
                                 cast<HimeFunctionScheduler>(args[0].value).call(asts, symbol.createChild())

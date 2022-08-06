@@ -35,7 +35,7 @@ fun structureHimeFunction(
     env: Env,
     parameters: List<String>,
     paramTypes: List<HimeType>,
-    asts: List<ASTNode>,
+    asts: List<AstNode>,
     symbol: SymbolTable
 ): HimeFunction {
     return HimeFunction(env, FuncType.USER_DEFINED, fun(args: List<Token>): Token {
@@ -63,7 +63,7 @@ fun variadicHimeFunction(
     env: Env,
     parameters: List<String>,
     paramTypes: List<HimeType>,
-    asts: List<ASTNode>,
+    asts: List<AstNode>,
     symbol: SymbolTable
 ): HimeFunction {
     return HimeFunction(env, FuncType.USER_DEFINED, fun(args: List<Token>): Token {

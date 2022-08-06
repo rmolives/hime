@@ -11,11 +11,11 @@ import java.util.*
  * @param tokens    lexer返回的内容
  * @return          一系列抽象语法树
  */
-fun parser(env: Env, tokens: MutableList<Token>): ASTNode {
-    var ast: ASTNode? = null
-    val stack = ArrayDeque<ASTNode>()
+fun parser(env: Env, tokens: MutableList<Token>): AstNode {
+    var ast: AstNode? = null
+    val stack = ArrayDeque<AstNode>()
     var state = -1
-    var temp: ASTNode
+    var temp: AstNode
     var index = 0
     while (index < tokens.size) {
         // State 1: 考虑开头
@@ -33,7 +33,7 @@ fun parser(env: Env, tokens: MutableList<Token>): ASTNode {
             // 如果运算符为组合式，则使用apply进行替换
             if (tokens[index] == env.himeLb)
                 tokens.add(index, Token(env.getType("id"), "apply"))
-            temp = ASTNode(tokens[index])
+            temp = AstNode(tokens[index])
             stack.push(temp)
             ast = temp
             state = -1
@@ -52,7 +52,7 @@ fun parser(env: Env, tokens: MutableList<Token>): ASTNode {
             // 如果运算符为组合式，则使用apply进行替换
             if (tokens[index] == env.himeLb)
                 tokens.add(index, Token(env.getType("id"), "apply"))
-            temp = ASTNode(tokens[index])
+            temp = AstNode(tokens[index])
             himeAssertParser(stack.peek() != null) { "peek eq null." }
             stack.peek().add(temp)
             stack.push(temp)
@@ -70,7 +70,7 @@ fun parser(env: Env, tokens: MutableList<Token>): ASTNode {
             stack.pop()
         } else {
             himeAssertParser(stack.isNotEmpty()) { "stack is empty." }
-            stack.peek().add(ASTNode(tokens[index]))
+            stack.peek().add(AstNode(tokens[index]))
         }
         ++index
     }
