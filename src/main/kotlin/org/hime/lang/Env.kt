@@ -126,34 +126,36 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
 
     private fun initType() {
         types = HashMap()
-        types["structure"] = HimeType("structure")
-        types["int"] = HimeType("int")
-        types["string"] = HimeType("string")
-        types["list"] = HimeType("list")
-        types["bool"] = HimeType("bool")
-        types["word"] = HimeType("word")
-        types["thread"] = HimeType("thread")
-        types["lock"] = HimeType("lock")
-        types["function"] = HimeType("function")
-        types["type"] = HimeType("type")
-        types["byte"] = HimeType("byte")
-        types["real"] = HimeType("real", arrayListOf(getType("int")))
-        types["num"] = HimeType("num", arrayListOf(getType("real")))
-        types["op"] = HimeType("op", arrayListOf(getType("num")))
-        types["ord"] = HimeType("ord", arrayListOf(getType("num")))
-        types["eq"] = HimeType(
-            "eq",
-            arrayListOf(
-                getType("string"),
-                getType("list"),
-                getType("bool"),
-                getType("word"),
-                getType("byte"),
-                getType("ord")
+        addType(HimeType("structure"))
+        addType(HimeType("int"))
+        addType(HimeType("string"))
+        addType(HimeType("list"))
+        addType(HimeType("bool"))
+        addType(HimeType("word"))
+        addType(HimeType("thread"))
+        addType(HimeType("lock"))
+        addType(HimeType("function"))
+        addType(HimeType("type"))
+        addType(HimeType("byte"))
+        addType(HimeType("real", arrayListOf(getType("int"))))
+        addType(HimeType("num", arrayListOf(getType("real"))))
+        addType(HimeType("op", arrayListOf(getType("num"))))
+        addType(HimeType("ord", arrayListOf(getType("num"))))
+        addType(
+            HimeType(
+                "eq",
+                arrayListOf(
+                    getType("string"),
+                    getType("list"),
+                    getType("bool"),
+                    getType("word"),
+                    getType("byte"),
+                    getType("ord")
+                )
             )
         )
         typeAny = HimeType("any", types.values.toMutableList())
-        types["any"] = typeAny
+        addType(typeAny)
     }
 
     private fun initEqs() {
@@ -210,6 +212,20 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
             f.children.add(type)
         if (father.isEmpty())
             typeAny.children.add(type)
+        symbol.put("${type.name}?", HimeFunctionScheduler(this).add(
+            HimeFunction(
+                this,
+                FuncType.BUILT_IN,
+                fun(args: List<Token>, _: SymbolTable): Token {
+                    for (arg in args)
+                        if (!this.isType(arg, type))
+                            return this.himeFalse
+                    return this.himeTrue
+                },
+                listOf(this.getType("any")),
+                true
+            )
+        ).toToken(this))
     }
 
     fun isType(token: Token, type: HimeType) = type == getType("any") || typeMatch(token, type).matched()
@@ -231,7 +247,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
 
         //裁决器匹配
         if (type.mode == HimeType.HimeTypeMode.JUDGE) {
-            val res = type.judge?.call(listOf(token))?: throw HimeRuntimeException("judge is null.")
+            val res = type.judge?.call(listOf(token)) ?: throw HimeRuntimeException("judge is null.")
             himeAssertType(res, "bool", this)
             return if (cast(res.value)) judgeMatchLevel else noMatchLevel
         }

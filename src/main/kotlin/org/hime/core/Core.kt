@@ -906,20 +906,6 @@ fun initCore(env: Env) {
                     false
                 )
             ).toToken(env),
-            "type?" to HimeFunctionScheduler(env).add(
-                HimeFunction(
-                    env,
-                    BUILT_IN,
-                    fun(args: List<Token>, _: SymbolTable): Token {
-                        for (arg in args)
-                            if (!env.isType(arg, env.getType("type")))
-                                return env.himeFalse
-                        return env.himeTrue
-                    },
-                    listOf(env.getType("any")),
-                    false
-                )
-            ).toToken(env),
             "is-type" to HimeFunctionScheduler(env).add(
                 HimeFunction(
                     env,
@@ -2419,104 +2405,6 @@ fun initCore(env: Env) {
                     },
                     listOf(env.getType("list")),
                     false
-                )
-            ).toToken(env),
-            "bool?" to HimeFunctionScheduler(env).add(
-                HimeFunction(
-                    env,
-                    BUILT_IN,
-                    fun(args: List<Token>, _: SymbolTable): Token {
-                        for (arg in args)
-                            if (!env.isType(arg, env.getType("bool")))
-                                return env.himeFalse
-                        return env.himeTrue
-                    },
-                    listOf(env.getType("any")),
-                    true
-                )
-            ).toToken(env),
-            "string?" to HimeFunctionScheduler(env).add(
-                HimeFunction(
-                    env,
-                    BUILT_IN,
-                    fun(args: List<Token>, _: SymbolTable): Token {
-                        for (arg in args)
-                            if (!env.isType(arg, env.getType("string")))
-                                return env.himeFalse
-                        return env.himeTrue
-                    },
-                    listOf(env.getType("any")),
-                    true
-                )
-            ).toToken(env),
-            "int?" to HimeFunctionScheduler(env).add(
-                HimeFunction(
-                    env,
-                    BUILT_IN,
-                    fun(args: List<Token>, _: SymbolTable): Token {
-                        for (arg in args)
-                            if (!env.isType(arg, env.getType("int")))
-                                return env.himeFalse
-                        return env.himeTrue
-                    },
-                    listOf(env.getType("any")),
-                    true
-                )
-            ).toToken(env),
-            "real?" to HimeFunctionScheduler(env).add(
-                HimeFunction(
-                    env,
-                    BUILT_IN,
-                    fun(args: List<Token>, _: SymbolTable): Token {
-                        for (arg in args)
-                            if (!env.isType(arg, env.getType("real")))
-                                return env.himeFalse
-                        return env.himeTrue
-                    },
-                    listOf(env.getType("any")),
-                    true
-                )
-            ).toToken(env),
-            "list?" to HimeFunctionScheduler(env).add(
-                HimeFunction(
-                    env,
-                    BUILT_IN,
-                    fun(args: List<Token>, _: SymbolTable): Token {
-                        for (arg in args)
-                            if (!env.isType(arg, env.getType("list")))
-                                return env.himeFalse
-                        return env.himeTrue
-                    },
-                    listOf(env.getType("any")),
-                    true
-                )
-            ).toToken(env),
-            "byte?" to HimeFunctionScheduler(env).add(
-                HimeFunction(
-                    env,
-                    BUILT_IN,
-                    fun(args: List<Token>, _: SymbolTable): Token {
-                        for (arg in args)
-                            if (!env.isType(arg, env.getType("byte")))
-                                return env.himeFalse
-                        return env.himeTrue
-                    },
-                    listOf(env.getType("any")),
-                    true
-                )
-            ).toToken(env),
-            "function?" to HimeFunctionScheduler(env).add(
-                HimeFunction(
-                    env,
-                    BUILT_IN,
-                    fun(args: List<Token>, _: SymbolTable): Token {
-                        for (arg in args)
-                            if (!env.isType(arg, env.getType("function")))
-                                return env.himeFalse
-                        return env.himeTrue
-                    },
-                    listOf(env.getType("any")),
-                    true
                 )
             ).toToken(env),
             "exit" to HimeFunctionScheduler(env).add(
