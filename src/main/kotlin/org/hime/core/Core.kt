@@ -59,7 +59,7 @@ fun initCore(env: Env) {
                                     cast<ArrayList<Token>>(args[0].value)[i - 1] = args[1]
                                     return args[0]
                                 },
-                                listOf(typeEmbedded),
+                                listOf(type, typeEmbedded),
                                 false
                             )).toToken(env))
                         }
