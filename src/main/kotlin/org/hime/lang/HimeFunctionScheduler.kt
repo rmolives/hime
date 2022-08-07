@@ -2,7 +2,6 @@ package org.hime.lang
 
 import org.hime.cast
 import org.hime.lang.typeMatch.noMatchLevel
-import org.hime.lang.typeMatch.sameMatchLevel
 import org.hime.parse.AstNode
 import org.hime.parse.Token
 
@@ -42,12 +41,14 @@ class HimeFunctionScheduler(private val env: Env, private val functions: Mutable
                     continue@loop
                 matchList[i] = Pair(matchList[i].first, matchList[i].second + res)
             }
-            if (it.variadic)
-                for (j in it.paramTypes.size until args.size)
-                    if (!env.typeMatch(args[j], it.varType).matched())
-                        matchList[i] = Pair(matchList[i].first, noMatchLevel)
-                    else if (!matchList[i].second.matched() && it.paramTypes.isEmpty())
-                        matchList[i] = Pair(matchList[i].first, sameMatchLevel)
+            if (it.variadic) {
+                for (j in it.paramTypes.size until args.size) {
+                    val res = env.typeMatch(args[j], it.varType)
+                    if (!res.matched())
+                        continue@loop
+                    matchList[i] = Pair(matchList[i].first, matchList[i].second + res)
+                }
+            }
         }
         // rhs比较lhs（而不是lhs比较rhs）使得权重大的函数排在列表的首部
         matchList.sortWith(fun(lhs, rhs) = rhs.second.compareTo(lhs.second))

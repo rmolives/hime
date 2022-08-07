@@ -36,7 +36,7 @@ class HimeFunction(
         else {
             for (i in paramTypes.size until args.size)
                 himeAssertRuntime(env.isType(args[i], varType)) {
-                    "${paramTypes[i].name} expected but ${varType.name} at position $i"
+                    "${varType.name} expected but ${args[i].type.name} at position $i"
                 }
         }
         val result = when (this.funcType) {
