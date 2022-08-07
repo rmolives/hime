@@ -2,6 +2,7 @@ package org.hime
 
 import org.hime.lang.Env
 import org.hime.lang.HimeFunctionScheduler
+import org.hime.lang.HimeRuntimeException
 import org.hime.lang.HimeType
 import org.hime.parse.Token
 import java.math.BigDecimal
@@ -46,4 +47,4 @@ fun Any.toToken(env: Env): Token {
 }
 
 inline fun <reified R> cast(any: Any?) =
-    any as? R ?: throw java.lang.RuntimeException("null is not ${R::class.java.name}.")
+    any as? R ?: throw HimeRuntimeException("null is not ${R::class.java.name}.")
