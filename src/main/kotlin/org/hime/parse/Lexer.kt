@@ -102,10 +102,10 @@ fun lexer(env: Env, expression: String): MutableList<Token> {
             ++index
         }
         // 处理小数.
-        if (Character.isDigit(expression[index])) {
+        if (expression[index].isDigit()) {
             var v = BigInteger.ZERO
             while (true) {
-                if (index >= expression.length - 1 || !Character.isDigit(expression[index])) {
+                if (index >= expression.length - 1 || !expression[index].isDigit()) {
                     --index
                     break
                 }
@@ -123,7 +123,7 @@ fun lexer(env: Env, expression: String): MutableList<Token> {
             ++index
             while (true) {
                 ++index
-                if (index >= expression.length - 1 || !Character.isDigit(expression[index])) {
+                if (index >= expression.length - 1 || !expression[index].isDigit()) {
                     --index
                     break
                 }
