@@ -29,10 +29,15 @@ class HimeFunctionScheduler(private val env: Env, private val functions: Mutable
     }
 
     fun call(args: List<Token>, symbol: SymbolTable = env.symbol): Token {
+        if (functions.size == 1) // 即没有重载
+            return functions[0].call(args, symbol)
         val its =
             functions.filter { args.size == it.paramTypes.size || (it.variadic && args.size >= it.paramTypes.size) }
-        if (its.size == 1) // 即没有重载
+        if (its.isEmpty()) // 即没有该实参数量的重载
+            throw HimeRuntimeException("No candidates were found. Incorrect amount of arguments maybe?")
+        else if (its.size == 1) // 即该实参数量下没有重载
             return its[0].call(args, symbol)
+
         val matchList = MutableList(its.size, fun(idx) = Pair(idx, noMatchLevel)) // Pair为(idx, matchLevel)
         loop@ for (i in matchList.indices) {
             val it = its[matchList[i].first]
@@ -53,9 +58,7 @@ class HimeFunctionScheduler(private val env: Env, private val functions: Mutable
         }
         // rhs比较lhs（而不是lhs比较rhs）使得权重大的函数排在列表的首部
         matchList.sortWith(fun(lhs, rhs) = rhs.second.compareTo(lhs.second))
-        if (matchList.isEmpty())
-            throw HimeRuntimeException("No matching function was found.")
-        else if (matchList.size >= 2 && matchList[0].second <= matchList[1].second) {
+        if (matchList.size >= 2 && matchList[0].second <= matchList[1].second) {
             val candidates = matchList.filter { it.second == matchList[0].second }.map { its[it.first] }
             throw HimeAmbiguousCallException(env, candidates, args)
         }

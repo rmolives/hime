@@ -73,6 +73,7 @@ fun repl() {
         } catch (e: HimeException) {
             env.io.err.print("error: ")
             env.io.err.println(e.message)
+            codeBuilder = StringBuilder()
         }
     }
 }
