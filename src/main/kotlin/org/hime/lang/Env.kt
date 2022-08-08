@@ -131,6 +131,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         val functionType = HimeType("function")
         types["function"] = functionType
         addType(typeAny)
+        typeAny.children.remove(typeAny)
         addType(functionType)
         addType(HimeType("structure"))
         addType(HimeType("int"))
