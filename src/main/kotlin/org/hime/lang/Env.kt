@@ -130,36 +130,23 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         typeAny = HimeType("any")
         val functionType = HimeType("function")
         types["function"] = functionType
-        addType(typeAny)
-        typeAny.children.remove(typeAny)
+        addType(typeAny, arrayListOf())
         addType(functionType)
+        addType(HimeType("eq"))
+        addType(HimeType("op"))
+        addType(HimeType("ord"), "eq")
+        addType(HimeType("num"), "op", "ord")
+        addType(HimeType("real"), "num")
+        addType(HimeType("int"), "real")
         addType(HimeType("structure"))
-        addType(HimeType("int"))
-        addType(HimeType("string"))
-        addType(HimeType("list"))
-        addType(HimeType("bool"))
-        addType(HimeType("word"))
+        addType(HimeType("string"), "eq")
+        addType(HimeType("list"), "eq")
+        addType(HimeType("bool"), "eq")
+        addType(HimeType("word"), "eq")
         addType(HimeType("thread"))
         addType(HimeType("lock"))
         addType(HimeType("type"))
-        addType(HimeType("byte"))
-        addType(HimeType("real", arrayListOf(getType("int"))))
-        addType(HimeType("num", arrayListOf(getType("real"))))
-        addType(HimeType("op", arrayListOf(getType("num"))))
-        addType(HimeType("ord", arrayListOf(getType("num"))))
-        addType(
-            HimeType(
-                "eq",
-                arrayListOf(
-                    getType("string"),
-                    getType("list"),
-                    getType("bool"),
-                    getType("word"),
-                    getType("byte"),
-                    getType("ord")
-                )
-            )
-        )
+        addType(HimeType("byte"), "eq")
     }
 
     private fun initEqs() {
@@ -209,12 +196,10 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         initCore(this)
     }
 
-    fun addType(type: HimeType, father: List<HimeType> = arrayListOf()) {
+    fun addType(type: HimeType, father: List<HimeType> = arrayListOf(typeAny)) {
         types[type.name] = type
         for (f in father)
             f.children.add(type)
-        if (father.isEmpty())
-            typeAny.children.add(type)
         symbol.put("${type.name}?", HimeFunctionScheduler(this).add(
             HimeFunction(
                 this,
@@ -231,6 +216,9 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
         ).toToken(this))
     }
 
+    fun addType(type: HimeType, vararg father: String) {
+        return addType(type, father.map(::getType))
+    }
     fun isType(token: Token, type: HimeType) = type == getType("any") || typeMatch(token, type).matched()
 
     fun typeMatch(token: Token, type: HimeType): TypeMatchLevel {
