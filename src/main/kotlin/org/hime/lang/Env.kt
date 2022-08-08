@@ -2,7 +2,7 @@ package org.hime.lang
 
 import org.hime.cast
 import org.hime.core.initCore
-import org.hime.lang.typeMatch.*
+import org.hime.lang.exception.HimeRuntimeException
 import org.hime.parse.AstNode
 import org.hime.parse.AstType
 import org.hime.parse.Token
@@ -232,7 +232,7 @@ class Env(val io: IOConfig = IOConfig(System.out, System.err, System.`in`)) {
 
     fun isType(token: Token, type: HimeType) = type == getType("any") || typeMatch(token, type).matched()
 
-    fun typeMatch(token: Token, type: HimeType): MatchLevel {
+    fun typeMatch(token: Token, type: HimeType): TypeMatchLevel {
         //同类型匹配
         if (token.type == type)
             return sameMatchLevel

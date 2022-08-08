@@ -1,5 +1,7 @@
 package org.hime.lang
 
+import org.hime.lang.exception.HimeParserException
+import org.hime.lang.exception.HimeRuntimeException
 import org.hime.parse.Token
 
 fun himeAssertRuntime(value: Boolean, lazyMessage: () -> String) {

@@ -1,6 +1,7 @@
 package org.hime.lang
 
 import org.hime.cast
+import org.hime.lang.exception.HimeRuntimeException
 import org.hime.parse.Token
 import org.hime.toToken
 

@@ -1,16 +1,16 @@
-package org.hime.lang.typeMatch
+package org.hime.lang
 
-data class MatchLevel(
+data class TypeMatchLevel(
     val inheritMatch: Int = -1,
     val judgeMatch: Int = 0
 ) {
-    operator fun plus(rhs: MatchLevel) =
-        MatchLevel(
+    operator fun plus(rhs: TypeMatchLevel) =
+        TypeMatchLevel(
             if (this.inheritMatched()) this.inheritMatch + rhs.inheritMatch else rhs.inheritMatch,
             this.judgeMatch + rhs.judgeMatch
         )
 
-    operator fun compareTo(rhs: MatchLevel): Int {
+    operator fun compareTo(rhs: TypeMatchLevel): Int {
         val inheritMatchCmp =
             if (this.inheritMatched() && rhs.inheritMatched()) // 继承匹配越大，总匹配度越小
                 rhs.inheritMatch.compareTo(this.inheritMatch)
@@ -27,9 +27,9 @@ data class MatchLevel(
 
     fun matched() = inheritMatched() || judgeMatched()
 
-    fun incInherit() = MatchLevel(inheritMatch + (if (inheritMatched()) 1 else 0), judgeMatch)
+    fun incInherit() = TypeMatchLevel(inheritMatch + (if (inheritMatched()) 1 else 0), judgeMatch)
 }
 
-val noMatchLevel = MatchLevel()
-val sameMatchLevel = MatchLevel(inheritMatch = 0)
-val judgeMatchLevel = MatchLevel(judgeMatch = 1)
+val noMatchLevel = TypeMatchLevel()
+val sameMatchLevel = TypeMatchLevel(inheritMatch = 0)
+val judgeMatchLevel = TypeMatchLevel(judgeMatch = 1)

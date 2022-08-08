@@ -1,7 +1,7 @@
 package org.hime.parse
 
 import org.hime.lang.Env
-import org.hime.lang.HimeParserException
+import org.hime.lang.exception.HimeParserException
 import org.hime.lang.himeAssertParser
 import java.util.*
 

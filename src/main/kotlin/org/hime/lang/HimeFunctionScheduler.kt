@@ -1,7 +1,8 @@
 package org.hime.lang
 
 import org.hime.cast
-import org.hime.lang.typeMatch.noMatchLevel
+import org.hime.lang.exception.HimeAmbiguousCallException
+import org.hime.lang.exception.HimeRuntimeException
 import org.hime.parse.AstNode
 import org.hime.parse.Token
 
@@ -54,8 +55,10 @@ class HimeFunctionScheduler(private val env: Env, private val functions: Mutable
         matchList.sortWith(fun(lhs, rhs) = rhs.second.compareTo(lhs.second))
         if (matchList.isEmpty())
             throw HimeRuntimeException("No matching function was found.")
-        else if (matchList.size >= 2 && matchList[0].second <= matchList[1].second)
-            throw HimeRuntimeException("Ambiguous call.")
+        else if (matchList.size >= 2 && matchList[0].second <= matchList[1].second) {
+            val candidates = matchList.filter { it.second == matchList[0].second }.map { its[it.first] }
+            throw HimeAmbiguousCallException(env, candidates, args)
+        }
         return its[matchList[0].first].call(args, symbol)
     }
 

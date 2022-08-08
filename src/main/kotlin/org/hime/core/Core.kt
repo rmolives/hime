@@ -6,6 +6,7 @@ import org.hime.cast
 import org.hime.lang.FuncType.BUILT_IN
 import org.hime.lang.FuncType.STATIC
 import org.hime.lang.*
+import org.hime.lang.exception.HimeRuntimeException
 import org.hime.parse.*
 import org.hime.toToken
 import java.io.File

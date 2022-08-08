@@ -2,7 +2,7 @@ package org.hime
 
 import org.hime.lang.Env
 import org.hime.lang.HimeFunctionScheduler
-import org.hime.lang.HimeRuntimeException
+import org.hime.lang.exception.HimeRuntimeException
 import org.hime.lang.HimeType
 import org.hime.parse.Token
 import java.math.BigDecimal
