@@ -5,7 +5,7 @@
 
 ## About
 
-This is the interpreter of Hime language, a dialect of Lisp, run on JVM platform.
+This is the interpreter of Hime language, a dialect of Lisp, running on JVM platform.
 
 Once a feature is finished and tested, and not considered harmful, I'll copy the codes here and publish releases.
 
